@@ -91,12 +91,25 @@ fi
 # Configure Nginx
 echo "🌐 Configuring Nginx..."
 if [ -f "deploy/nginx.conf" ]; then
-    cp deploy/nginx.conf /etc/nginx/sites-available/web-portal
-    ln -sf /etc/nginx/sites-available/web-portal /etc/nginx/sites-enabled/
+    # Remove default site first
     rm -f /etc/nginx/sites-enabled/default
-    nginx -t
-    systemctl reload nginx
-    echo "✅ Nginx configured successfully"
+    
+    # Copy our configuration
+    cp deploy/nginx.conf /etc/nginx/sites-available/web-portal
+    
+    # Enable our site
+    ln -sf /etc/nginx/sites-available/web-portal /etc/nginx/sites-enabled/
+    
+    # Test configuration
+    if nginx -t; then
+        systemctl reload nginx
+        echo "✅ Nginx configured successfully"
+    else
+        echo "❌ Nginx configuration test failed"
+        echo "📝 Nginx error details:"
+        nginx -t
+        exit 1
+    fi
 else
     echo "❌ Nginx configuration not found"
     exit 1
