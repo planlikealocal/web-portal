@@ -54,7 +54,7 @@ A comprehensive web portal built with Laravel 12, Inertia.js, React.js, and Mate
 ### For Junior Developers (Recommended)
 We've created a comprehensive setup guide and automated scripts to get you started quickly:
 
-1. **Follow the detailed setup guide**: [DEVELOPMENT_SETUP.md](DEVELOPMENT_SETUP.md)
+1. **Follow the detailed setup guide**: [DEVELOPMENT_SETUP.md](doc/DEVELOPMENT_SETUP.md)
 2. **Or run the quick start script**:
    ```bash
    git clone git@github.com:planlikealocal/web-portal.git

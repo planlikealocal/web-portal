@@ -1,11 +1,12 @@
 # Development Environment Setup Guide
 
-This guide will help junior developers set up the Web Portal project on macOS using Docker + Laravel Sail.
+This guide will help developers set up the Web Portal project on macOS using Docker + Laravel Sail.
 
 ## 📋 Prerequisites
 
-Before starting, ensure you have the following software installed on your Mac:
-
+Before starting, ensure you have the following software installed on your Mac or Linux.
+#### If you have Windows go and install linux :D just kidding but worth to try https://linuxmint-installation-guide.readthedocs.io/en/latest/
+You still want window this document is not for you :D 
 ### Required Software
 
 1. **Docker Desktop for Mac**
@@ -22,15 +23,17 @@ Before starting, ensure you have the following software installed on your Mac:
    - Install from: https://brew.sh/
    - Run: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 
-4. **VS Code (Recommended IDE)**
-   - Download from: https://code.visualstudio.com/
-   - Install recommended extensions:
-     - PHP Intelephense
-     - Laravel Blade Snippets
-     - React Snippets
-     - Tailwind CSS IntelliSense
-     - Docker
-     - GitLens
+4. **IDE setup 
+   - If you are using PhpStorm you can ignore below
+   - VS Code
+      - Download from: https://code.visualstudio.com/
+      - Install recommended extensions:
+        - PHP Intelephense
+        - Laravel Blade Snippets
+        - React Snippets
+        - Tailwind CSS IntelliSense
+        - Docker
+        - GitLens
 
 ### Optional but Recommended Tools
 
@@ -40,10 +43,6 @@ Before starting, ensure you have the following software installed on your Mac:
 
 6. **Postman (API Testing)**
    - Download from: https://www.postman.com/downloads/
-
-7. **iTerm2 (Terminal)**
-   - Download from: https://iterm2.com/
-   - Alternative: Use built-in Terminal
 
 ## 🚀 Project Setup
 
@@ -192,165 +191,4 @@ web-portal/
 ├── tests/                # Test files
 ├── compose.yaml          # Docker Compose configuration
 └── sail-setup.sh        # Setup helper script
-```
 
-## 🔧 Common Development Tasks
-
-### Adding a New Specialist
-
-1. Create migration: `./sail-setup.sh artisan make:migration add_field_to_specialists_table`
-2. Update model: Edit `app/Models/Specialist.php`
-3. Update controller: Edit `app/Http/Controllers/Admin/SpecialistController.php`
-4. Update frontend: Edit React components in `resources/js/`
-
-### Running Tests
-
-```bash
-# Run all tests
-./sail-setup.sh artisan test
-
-# Run specific test
-./sail-setup.sh artisan test --filter SpecialistUpdateTest
-```
-
-### Database Operations
-
-```bash
-# Create new migration
-./sail-setup.sh artisan make:migration create_new_table
-
-# Run migrations
-./sail-setup.sh artisan migrate
-
-# Rollback last migration
-./sail-setup.sh artisan migrate:rollback
-
-# Reset database
-./sail-setup.sh artisan migrate:fresh --seed
-```
-
-### Frontend Development
-
-```bash
-# Install new packages
-./sail-setup.sh npm install package-name
-
-# Start development server
-./sail-setup.sh npm run dev
-
-# Build for production
-./sail-setup.sh npm run build
-```
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-#### 1. Docker Not Running
-**Error**: `Cannot connect to the Docker daemon`
-
-**Solution**:
-- Start Docker Desktop
-- Wait for it to fully load (green icon in menu bar)
-- Try the command again
-
-#### 2. Port Already in Use
-**Error**: `Port 80 is already in use`
-
-**Solution**:
-```bash
-# Check what's using port 80
-lsof -i :80
-
-# Kill the process or change port in .env
-# Edit .env file and change APP_PORT=8080
-```
-
-#### 3. Permission Issues
-**Error**: `Permission denied` when running scripts
-
-**Solution**:
-```bash
-# Make scripts executable
-chmod +x sail-setup.sh
-chmod +x vendor/bin/sail
-```
-
-#### 4. Database Connection Issues
-**Error**: `SQLSTATE[HY000] [2002] Connection refused`
-
-**Solution**:
-```bash
-# Restart Sail
-./sail-setup.sh restart
-
-# Check if MySQL container is running
-docker ps
-```
-
-#### 5. Node Modules Issues
-**Error**: `Module not found` or similar
-
-**Solution**:
-```bash
-# Clear node modules and reinstall
-rm -rf node_modules package-lock.json
-./sail-setup.sh npm install
-```
-
-#### 6. Composer Issues
-**Error**: `Composer autoload issues`
-
-**Solution**:
-```bash
-# Regenerate autoload
-./sail-setup.sh composer dump-autoload
-
-# Clear caches
-./sail-setup.sh artisan config:clear
-./sail-setup.sh artisan cache:clear
-```
-
-### Getting Help
-
-1. **Check Logs**: `./sail-setup.sh logs`
-2. **View Container Status**: `docker ps`
-3. **Access Container Shell**: `./sail-setup.sh shell`
-4. **Check Laravel Logs**: `tail -f storage/logs/laravel.log`
-
-### Useful Commands
-
-```bash
-# View all running containers
-docker ps
-
-# View container logs
-docker logs web-portal-laravel.test-1
-
-# Restart specific service
-docker-compose restart laravel.test
-
-# Clean up Docker (removes unused containers/images)
-docker system prune
-```
-
-## 📚 Additional Resources
-
-- [Laravel Documentation](https://laravel.com/docs)
-- [Laravel Sail Documentation](https://laravel.com/docs/sail)
-- [React Documentation](https://react.dev/)
-- [Inertia.js Documentation](https://inertiajs.com/)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-
-## 🤝 Getting Help
-
-If you encounter issues not covered in this guide:
-
-1. Check the troubleshooting section above
-2. Search the project's GitHub issues
-3. Ask in the team's Slack channel
-4. Contact the senior developers
-
----
-
-**Happy Coding! 🚀**
