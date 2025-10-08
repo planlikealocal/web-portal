@@ -19,10 +19,19 @@ rm -f /etc/nginx/sites-enabled/default
 
 # Copy our Nginx configuration
 echo "📝 Copying Nginx configuration..."
-if [ -f "/var/www/web-portal/deploy/nginx.conf" ]; then
-    cp /var/www/web-portal/deploy/nginx.conf /etc/nginx/sites-available/web-portal
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+NGINX_CONF="$SCRIPT_DIR/nginx.conf"
+
+if [ -f "$NGINX_CONF" ]; then
+    cp "$NGINX_CONF" /etc/nginx/sites-available/web-portal
+    echo "✅ Nginx configuration copied from $NGINX_CONF"
 else
-    echo "❌ Nginx configuration file not found at /var/www/web-portal/deploy/nginx.conf"
+    echo "❌ Nginx configuration file not found at $NGINX_CONF"
+    echo "📁 Current directory: $(pwd)"
+    echo "📁 Script directory: $SCRIPT_DIR"
+    echo "📁 Looking for: $NGINX_CONF"
     exit 1
 fi
 
