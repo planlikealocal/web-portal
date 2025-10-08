@@ -22,16 +22,20 @@ echo "📝 Copying Nginx configuration..."
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-NGINX_CONF="$SCRIPT_DIR/nginx.conf"
+NGINX_CONF="$SCRIPT_DIR/nginx-simple.conf"
 
+# Try simple config first, fallback to main config
 if [ -f "$NGINX_CONF" ]; then
     cp "$NGINX_CONF" /etc/nginx/sites-available/web-portal
     echo "✅ Nginx configuration copied from $NGINX_CONF"
+elif [ -f "$SCRIPT_DIR/nginx.conf" ]; then
+    cp "$SCRIPT_DIR/nginx.conf" /etc/nginx/sites-available/web-portal
+    echo "✅ Nginx configuration copied from $SCRIPT_DIR/nginx.conf"
 else
-    echo "❌ Nginx configuration file not found at $NGINX_CONF"
+    echo "❌ Nginx configuration file not found"
     echo "📁 Current directory: $(pwd)"
     echo "📁 Script directory: $SCRIPT_DIR"
-    echo "📁 Looking for: $NGINX_CONF"
+    echo "📁 Looking for: $NGINX_CONF or nginx.conf"
     exit 1
 fi
 
