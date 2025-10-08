@@ -78,19 +78,41 @@ sudo systemctl enable php8.2-fpm
 
 # Configure MySQL
 echo "🔐 Securing MySQL installation..."
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root_password';"
-sudo mysql -e "DELETE FROM mysql.user WHERE User='';"
-sudo mysql -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
-sudo mysql -e "DROP DATABASE IF EXISTS test;"
-sudo mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
-sudo mysql -e "FLUSH PRIVILEGES;"
+# First, try to connect without password (fresh installation)
+if sudo mysql -e "SELECT 1;" 2>/dev/null; then
+    echo "📊 Configuring fresh MySQL installation..."
+    sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root_password';"
+    sudo mysql -e "DELETE FROM mysql.user WHERE User='';"
+    sudo mysql -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
+    sudo mysql -e "DROP DATABASE IF EXISTS test;"
+    sudo mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
+    sudo mysql -e "FLUSH PRIVILEGES;"
+else
+    echo "📊 MySQL already configured or requires password authentication"
+    echo "⚠️  If you need to reset MySQL root password, run:"
+    echo "   sudo mysql_secure_installation"
+fi
 
 # Create application database
 echo "🗄️ Creating application database..."
-sudo mysql -u root -proot_password -e "CREATE DATABASE IF NOT EXISTS web_portal;"
-sudo mysql -u root -proot_password -e "CREATE USER IF NOT EXISTS 'web_portal_user'@'localhost' IDENTIFIED BY 'web_portal_password';"
-sudo mysql -u root -proot_password -e "GRANT ALL PRIVILEGES ON web_portal.* TO 'web_portal_user'@'localhost';"
-sudo mysql -u root -proot_password -e "FLUSH PRIVILEGES;"
+if sudo mysql -u root -proot_password -e "SELECT 1;" 2>/dev/null; then
+    echo "📊 Creating database with configured password..."
+    sudo mysql -u root -proot_password -e "CREATE DATABASE IF NOT EXISTS web_portal;"
+    sudo mysql -u root -proot_password -e "CREATE USER IF NOT EXISTS 'web_portal_user'@'localhost' IDENTIFIED BY 'web_portal_password';"
+    sudo mysql -u root -proot_password -e "GRANT ALL PRIVILEGES ON web_portal.* TO 'web_portal_user'@'localhost';"
+    sudo mysql -u root -proot_password -e "FLUSH PRIVILEGES;"
+else
+    echo "⚠️  MySQL root password not set or different. Please run MySQL setup manually:"
+    echo "   1. Run: sudo mysql_secure_installation"
+    echo "   2. Set root password when prompted"
+    echo "   3. Then run: sudo mysql -u root -p"
+    echo "   4. Create database and user manually:"
+    echo "      CREATE DATABASE web_portal;"
+    echo "      CREATE USER 'web_portal_user'@'localhost' IDENTIFIED BY 'web_portal_password';"
+    echo "      GRANT ALL PRIVILEGES ON web_portal.* TO 'web_portal_user'@'localhost';"
+    echo "      FLUSH PRIVILEGES;"
+    echo "   5. Update the .env file with correct database credentials"
+fi
 
 # Configure UFW firewall
 echo "🔥 Configuring firewall..."
