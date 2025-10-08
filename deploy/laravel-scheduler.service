@@ -1,0 +1,23 @@
+[Unit]
+Description=Laravel Scheduler
+After=network.target mysql.service
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/web-portal
+ExecStart=/usr/bin/php /var/www/web-portal/artisan schedule:run
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=laravel-scheduler
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/www/web-portal/storage
+ReadWritePaths=/var/www/web-portal/bootstrap/cache
+
+[Install]
+WantedBy=multi-user.target

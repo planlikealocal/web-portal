@@ -1,0 +1,12 @@
+/var/www/web-portal/storage/logs/*.log {
+    daily
+    missingok
+    rotate 14
+    compress
+    notifempty
+    create 644 www-data www-data
+    postrotate
+        /bin/kill -USR1 $(cat /var/run/nginx.pid 2>/dev/null) 2>/dev/null || true
+        /bin/kill -USR1 $(cat /var/run/php8.2-fpm.pid 2>/dev/null) 2>/dev/null || true
+    endscript
+}

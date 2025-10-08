@@ -1,0 +1,25 @@
+[Unit]
+Description=Laravel Queue Worker
+After=network.target mysql.service redis.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/web-portal
+ExecStart=/usr/bin/php /var/www/web-portal/artisan queue:work --sleep=3 --tries=3 --max-time=3600
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=laravel-worker
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/www/web-portal/storage
+ReadWritePaths=/var/www/web-portal/bootstrap/cache
+
+[Install]
+WantedBy=multi-user.target

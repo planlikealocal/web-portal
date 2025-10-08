@@ -9,7 +9,14 @@ Before starting, ensure you have the following software installed on your Mac or
 You still want window this document is not for you :D 
 ### Required Software
 
-1. **Docker Desktop for Mac**
+1. **Install PHP**
+   - run homebrew install php
+2. **Install composer**
+   - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+     php -r "if (hash_file('sha384', 'composer-setup.php') === 'ed0feb545ba87161262f2d45a633e34f591ebb3381f2e0063c345ebea4d228dd0043083717770234ec00c5a9f9593792') { echo 'Installer verified'.PHP_EOL; } else { echo 'Installer corrupt'.PHP_EOL; unlink('composer-setup.php'); exit(1); }"
+     php composer-setup.php
+     php -r "unlink('composer-setup.php');"
+3. **Docker Desktop for Mac**
    - Download from: https://www.docker.com/products/docker-desktop/
    - Version: Latest stable release
    - After installation, start Docker Desktop and ensure it's running
