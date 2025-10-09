@@ -41,10 +41,12 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Copy existing application directory contents
 COPY . /var/www
 
-# Copy existing application directory permissions
-COPY --chown=www-data:www-data . /var/www
+# Set proper permissions
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 755 /var/www \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-# Change current user to www
+# Change current user to www-data
 USER www-data
 
 # Expose port 9000 and start php-fpm server
