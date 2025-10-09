@@ -92,3 +92,4 @@ echo "   - Access database: docker-compose exec db mysql -u web_portal_user -p w
 echo ""
 echo "✨ Your Laravel + React application is now running in Docker!"
 
+
