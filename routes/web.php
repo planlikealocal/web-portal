@@ -4,6 +4,7 @@ use App\Http\Controllers\WebsiteController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SpecialistController;
+use App\Http\Controllers\Admin\DestinationController;
 use Illuminate\Support\Facades\Route;
 
 // Website routes
@@ -28,6 +29,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/specialists', [SpecialistController::class, 'store'])->name('specialists.store');
         Route::post('/specialists/{specialist}', [SpecialistController::class, 'update'])->name('specialists.update');
         Route::delete('/specialists/{specialist}', [SpecialistController::class, 'destroy'])->name('specialists.destroy');
+        
+        // Destination routes
+        Route::get('/destinations', [DestinationController::class, 'index'])->name('destinations.index');
+        Route::get('/destinations/create', [DestinationController::class, 'create'])->name('destinations.create');
+        Route::get('/destinations/{destination}/manage', [DestinationController::class, 'manage'])->name('destinations.manage');
+        Route::get('/destinations/{destination}/edit', [DestinationController::class, 'edit'])->name('destinations.edit');
+        Route::post('/destinations', [DestinationController::class, 'store'])->name('destinations.store');
+        Route::post('/destinations/{destination}', [DestinationController::class, 'update'])->name('destinations.update');
+        Route::delete('/destinations/{destination}', [DestinationController::class, 'destroy'])->name('destinations.destroy');
+        Route::post('/destinations/{destination}/toggle-status', [DestinationController::class, 'toggleStatus'])->name('destinations.toggle-status');
         
         // Test notification route (for development/demo purposes)
         Route::post('/test-notifications', function () {
