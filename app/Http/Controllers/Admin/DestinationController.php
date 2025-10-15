@@ -12,6 +12,7 @@ use App\Http\Requests\StoreDestinationRequest;
 use App\Http\Requests\UpdateDestinationRequest;
 use App\Models\Destination;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -64,7 +65,7 @@ class DestinationController extends Controller
         if ($request->hasFile('home_image')) {
             $file = $request->file('home_image');
             $path = $file->store('destinations', 'public');
-            $data['home_image'] = asset('storage/' . $path);
+            $data['home_image'] = Storage::disk('public')->url($path);
         }
         
         // Set default values for required fields not in the create form
