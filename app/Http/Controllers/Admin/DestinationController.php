@@ -60,6 +60,13 @@ class DestinationController extends Controller
     {
         $data = $request->validated();
         
+        // Handle image upload
+        if ($request->hasFile('home_image')) {
+            $file = $request->file('home_image');
+            $path = $file->store('destinations', 'public');
+            $data['home_image'] = asset('storage/' . $path);
+        }
+        
         // Set default values for required fields not in the create form
         $data['overview_title'] = $data['name']; // Use name as overview title
         $data['overview'] = $data['description']; // Use description as overview
@@ -134,30 +141,4 @@ class DestinationController extends Controller
         ]);
     }
 
-    /**
-     * Upload image and return storage URL
-     */
-    public function uploadImage(Request $request)
-    {
-        $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
-
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $path = $file->store('destinations', 'public');
-            $url = asset('storage/' . $path);
-            
-            return response()->json([
-                'success' => true,
-                'url' => $url,
-                'path' => $path
-            ]);
-        }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'No image uploaded'
-        ], 400);
-    }
 }

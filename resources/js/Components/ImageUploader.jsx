@@ -3,14 +3,11 @@ import {
   Box,
   Button,
   Typography,
-  CircularProgress,
   Alert,
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
-  Image as ImageIcon,
 } from '@mui/icons-material';
-import { router } from '@inertiajs/react';
 
 const ImageUploader = ({ 
   value, 
@@ -21,7 +18,6 @@ const ImageUploader = ({
   previewHeight = 200,
   previewWidth = 300 
 }) => {
-  const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(value || '');
   const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef(null);
@@ -42,44 +38,19 @@ const ImageUploader = ({
       }
 
       setUploadError('');
-      uploadFile(file);
-    }
-  };
-
-  const uploadFile = async (file) => {
-    setUploading(true);
-    setUploadError('');
-
-    const formData = new FormData();
-    formData.append('image', file);
-
-    try {
-      const response = await fetch('/admin/destinations/upload-image', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        },
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setPreview(data.url);
-        onChange(data.url);
-      } else {
-        setUploadError(data.message || 'Upload failed');
-      }
-    } catch (error) {
-      setUploadError('Upload failed. Please try again.');
-    } finally {
-      setUploading(false);
+      
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setPreview(previewUrl);
+      
+      // Pass the file to the parent component
+      onChange(file);
     }
   };
 
   const handleRemoveImage = () => {
     setPreview('');
-    onChange('');
+    onChange(null);
     setUploadError('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -141,9 +112,8 @@ const ImageUploader = ({
         <Button
           variant="outlined"
           component="label"
-          startIcon={uploading ? <CircularProgress size={20} /> : <UploadIcon />}
+          startIcon={<UploadIcon />}
           onClick={handleButtonClick}
-          disabled={uploading}
           sx={{
             width: 'fit-content',
             borderStyle: 'dashed',
@@ -154,7 +124,7 @@ const ImageUploader = ({
             },
           }}
         >
-          {uploading ? 'Uploading...' : preview ? 'Change Image' : 'Select Image'}
+          {preview ? 'Change Image' : 'Select Image'}
         </Button>
 
         {/* Hidden file input */}

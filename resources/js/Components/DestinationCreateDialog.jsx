@@ -19,7 +19,7 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
     const [formData, setFormData] = useState({
         name: '',
         description: '',
-        home_image: '',
+        home_image: null,
     });
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
@@ -29,16 +29,16 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
             setFormData({
                 name: '',
                 description: '',
-                home_image: '',
+                home_image: null,
             });
             setErrors({});
         }
     }, [open]);
 
-    const handleChange = (field) => (event) => {
+    const handleChange = (field) => (value) => {
         setFormData(prev => ({
             ...prev,
-            [field]: event.target.value
+            [field]: value
         }));
         // Clear error when user starts typing
         if (errors[field]) {
@@ -54,7 +54,14 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
         setLoading(true);
         setErrors({});
 
-        router.post('/admin/destinations', formData, {
+        const formDataToSend = new FormData();
+        formDataToSend.append('name', formData.name);
+        formDataToSend.append('description', formData.description);
+        if (formData.home_image) {
+            formDataToSend.append('home_image', formData.home_image);
+        }
+
+        router.post('/admin/destinations', formDataToSend, {
             onSuccess: (page) => {
                 setLoading(false);
                 onSuccess(page.props.destination);
@@ -70,7 +77,7 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
         setFormData({
             name: '',
             description: '',
-            home_image: '',
+            home_image: null,
         });
         setErrors({});
     };
@@ -97,7 +104,7 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
                         <TextField
                             label="Name *"
                             value={formData.name}
-                            onChange={handleChange('name')}
+                            onChange={(e) => handleChange('name')(e.target.value)}
                             error={!!errors.name}
                             helperText={errors.name}
                             fullWidth
@@ -107,7 +114,7 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
                         <TextField
                             label="Description *"
                             value={formData.description}
-                            onChange={handleChange('description')}
+                            onChange={(e) => handleChange('description')(e.target.value)}
                             error={!!errors.description}
                             helperText={errors.description}
                             fullWidth
