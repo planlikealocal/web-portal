@@ -23,15 +23,8 @@ class StoreDestinationRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'overview_title' => 'required|string|max:255',
-            'overview' => 'nullable|string',
-            'description' => 'nullable|string',
-            'country' => 'required|string|max:255',
-            'state_province' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
+            'description' => 'required|string',
             'home_image' => 'nullable|string|max:255',
-            'grid_image' => 'nullable|string|max:255',
-            'status' => 'nullable|in:draft,active,inactive',
         ];
     }
 }

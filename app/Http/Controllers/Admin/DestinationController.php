@@ -59,6 +59,13 @@ class DestinationController extends Controller
     public function store(StoreDestinationRequest $request)
     {
         $data = $request->validated();
+        
+        // Set default values for required fields not in the create form
+        $data['overview_title'] = $data['name']; // Use name as overview title
+        $data['overview'] = $data['description']; // Use description as overview
+        $data['country'] = 'TBD'; // To be filled in manage page
+        $data['state_province'] = 'TBD'; // To be filled in manage page
+        $data['city'] = 'TBD'; // To be filled in manage page
         $data['status'] = 'draft'; // Always create as draft initially
 
         $destination = $this->createDestinationAction->execute($data);

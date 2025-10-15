@@ -17,13 +17,8 @@ import {router, usePage} from '@inertiajs/react';
 const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
     const [formData, setFormData] = useState({
         name: '',
-        overview_title: '',
-        overview: '',
-        country: '',
-        state_province: '',
-        city: '',
+        description: '',
         home_image: '',
-        grid_image: '',
     });
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
@@ -32,13 +27,8 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
         if (open) {
             setFormData({
                 name: '',
-                overview_title: '',
-                overview: '',
-                country: '',
-                state_province: '',
-                city: '',
+                description: '',
                 home_image: '',
-                grid_image: '',
             });
             setErrors({});
         }
@@ -78,13 +68,8 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
     const handleReset = () => {
         setFormData({
             name: '',
-            overview_title: '',
-            overview: '',
-            country: '',
-            state_province: '',
-            city: '',
+            description: '',
             home_image: '',
-            grid_image: '',
         });
         setErrors({});
     };
@@ -119,53 +104,14 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
                         />
                         
                         <TextField
-                            label="Overview Title *"
-                            value={formData.overview_title}
-                            onChange={handleChange('overview_title')}
-                            error={!!errors.overview_title}
-                            helperText={errors.overview_title}
-                            fullWidth
-                            required
-                        />
-                        
-                        <TextField
-                            label="Overview"
-                            value={formData.overview}
-                            onChange={handleChange('overview')}
-                            error={!!errors.overview}
-                            helperText={errors.overview}
+                            label="Description *"
+                            value={formData.description}
+                            onChange={handleChange('description')}
+                            error={!!errors.description}
+                            helperText={errors.description}
                             fullWidth
                             multiline
                             rows={3}
-                        />
-                        
-                        <TextField
-                            label="Country *"
-                            value={formData.country}
-                            onChange={handleChange('country')}
-                            error={!!errors.country}
-                            helperText={errors.country}
-                            fullWidth
-                            required
-                        />
-                        
-                        <TextField
-                            label="State/Province *"
-                            value={formData.state_province}
-                            onChange={handleChange('state_province')}
-                            error={!!errors.state_province}
-                            helperText={errors.state_province}
-                            fullWidth
-                            required
-                        />
-                        
-                        <TextField
-                            label="City *"
-                            value={formData.city}
-                            onChange={handleChange('city')}
-                            error={!!errors.city}
-                            helperText={errors.city}
-                            fullWidth
                             required
                         />
                         
@@ -175,15 +121,6 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
                             onChange={handleChange('home_image')}
                             error={!!errors.home_image}
                             helperText={errors.home_image}
-                            fullWidth
-                        />
-                        
-                        <TextField
-                            label="Grid Image URL"
-                            value={formData.grid_image}
-                            onChange={handleChange('grid_image')}
-                            error={!!errors.grid_image}
-                            helperText={errors.grid_image}
                             fullWidth
                         />
                     </Box>
