@@ -42,7 +42,7 @@ const Manage = (props) => {
     const [seasonDialogOpen, setSeasonDialogOpen] = useState(false);
     const [activityDialogOpen, setActivityDialogOpen] = useState(false);
     const [itineraryDialogOpen, setItineraryDialogOpen] = useState(false);
-    const [editingItem, setEditingItem] = useState(null);
+    const [editing, setEditing] = useState(null);
 
     const handleBasicInfoChange = (field) => (event) => {
         setBasicInfo(prev => ({
@@ -73,12 +73,12 @@ const Manage = (props) => {
     };
 
     const handleAddImage = () => {
-        setEditingItem(null);
+        setEditing(null);
         setImageDialogOpen(true);
     };
 
     const handleEditImage = (image) => {
-        setEditingItem(image);
+        setEditing(image);
         setImageDialogOpen(true);
     };
 
@@ -89,12 +89,12 @@ const Manage = (props) => {
     };
 
     const handleAddSeason = () => {
-        setEditingItem(null);
+        setEditing(null);
         setSeasonDialogOpen(true);
     };
 
     const handleEditSeason = (season) => {
-        setEditingItem(season);
+        setEditing(season);
         setSeasonDialogOpen(true);
     };
 
@@ -105,12 +105,12 @@ const Manage = (props) => {
     };
 
     const handleAddActivity = () => {
-        setEditingItem(null);
+        setEditing(null);
         setActivityDialogOpen(true);
     };
 
     const handleEditActivity = (activity) => {
-        setEditingItem(activity);
+        setEditing(activity);
         setActivityDialogOpen(true);
     };
 
@@ -121,12 +121,12 @@ const Manage = (props) => {
     };
 
     const handleAddItinerary = () => {
-        setEditingItem(null);
+        setEditing(null);
         setItineraryDialogOpen(true);
     };
 
     const handleEditItinerary = (itinerary) => {
-        setEditingItem(itinerary);
+        setEditing(itinerary);
         setItineraryDialogOpen(true);
     };
 
@@ -142,7 +142,16 @@ const Manage = (props) => {
                 <Typography variant="h4" component="h1" sx={{mb: 3}}>
                     Manage Destination: {destination.name}
                 </Typography>
+                <Card sx={{mb: 3}}>
+                    <CardContent>
+                        <Box sx={{display: 'flex', justifyContent: 'space-between', aligns: 'center', mb: 2}}>
+                            <Typography variant="h6">
+                                Home page card
+                            </Typography>
 
+                        </Box>
+                    </CardContent>
+                </Card>
                 {/* Section 1: Basic Information */}
                 <Card sx={{mb: 3}}>
                     <CardContent>
@@ -150,7 +159,8 @@ const Manage = (props) => {
                             1. Basic Information
                         </Typography>
                         <Grid container spacing={2}>
-                            <Grid item xs={12} md={6}>
+
+                            <Grid size={{xs:12, md: 6}}>
                                 <TextField
                                     label="Name"
                                     value={basicInfo.name}
@@ -160,7 +170,7 @@ const Manage = (props) => {
                                     fullWidth
                                 />
                             </Grid>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{xs:12, md: 6}} >
                                 <TextField
                                     label="Overview Title"
                                     value={basicInfo.overview_title}
@@ -170,7 +180,7 @@ const Manage = (props) => {
                                     fullWidth
                                 />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={{xs:12}}>
                                 <TextField
                                     label="Description"
                                     value={basicInfo.description}
@@ -182,7 +192,7 @@ const Manage = (props) => {
                                     rows={3}
                                 />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid  size={{xs:12}}>
                                 <TextField
                                     label="Overview"
                                     value={basicInfo.overview}
@@ -194,7 +204,7 @@ const Manage = (props) => {
                                     rows={4}
                                 />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid  size={{xs:12}}>
                                 <Button
                                     variant="contained"
                                     startIcon={<SaveIcon />}
@@ -211,7 +221,7 @@ const Manage = (props) => {
                 {/* Section 2: Destination Images */}
                 <Card sx={{mb: 3}}>
                     <CardContent>
-                        <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
+                        <Box sx={{display: 'flex', justifyContent: 'space-between', aligns: 'center', mb: 2}}>
                             <Typography variant="h6">
                                 2. Destination Images
                             </Typography>
@@ -221,7 +231,7 @@ const Manage = (props) => {
                         </Box>
                         <Grid container spacing={2}>
                             {destination.images?.map((image) => (
-                                <Grid item xs={12} sm={6} md={4} key={image.id}>
+                                <Grid  size={{xs:12}} sm={6} md={4} key={image.id}>
                                     <Card>
                                         <Box sx={{position: 'relative'}}>
                                             <Box
@@ -255,10 +265,10 @@ const Manage = (props) => {
                                             <Typography variant="subtitle2" noWrap>
                                                 {image.name}
                                             </Typography>
-                                            <Chip 
-                                                label={image.image_type} 
-                                                size="small" 
-                                                color="primary" 
+                                            <Chip
+                                                label={image.image_type}
+                                                size="small"
+                                                color="primary"
                                                 variant="outlined"
                                             />
                                         </CardContent>
@@ -266,7 +276,7 @@ const Manage = (props) => {
                                 </Grid>
                             ))}
                             {(!destination.images || destination.images.length === 0) && (
-                                <Grid item xs={12}>
+                                <Grid  size={{xs:12}}>
                                     <Typography color="text.secondary" textAlign="center">
                                         No images added yet. Click the + button to add images.
                                     </Typography>
@@ -279,7 +289,7 @@ const Manage = (props) => {
                 {/* Section 3: Destination Seasons */}
                 <Card sx={{mb: 3}}>
                     <CardContent>
-                        <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
+                        <Box sx={{display: 'flex', justifyContent: 'space-between', aligns: 'center', mb: 2}}>
                             <Typography variant="h6">
                                 3. Destination Seasons
                             </Typography>
@@ -289,10 +299,10 @@ const Manage = (props) => {
                         </Box>
                         <Grid container spacing={2}>
                             {destination.seasons?.map((season) => (
-                                <Grid item xs={12} sm={6} md={4} key={season.id}>
+                                <Grid  size={{xs:12}} sm={6} md={4} key={season.id}>
                                     <Card>
                                         <CardContent>
-                                            <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1}}>
+                                            <Box sx={{display: 'flex', justifyContent: 'space-between', aligns: 'flex-start', mb: 1}}>
                                                 <Typography variant="h6">{season.name}</Typography>
                                                 <Box>
                                                     <IconButton
@@ -315,9 +325,9 @@ const Manage = (props) => {
                                             <Typography variant="body2">
                                                 {season.description}
                                             </Typography>
-                                            <Chip 
-                                                label={season.status ? 'Active' : 'Inactive'} 
-                                                size="small" 
+                                            <Chip
+                                                label={season.status ? 'Active' : 'Inactive'}
+                                                size="small"
                                                 color={season.status ? 'success' : 'default'}
                                                 sx={{mt: 1}}
                                             />
@@ -326,7 +336,7 @@ const Manage = (props) => {
                                 </Grid>
                             ))}
                             {(!destination.seasons || destination.seasons.length === 0) && (
-                                <Grid item xs={12}>
+                                <Grid  size={{xs:12}}>
                                     <Typography color="text.secondary" textAlign="center">
                                         No seasons added yet. Click the + button to add seasons.
                                     </Typography>
@@ -339,7 +349,7 @@ const Manage = (props) => {
                 {/* Section 4: Destination Activities */}
                 <Card sx={{mb: 3}}>
                     <CardContent>
-                        <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
+                        <Box sx={{display: 'flex', justifyContent: 'space-between', aligns: 'center', mb: 2}}>
                             <Typography variant="h6">
                                 4. Destination Activities
                             </Typography>
@@ -349,10 +359,10 @@ const Manage = (props) => {
                         </Box>
                         <Grid container spacing={2}>
                             {destination.activities?.map((activity) => (
-                                <Grid item xs={12} sm={6} md={4} key={activity.id}>
+                                <Grid  size={{xs:12}} sm={6} md={4} key={activity.id}>
                                     <Card>
                                         <CardContent>
-                                            <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1}}>
+                                            <Box sx={{display: 'flex', justifyContent: 'space-between', aligns: 'flex-start', mb: 1}}>
                                                 <Typography variant="h6">{activity.name}</Typography>
                                                 <Box>
                                                     <IconButton
@@ -388,7 +398,7 @@ const Manage = (props) => {
                                 </Grid>
                             ))}
                             {(!destination.activities || destination.activities.length === 0) && (
-                                <Grid item xs={12}>
+                                <Grid  size={{xs:12}}>
                                     <Typography color="text.secondary" textAlign="center">
                                         No activities added yet. Click the + button to add activities.
                                     </Typography>
@@ -401,7 +411,7 @@ const Manage = (props) => {
                 {/* Section 5: Destination Itineraries */}
                 <Card sx={{mb: 3}}>
                     <CardContent>
-                        <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
+                        <Box sx={{display: 'flex', justifyContent: 'space-between', aligns: 'center', mb: 2}}>
                             <Typography variant="h6">
                                 5. Destination Itineraries
                             </Typography>
@@ -411,10 +421,10 @@ const Manage = (props) => {
                         </Box>
                         <Grid container spacing={2}>
                             {destination.itineraries?.map((itinerary) => (
-                                <Grid item xs={12} sm={6} md={4} key={itinerary.id}>
+                                <Grid  size={{xs:12}} sm={6} md={4} key={itinerary.id}>
                                     <Card>
                                         <CardContent>
-                                            <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1}}>
+                                            <Box sx={{display: 'flex', justifyContent: 'space-between', aligns: 'flex-start', mb: 1}}>
                                                 <Typography variant="h6">{itinerary.title}</Typography>
                                                 <Box>
                                                     <IconButton
@@ -448,9 +458,9 @@ const Manage = (props) => {
                                                     }}
                                                 />
                                             )}
-                                            <Chip 
-                                                label={itinerary.status} 
-                                                size="small" 
+                                            <Chip
+                                                label={itinerary.status}
+                                                size="small"
                                                 color={itinerary.status === 'active' ? 'success' : 'default'}
                                             />
                                         </CardContent>
@@ -458,7 +468,7 @@ const Manage = (props) => {
                                 </Grid>
                             ))}
                             {(!destination.itineraries || destination.itineraries.length === 0) && (
-                                <Grid item xs={12}>
+                                <Grid  size={{xs:12}}>
                                     <Typography color="text.secondary" textAlign="center">
                                         No itineraries added yet. Click the + button to add itineraries.
                                     </Typography>

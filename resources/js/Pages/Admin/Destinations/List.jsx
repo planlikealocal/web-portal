@@ -55,7 +55,7 @@ const List = (props) => {
     const columns = [
         {field: 'id', headerName: 'ID', width: 70},
         {
-            field: 'main_image',
+            field: 'home_image',
             headerName: 'Image',
             width: 100,
             renderCell: (params) => (

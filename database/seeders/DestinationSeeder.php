@@ -22,6 +22,8 @@ class DestinationSeeder extends Seeder
                 'country' => 'France',
                 'state_province' => 'Île-de-France',
                 'city' => 'Paris',
+                'home_image' => 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?w=800',
+                'grid_image' => 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?w=400',
             ],
             [
                 'name' => 'Tokyo Cultural Experience',
@@ -32,6 +34,8 @@ class DestinationSeeder extends Seeder
                 'country' => 'Japan',
                 'state_province' => 'Tokyo',
                 'city' => 'Tokyo',
+                'home_image' => 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800',
+                'grid_image' => 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400',
             ],
             [
                 'name' => 'New York Adventure',
@@ -42,6 +46,8 @@ class DestinationSeeder extends Seeder
                 'country' => 'USA',
                 'state_province' => 'New York',
                 'city' => 'New York',
+                'home_image' => 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800',
+                'grid_image' => 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400',
             ],
             [
                 'name' => 'London Heritage Tour',
@@ -52,6 +58,8 @@ class DestinationSeeder extends Seeder
                 'country' => 'United Kingdom',
                 'state_province' => 'England',
                 'city' => 'London',
+                'home_image' => 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800',
+                'grid_image' => 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400',
             ],
         ];
 

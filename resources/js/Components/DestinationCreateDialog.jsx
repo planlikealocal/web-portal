@@ -22,6 +22,8 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
         country: '',
         state_province: '',
         city: '',
+        home_image: '',
+        grid_image: '',
     });
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
@@ -35,6 +37,8 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
                 country: '',
                 state_province: '',
                 city: '',
+                home_image: '',
+                grid_image: '',
             });
             setErrors({});
         }
@@ -79,6 +83,8 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
             country: '',
             state_province: '',
             city: '',
+            home_image: '',
+            grid_image: '',
         });
         setErrors({});
     };
@@ -161,6 +167,24 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
                             helperText={errors.city}
                             fullWidth
                             required
+                        />
+                        
+                        <TextField
+                            label="Home Image URL"
+                            value={formData.home_image}
+                            onChange={handleChange('home_image')}
+                            error={!!errors.home_image}
+                            helperText={errors.home_image}
+                            fullWidth
+                        />
+                        
+                        <TextField
+                            label="Grid Image URL"
+                            value={formData.grid_image}
+                            onChange={handleChange('grid_image')}
+                            error={!!errors.grid_image}
+                            helperText={errors.grid_image}
+                            fullWidth
                         />
                     </Box>
                 </DialogContent>

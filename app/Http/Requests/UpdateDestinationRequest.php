@@ -29,6 +29,8 @@ class UpdateDestinationRequest extends FormRequest
             'country' => 'required|string|max:255',
             'state_province' => 'required|string|max:255',
             'city' => 'required|string|max:255',
+            'home_image' => 'nullable|string|max:255',
+            'grid_image' => 'nullable|string|max:255',
             'status' => 'nullable|in:draft,active,inactive',
         ];
     }

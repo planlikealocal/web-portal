@@ -19,6 +19,8 @@ class Destination extends Model
         'country',
         'state_province',
         'city',
+        'home_image',
+        'grid_image',
     ];
 
     protected function casts(): array

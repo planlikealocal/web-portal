@@ -25,6 +25,8 @@ class DestinationResource extends JsonResource
             'state_province' => $this->state_province,
             'city' => $this->city,
             'full_location' => $this->full_location,
+            'home_image' => $this->home_image,
+            'grid_image' => $this->grid_image,
             'images' => $this->whenLoaded('images', function () {
                 return $this->images->map(function ($image) {
                     return [
