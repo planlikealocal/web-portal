@@ -135,14 +135,29 @@ class DestinationController extends Controller
     }
 
     /**
-     * Toggle destination status
+     * Upload image and return storage URL
      */
-    public function toggleStatus(Destination $destination)
+    public function uploadImage(Request $request)
     {
-        $destination->status = $destination->status === 'active' ? 'inactive' : 'active';
-        $destination->save();
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
 
-        return redirect()->back()
-            ->with('success', 'Destination status updated successfully.');
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $path = $file->store('destinations', 'public');
+            $url = asset('storage/' . $path);
+            
+            return response()->json([
+                'success' => true,
+                'url' => $url,
+                'path' => $path
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'No image uploaded'
+        ], 400);
     }
 }

@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import {Close as CloseIcon} from '@mui/icons-material';
 import {router, usePage} from '@inertiajs/react';
+import ImageUploader from './ImageUploader';
 
 const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
     const [formData, setFormData] = useState({
@@ -115,13 +116,14 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
                             required
                         />
                         
-                        <TextField
-                            label="Home Image URL"
+                        <ImageUploader
                             value={formData.home_image}
                             onChange={handleChange('home_image')}
                             error={!!errors.home_image}
                             helperText={errors.home_image}
-                            fullWidth
+                            label="Home Image *"
+                            previewHeight={150}
+                            previewWidth={250}
                         />
                     </Box>
                 </DialogContent>

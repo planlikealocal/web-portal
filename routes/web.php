@@ -39,6 +39,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/destinations/{destination}', [DestinationController::class, 'update'])->name('destinations.update');
         Route::delete('/destinations/{destination}', [DestinationController::class, 'destroy'])->name('destinations.destroy');
         Route::post('/destinations/{destination}/toggle-status', [DestinationController::class, 'toggleStatus'])->name('destinations.toggle-status');
+        Route::post('/destinations/upload-image', [DestinationController::class, 'uploadImage'])->name('destinations.upload-image');
         
         // Test notification route (for development/demo purposes)
         Route::post('/test-notifications', function () {
