@@ -40,15 +40,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/destinations/{destination}', [DestinationController::class, 'destroy'])->name('destinations.destroy');
         Route::post('/destinations/{destination}/toggle-status', [DestinationController::class, 'toggleStatus'])->name('destinations.toggle-status');
         
-        // Test storage access
-        Route::get('/test-storage/{filename}', function ($filename) {
-            $path = storage_path('app/public/destinations/' . $filename);
-            if (file_exists($path)) {
-                return response()->file($path);
-            }
-            return response('File not found', 404);
-        })->name('test.storage');
-        
         // Test notification route (for development/demo purposes)
         Route::post('/test-notifications', function () {
             $type = request('type', 'info');

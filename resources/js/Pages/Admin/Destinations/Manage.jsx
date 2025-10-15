@@ -142,24 +142,95 @@ const Manage = (props) => {
                 <Typography variant="h4" component="h1" sx={{mb: 3}}>
                     Manage Destination: {destination.name}
                 </Typography>
-                <Card sx={{mb: 3}}>
+                {/* Home Page Preview Card */}
+                <Card sx={{mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white'}}>
                     <CardContent>
-                        <Box sx={{display: 'flex', justifyContent: 'space-between', aligns: 'center', mb: 2}}>
-                            <Typography variant="h6">
-                                Home page card
-                            </Typography>
-
-                        </Box>
+                        <Typography variant="h5" sx={{mb: 2, fontWeight: 'bold'}}>
+                            Home Page Preview
+                        </Typography>
+                        <Grid container spacing={3} alignItems="center">
+                            <Grid size={{xs: 12, md: 4}}>
+                                {destination.home_image ? (
+                                    <Box
+                                        component="img"
+                                        src={destination.home_image}
+                                        alt={destination.name}
+                                        sx={{
+                                            width: '100%',
+                                            height: 200,
+                                            objectFit: 'cover',
+                                            borderRadius: 2,
+                                            border: '2px solid rgba(255,255,255,0.3)',
+                                        }}
+                                    />
+                                ) : (
+                                    <Box
+                                        sx={{
+                                            width: '100%',
+                                            height: 200,
+                                            backgroundColor: 'rgba(255,255,255,0.1)',
+                                            borderRadius: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            border: '2px dashed rgba(255,255,255,0.3)',
+                                        }}
+                                    >
+                                        <Typography variant="body2" color="inherit">
+                                            No Image
+                                        </Typography>
+                                    </Box>
+                                )}
+                            </Grid>
+                            <Grid size={{xs: 12, md: 8}}>
+                                <Typography variant="h4" sx={{mb: 1, fontWeight: 'bold'}}>
+                                    {destination.name}
+                                </Typography>
+                                <Typography variant="h6" sx={{mb: 2, opacity: 0.9}}>
+                                    {destination.overview_title}
+                                </Typography>
+                                <Typography variant="body1" sx={{mb: 2, opacity: 0.8, lineHeight: 1.6}}>
+                                    {destination.description}
+                                </Typography>
+                                <Chip 
+                                    label={destination.status.toUpperCase()} 
+                                    color={destination.status === 'active' ? 'success' : 'default'}
+                                    sx={{color: 'white', fontWeight: 'bold'}}
+                                />
+                            </Grid>
+                        </Grid>
                     </CardContent>
                 </Card>
-                {/* Section 1: Basic Information */}
+                {/* Section 1: Home Page Information */}
                 <Card sx={{mb: 3}}>
                     <CardContent>
                         <Typography variant="h6" sx={{mb: 2}}>
-                            1. Basic Information
+                            1. Home Page Information
                         </Typography>
+                        
+                        {/* Home Image Display */}
+                        {destination.home_image && (
+                            <Box sx={{mb: 3, textAlign: 'center'}}>
+                                <Typography variant="subtitle2" sx={{mb: 1}}>
+                                    Home Image Preview
+                                </Typography>
+                                <Box
+                                    component="img"
+                                    src={destination.home_image}
+                                    alt={destination.name}
+                                    sx={{
+                                        maxWidth: '100%',
+                                        height: 300,
+                                        objectFit: 'cover',
+                                        borderRadius: 2,
+                                        border: '1px solid',
+                                        borderColor: 'grey.300',
+                                    }}
+                                />
+                            </Box>
+                        )}
+                        
                         <Grid container spacing={2}>
-
                             <Grid size={{xs:12, md: 6}}>
                                 <TextField
                                     label="Name"
@@ -170,7 +241,7 @@ const Manage = (props) => {
                                     fullWidth
                                 />
                             </Grid>
-                            <Grid size={{xs:12, md: 6}} >
+                            <Grid size={{xs:12, md: 6}}>
                                 <TextField
                                     label="Overview Title"
                                     value={basicInfo.overview_title}
@@ -192,7 +263,7 @@ const Manage = (props) => {
                                     rows={3}
                                 />
                             </Grid>
-                            <Grid  size={{xs:12}}>
+                            <Grid size={{xs:12}}>
                                 <TextField
                                     label="Overview"
                                     value={basicInfo.overview}
@@ -204,14 +275,14 @@ const Manage = (props) => {
                                     rows={4}
                                 />
                             </Grid>
-                            <Grid  size={{xs:12}}>
+                            <Grid size={{xs:12}}>
                                 <Button
                                     variant="contained"
                                     startIcon={<SaveIcon />}
                                     onClick={handleSaveBasicInfo}
                                     disabled={savingBasicInfo}
                                 >
-                                    {savingBasicInfo ? 'Saving...' : 'Save Basic Information'}
+                                    {savingBasicInfo ? 'Saving...' : 'Save Home Page Information'}
                                 </Button>
                             </Grid>
                         </Grid>
