@@ -20,6 +20,7 @@ import {
   People as PeopleIcon,
   Logout as LogoutIcon,
   Home as HomeIcon,
+  Place as PlaceIcon,
 } from '@mui/icons-material';
 import { Link, router } from '@inertiajs/react';
 import adminTheme from '../themes/adminTheme';
@@ -41,6 +42,7 @@ const AdminLayout = ({ children }) => {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, href: '/admin' },
     { text: 'Specialists', icon: <PeopleIcon />, href: '/admin/specialists' },
+    { text: 'Destinations', icon: <PlaceIcon />, href: '/admin/destinations' },
     { text: 'Back to Website', icon: <HomeIcon />, href: '/' },
   ];
 
