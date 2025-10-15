@@ -15,12 +15,13 @@ import {Close as CloseIcon} from '@mui/icons-material';
 import {router, usePage} from '@inertiajs/react';
 
 const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
-    const {locations} = usePage().props;
     const [formData, setFormData] = useState({
         name: '',
         overview_title: '',
         overview: '',
-        location_id: '',
+        country: '',
+        state_province: '',
+        city: '',
     });
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
@@ -31,7 +32,9 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
                 name: '',
                 overview_title: '',
                 overview: '',
-                location_id: '',
+                country: '',
+                state_province: '',
+                city: '',
             });
             setErrors({});
         }
@@ -73,7 +76,9 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
             name: '',
             overview_title: '',
             overview: '',
-            location_id: '',
+            country: '',
+            state_province: '',
+            city: '',
         });
         setErrors({});
     };
@@ -129,25 +134,34 @@ const DestinationCreateDialog = ({open, onClose, onSuccess}) => {
                         />
                         
                         <TextField
-                            select
-                            label="Location *"
-                            value={formData.location_id}
-                            onChange={handleChange('location_id')}
-                            error={!!errors.location_id}
-                            helperText={errors.location_id}
+                            label="Country *"
+                            value={formData.country}
+                            onChange={handleChange('country')}
+                            error={!!errors.country}
+                            helperText={errors.country}
                             fullWidth
                             required
-                            SelectProps={{
-                                native: true,
-                            }}
-                        >
-                            <option value="">Select a location</option>
-                            {locations?.map((location) => (
-                                <option key={location.id} value={location.id}>
-                                    {location.name}, {location.city}, {location.country}
-                                </option>
-                            ))}
-                        </TextField>
+                        />
+                        
+                        <TextField
+                            label="State/Province *"
+                            value={formData.state_province}
+                            onChange={handleChange('state_province')}
+                            error={!!errors.state_province}
+                            helperText={errors.state_province}
+                            fullWidth
+                            required
+                        />
+                        
+                        <TextField
+                            label="City *"
+                            value={formData.city}
+                            onChange={handleChange('city')}
+                            error={!!errors.city}
+                            helperText={errors.city}
+                            fullWidth
+                            required
+                        />
                     </Box>
                 </DialogContent>
                 

@@ -27,12 +27,12 @@ class DestinationRepository implements DestinationRepositoryInterface
 
     public function find(int $id): ?Destination
     {
-        return Destination::with(['location', 'images', 'seasons', 'activities', 'itineraries'])->find($id);
+        return Destination::with(['images', 'seasons', 'activities', 'itineraries'])->find($id);
     }
 
     public function getAll(array $filters = []): Collection
     {
-        $query = Destination::with(['location', 'images']);
+        $query = Destination::with(['images']);
 
         if (isset($filters['status'])) {
             $query->where('status', $filters['status']);
@@ -52,7 +52,7 @@ class DestinationRepository implements DestinationRepositoryInterface
 
     public function getAllPaginated(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = Destination::with(['location', 'images']);
+        $query = Destination::with(['images']);
 
         if (isset($filters['status'])) {
             $query->where('status', $filters['status']);
@@ -72,17 +72,17 @@ class DestinationRepository implements DestinationRepositoryInterface
 
     public function getActive(): Collection
     {
-        return Destination::with(['location', 'images'])->active()->get();
+        return Destination::with(['images'])->active()->get();
     }
 
     public function getDraft(): Collection
     {
-        return Destination::with(['location', 'images'])->draft()->get();
+        return Destination::with(['images'])->draft()->get();
     }
 
     public function search(string $query): Collection
     {
-        return Destination::with(['location', 'images'])
+        return Destination::with(['images'])
             ->where('name', 'like', "%{$query}%")
             ->orWhere('overview_title', 'like', "%{$query}%")
             ->orWhere('description', 'like', "%{$query}%")

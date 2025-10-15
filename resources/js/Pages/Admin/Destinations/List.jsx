@@ -93,18 +93,16 @@ const List = (props) => {
         {field: 'name', headerName: 'Name', flex: 1, minWidth: 150},
         {field: 'overview_title', headerName: 'Overview Title', flex: 1, minWidth: 150},
         {
-            field: 'location',
+            field: 'country',
             headerName: 'Country',
             width: 120,
-            renderCell: (params) => params.value?.country || 'N/A',
         },
         {
-            field: 'location',
+            field: 'state_province',
             headerName: 'State/City',
             width: 150,
             renderCell: (params) => {
-                const location = params.value;
-                return location ? `${location.state_province}, ${location.city}` : 'N/A';
+                return `${params.row.state_province}, ${params.row.city}`;
             },
         },
         {

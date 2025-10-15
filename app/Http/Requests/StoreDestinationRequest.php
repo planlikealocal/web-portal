@@ -26,7 +26,9 @@ class StoreDestinationRequest extends FormRequest
             'overview_title' => 'required|string|max:255',
             'overview' => 'nullable|string',
             'description' => 'nullable|string',
-            'location_id' => 'required|exists:locations,id',
+            'country' => 'required|string|max:255',
+            'state_province' => 'required|string|max:255',
+            'city' => 'required|string|max:255',
             'status' => 'nullable|in:draft,active,inactive',
         ];
     }

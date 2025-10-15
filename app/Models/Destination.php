@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Destination extends Model
@@ -17,7 +16,9 @@ class Destination extends Model
         'overview_title',
         'overview',
         'status',
-        'location_id',
+        'country',
+        'state_province',
+        'city',
     ];
 
     protected function casts(): array
@@ -31,13 +32,6 @@ class Destination extends Model
         'status' => 'draft',
     ];
 
-    /**
-     * Get the location that owns the destination.
-     */
-    public function location(): BelongsTo
-    {
-        return $this->belongsTo(Location::class);
-    }
 
     /**
      * Get the images for the destination.
@@ -93,5 +87,14 @@ class Destination extends Model
     public function getMainImageAttribute()
     {
         return $this->images()->where('image_type', 'banner')->first();
+    }
+
+    /**
+     * Get the full location string
+     */
+    public function getFullLocationAttribute(): string
+    {
+        $parts = array_filter([$this->city, $this->state_province, $this->country]);
+        return implode(', ', $parts);
     }
 }

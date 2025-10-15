@@ -11,7 +11,6 @@ use App\Http\Resources\DestinationResource;
 use App\Http\Requests\StoreDestinationRequest;
 use App\Http\Requests\UpdateDestinationRequest;
 use App\Models\Destination;
-use App\Models\Location;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -51,11 +50,7 @@ class DestinationController extends Controller
      */
     public function create(): Response
     {
-        $locations = Location::all();
-        
-        return Inertia::render('Admin/Destinations/Create', [
-            'locations' => $locations,
-        ]);
+        return Inertia::render('Admin/Destinations/Create');
     }
 
     /**
@@ -89,12 +84,10 @@ class DestinationController extends Controller
      */
     public function edit(Destination $destination): Response
     {
-        $destination->load(['location', 'images', 'seasons', 'activities', 'itineraries']);
-        $locations = Location::all();
+        $destination->load(['images', 'seasons', 'activities', 'itineraries']);
         
         return Inertia::render('Admin/Destinations/Edit', [
             'destination' => new DestinationResource($destination),
-            'locations' => $locations,
         ]);
     }
 
@@ -127,7 +120,7 @@ class DestinationController extends Controller
      */
     public function manage(Destination $destination): Response
     {
-        $destination->load(['location', 'images', 'seasons', 'activities', 'itineraries']);
+        $destination->load(['images', 'seasons', 'activities', 'itineraries']);
         
         return Inertia::render('Admin/Destinations/Manage', [
             'destination' => new DestinationResource($destination),

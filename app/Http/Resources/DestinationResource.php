@@ -21,16 +21,10 @@ class DestinationResource extends JsonResource
             'overview_title' => $this->overview_title,
             'overview' => $this->overview,
             'status' => $this->status,
-            'location_id' => $this->location_id,
-            'location' => $this->whenLoaded('location', function () {
-                return [
-                    'id' => $this->location->id,
-                    'name' => $this->location->name,
-                    'country' => $this->location->country,
-                    'state_province' => $this->location->state_province,
-                    'city' => $this->location->city,
-                ];
-            }),
+            'country' => $this->country,
+            'state_province' => $this->state_province,
+            'city' => $this->city,
+            'full_location' => $this->full_location,
             'images' => $this->whenLoaded('images', function () {
                 return $this->images->map(function ($image) {
                     return [

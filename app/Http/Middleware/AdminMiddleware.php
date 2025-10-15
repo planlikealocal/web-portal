@@ -18,7 +18,6 @@ class AdminMiddleware
         if (!auth()->check()) {
             return redirect()->route('admin.login');
         }
-
         if (!auth()->user()->isAdmin()) {
             abort(403, 'Unauthorized access. Admin privileges required.');
         }
