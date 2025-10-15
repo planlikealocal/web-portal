@@ -112,6 +112,13 @@ class DestinationController extends Controller
     public function update(UpdateDestinationRequest $request, Destination $destination)
     {
         $data = $request->validated();
+        
+        // Handle image upload
+        if ($request->hasFile('home_image')) {
+            $file = $request->file('home_image');
+            $path = $file->store('destinations', 'public');
+            $data['home_image'] = Storage::disk('public')->url($path);
+        }
 
         $destination = $this->updateDestinationAction->execute($destination, $data);
 

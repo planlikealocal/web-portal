@@ -25,6 +25,7 @@ import {
 } from '@mui/icons-material';
 import {router, usePage} from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout.jsx';
+import ImageUploader from '../../../Components/ImageUploader.jsx';
 
 const Manage = (props) => {
     const {destination} = props;
@@ -33,6 +34,7 @@ const Manage = (props) => {
         description: destination.description || '',
         overview_title: destination.overview_title || '',
         overview: destination.overview || '',
+        home_image: destination.home_image || null,
     });
     const [basicInfoErrors, setBasicInfoErrors] = useState({});
     const [savingBasicInfo, setSavingBasicInfo] = useState(false);
@@ -44,10 +46,10 @@ const Manage = (props) => {
     const [itineraryDialogOpen, setItineraryDialogOpen] = useState(false);
     const [editing, setEditing] = useState(null);
 
-    const handleBasicInfoChange = (field) => (event) => {
+    const handleBasicInfoChange = (field) => (value) => {
         setBasicInfo(prev => ({
             ...prev,
-            [field]: event.target.value
+            [field]: value
         }));
         if (basicInfoErrors[field]) {
             setBasicInfoErrors(prev => ({
@@ -61,7 +63,16 @@ const Manage = (props) => {
         setSavingBasicInfo(true);
         setBasicInfoErrors({});
 
-        router.post(`/admin/destinations/${destination.id}`, basicInfo, {
+        const formData = new FormData();
+        formData.append('name', basicInfo.name);
+        formData.append('description', basicInfo.description);
+        formData.append('overview_title', basicInfo.overview_title);
+        formData.append('overview', basicInfo.overview);
+        if (basicInfo.home_image) {
+            formData.append('home_image', basicInfo.home_image);
+        }
+
+        router.post(`/admin/destinations/${destination.id}`, formData, {
             onSuccess: () => {
                 setSavingBasicInfo(false);
             },
@@ -142,65 +153,6 @@ const Manage = (props) => {
                 <Typography variant="h4" component="h1" sx={{mb: 3}}>
                     Manage Destination: {destination.name}
                 </Typography>
-                {/* Home Page Preview Card */}
-                <Card sx={{mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white'}}>
-                    <CardContent>
-                        <Typography variant="h5" sx={{mb: 2, fontWeight: 'bold'}}>
-                            Home Page Preview
-                        </Typography>
-                        <Grid container spacing={3} alignItems="center">
-                            <Grid size={{xs: 12, md: 4}}>
-                                {destination.home_image ? (
-                                    <Box
-                                        component="img"
-                                        src={destination.home_image}
-                                        alt={destination.name}
-                                        sx={{
-                                            width: '100%',
-                                            height: 200,
-                                            objectFit: 'cover',
-                                            borderRadius: 2,
-                                            border: '2px solid rgba(255,255,255,0.3)',
-                                        }}
-                                    />
-                                ) : (
-                                    <Box
-                                        sx={{
-                                            width: '100%',
-                                            height: 200,
-                                            backgroundColor: 'rgba(255,255,255,0.1)',
-                                            borderRadius: 2,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            border: '2px dashed rgba(255,255,255,0.3)',
-                                        }}
-                                    >
-                                        <Typography variant="body2" color="inherit">
-                                            No Image
-                                        </Typography>
-                                    </Box>
-                                )}
-                            </Grid>
-                            <Grid size={{xs: 12, md: 8}}>
-                                <Typography variant="h4" sx={{mb: 1, fontWeight: 'bold'}}>
-                                    {destination.name}
-                                </Typography>
-                                <Typography variant="h6" sx={{mb: 2, opacity: 0.9}}>
-                                    {destination.overview_title}
-                                </Typography>
-                                <Typography variant="body1" sx={{mb: 2, opacity: 0.8, lineHeight: 1.6}}>
-                                    {destination.description}
-                                </Typography>
-                                <Chip 
-                                    label={destination.status.toUpperCase()} 
-                                    color={destination.status === 'active' ? 'success' : 'default'}
-                                    sx={{color: 'white', fontWeight: 'bold'}}
-                                />
-                            </Grid>
-                        </Grid>
-                    </CardContent>
-                </Card>
                 {/* Section 1: Home Page Information */}
                 <Card sx={{mb: 3}}>
                     <CardContent>
@@ -208,34 +160,12 @@ const Manage = (props) => {
                             1. Home Page Information
                         </Typography>
                         
-                        {/* Home Image Display */}
-                        {destination.home_image && (
-                            <Box sx={{mb: 3, textAlign: 'center'}}>
-                                <Typography variant="subtitle2" sx={{mb: 1}}>
-                                    Home Image Preview
-                                </Typography>
-                                <Box
-                                    component="img"
-                                    src={destination.home_image}
-                                    alt={destination.name}
-                                    sx={{
-                                        maxWidth: '100%',
-                                        height: 300,
-                                        objectFit: 'cover',
-                                        borderRadius: 2,
-                                        border: '1px solid',
-                                        borderColor: 'grey.300',
-                                    }}
-                                />
-                            </Box>
-                        )}
-                        
                         <Grid container spacing={2}>
                             <Grid size={{xs:12, md: 6}}>
                                 <TextField
                                     label="Name"
                                     value={basicInfo.name}
-                                    onChange={handleBasicInfoChange('name')}
+                                    onChange={(e) => handleBasicInfoChange('name')(e.target.value)}
                                     error={!!basicInfoErrors.name}
                                     helperText={basicInfoErrors.name}
                                     fullWidth
@@ -245,7 +175,7 @@ const Manage = (props) => {
                                 <TextField
                                     label="Overview Title"
                                     value={basicInfo.overview_title}
-                                    onChange={handleBasicInfoChange('overview_title')}
+                                    onChange={(e) => handleBasicInfoChange('overview_title')(e.target.value)}
                                     error={!!basicInfoErrors.overview_title}
                                     helperText={basicInfoErrors.overview_title}
                                     fullWidth
@@ -255,7 +185,7 @@ const Manage = (props) => {
                                 <TextField
                                     label="Description"
                                     value={basicInfo.description}
-                                    onChange={handleBasicInfoChange('description')}
+                                    onChange={(e) => handleBasicInfoChange('description')(e.target.value)}
                                     error={!!basicInfoErrors.description}
                                     helperText={basicInfoErrors.description}
                                     fullWidth
@@ -264,10 +194,21 @@ const Manage = (props) => {
                                 />
                             </Grid>
                             <Grid size={{xs:12}}>
+                                <ImageUploader
+                                    value={basicInfo.home_image}
+                                    onChange={handleBasicInfoChange('home_image')}
+                                    error={!!basicInfoErrors.home_image}
+                                    helperText={basicInfoErrors.home_image}
+                                    label="Home Image"
+                                    previewHeight={200}
+                                    previewWidth={300}
+                                />
+                            </Grid>
+                            <Grid size={{xs:12}}>
                                 <TextField
                                     label="Overview"
                                     value={basicInfo.overview}
-                                    onChange={handleBasicInfoChange('overview')}
+                                    onChange={(e) => handleBasicInfoChange('overview')(e.target.value)}
                                     error={!!basicInfoErrors.overview}
                                     helperText={basicInfoErrors.overview}
                                     fullWidth
