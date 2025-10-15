@@ -40,6 +40,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/destinations/{destination}', [DestinationController::class, 'destroy'])->name('destinations.destroy');
         Route::post('/destinations/{destination}/toggle-status', [DestinationController::class, 'toggleStatus'])->name('destinations.toggle-status');
         
+        // Destination Images routes
+        Route::post('/destinations/{destination}/images', [DestinationController::class, 'storeImage'])->name('destinations.images.store');
+        Route::match(['post', 'put'], '/destinations/{destination}/images/{image}', [DestinationController::class, 'updateImage'])->name('destinations.images.update');
+        Route::delete('/destinations/{destination}/images/{image}', [DestinationController::class, 'destroyImage'])->name('destinations.images.destroy');
+        
         // Test notification route (for development/demo purposes)
         Route::post('/test-notifications', function () {
             $type = request('type', 'info');

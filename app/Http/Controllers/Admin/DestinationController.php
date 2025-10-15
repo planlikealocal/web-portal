@@ -6,11 +6,14 @@ use App\Actions\Destination\CreateDestinationAction;
 use App\Actions\Destination\DeleteDestinationAction;
 use App\Actions\Destination\GetDestinationsAction;
 use App\Actions\Destination\UpdateDestinationAction;
+use App\Actions\Specialist\GetSpecialistsAction;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DestinationResource;
+use App\Http\Resources\SpecialistResource;
 use App\Http\Requests\StoreDestinationRequest;
 use App\Http\Requests\UpdateDestinationRequest;
 use App\Models\Destination;
+use App\Models\DestinationImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -23,6 +26,7 @@ class DestinationController extends Controller
         private CreateDestinationAction     $createDestinationAction,
         private UpdateDestinationAction     $updateDestinationAction,
         private DeleteDestinationAction     $deleteDestinationAction,
+        private GetSpecialistsAction        $getSpecialistsAction,
     )
     {
     }
@@ -113,11 +117,22 @@ class DestinationController extends Controller
     {
         $data = $request->validated();
         
-        // Handle image upload
+        // Handle specialist_ids - convert JSON string to array
+        if (isset($data['specialist_ids']) && is_string($data['specialist_ids'])) {
+            $data['specialist_ids'] = json_decode($data['specialist_ids'], true) ?? [];
+        }
+        
+        // Handle image uploads
         if ($request->hasFile('home_image')) {
             $file = $request->file('home_image');
             $path = $file->store('destinations', 'public');
             $data['home_image'] = Storage::disk('public')->url($path);
+        }
+        
+        if ($request->hasFile('grid_image')) {
+            $file = $request->file('grid_image');
+            $path = $file->store('destinations', 'public');
+            $data['grid_image'] = Storage::disk('public')->url($path);
         }
 
         $destination = $this->updateDestinationAction->execute($destination, $data);
@@ -144,9 +159,105 @@ class DestinationController extends Controller
     {
         $destination->load(['images', 'seasons', 'activities', 'itineraries']);
         
+        // Load all active specialists for the multi-select
+        $specialists = $this->getSpecialistsAction->execute(['status' => 'active']);
+        
         return Inertia::render('Admin/Destinations/Manage', [
             'destination' => new DestinationResource($destination),
+            'specialists' => SpecialistResource::collection($specialists),
         ]);
+    }
+
+    /**
+     * Store a new destination image
+     */
+    public function storeImage(Request $request, Destination $destination)
+    {
+        // Log the request for debugging
+        \Log::info('Store image request', [
+            'destination_id' => $destination->id,
+            'request_data' => $request->all()
+        ]);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif',
+        ]);
+
+        $data = $request->only(['name', 'description']);
+        $data['image_type'] = 'gallery'; // Always gallery
+        
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $path = $file->store('destination-images', 'public');
+            $data['url'] = Storage::disk('public')->url($path);
+        }
+
+        $data['destination_id'] = $destination->id;
+        
+        DestinationImage::create($data);
+
+        return redirect()->route('admin.destinations.manage', $destination->id)
+            ->with('success', 'Image added successfully.');
+    }
+
+    /**
+     * Update a destination image
+     */
+    public function updateImage(Request $request, Destination $destination, DestinationImage $image)
+    {
+        // Log the request for debugging
+        \Log::info('Update image request', [
+            'destination_id' => $destination->id,
+            'image_id' => $image->id,
+            'request_data' => $request->all()
+        ]);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+        ]);
+
+        $data = $request->only(['name', 'description']);
+        $data['image_type'] = 'gallery'; // Always gallery
+        
+        // Handle image upload if new image provided
+        if ($request->hasFile('image')) {
+            // Delete old image
+            if ($image->url) {
+                $oldPath = str_replace(Storage::disk('public')->url(''), '', $image->url);
+                Storage::disk('public')->delete($oldPath);
+            }
+            
+            $file = $request->file('image');
+            $path = $file->store('destination-images', 'public');
+            $data['url'] = Storage::disk('public')->url($path);
+        }
+
+        $image->update($data);
+
+        return redirect()->route('admin.destinations.manage', $destination->id)
+            ->with('success', 'Image updated successfully.');
+    }
+
+    /**
+     * Delete a destination image
+     */
+    public function destroyImage(Destination $destination, DestinationImage $image)
+    {
+        // Delete image file
+        if ($image->url) {
+            $path = str_replace(Storage::disk('public')->url(''), '', $image->url);
+            Storage::disk('public')->delete($path);
+        }
+
+        $image->delete();
+
+        return redirect()->route('admin.destinations.manage', $destination->id)
+            ->with('success', 'Image deleted successfully.');
     }
 
 }

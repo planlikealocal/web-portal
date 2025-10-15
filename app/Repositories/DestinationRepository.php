@@ -16,6 +16,7 @@ class DestinationRepository implements DestinationRepositoryInterface
 
     public function update(Destination $destination, array $data): Destination
     {
+
         $destination->update($data);
         return $destination->fresh();
     }

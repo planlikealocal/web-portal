@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -18,9 +18,26 @@ const ImageUploader = ({
   previewHeight = 200,
   previewWidth = 300 
 }) => {
-  const [preview, setPreview] = useState(value || '');
+  const [preview, setPreview] = useState('');
   const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef(null);
+
+  // Update preview when value changes
+  useEffect(() => {
+    if (value instanceof File) {
+      const previewUrl = URL.createObjectURL(value);
+      setPreview(previewUrl);
+      
+      // Cleanup function to revoke object URL
+      return () => {
+        URL.revokeObjectURL(previewUrl);
+      };
+    } else if (typeof value === 'string' && value) {
+      setPreview(value);
+    } else {
+      setPreview('');
+    }
+  }, [value]);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -31,11 +48,7 @@ const ImageUploader = ({
         return;
       }
 
-      // Validate file size (2MB max)
-      if (file.size > 2 * 1024 * 1024) {
-        setUploadError('File size must be less than 2MB');
-        return;
-      }
+      // No size validation - removed as requested
 
       setUploadError('');
       

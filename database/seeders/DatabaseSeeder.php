@@ -19,5 +19,11 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Seed specialists and destination images
+        $this->call([
+            SpecialistSeeder::class,
+            DestinationImageSeeder::class,
+        ]);
     }
 }

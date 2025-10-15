@@ -21,12 +21,14 @@ class Destination extends Model
         'city',
         'home_image',
         'grid_image',
+        'specialist_ids',
     ];
 
     protected function casts(): array
     {
         return [
             'status' => 'string',
+            'specialist_ids' => 'array',
         ];
     }
 

@@ -26,12 +26,13 @@ class UpdateDestinationRequest extends FormRequest
             'overview_title' => 'required|string|max:255',
             'overview' => 'nullable|string',
             'description' => 'nullable|string',
-            'country' => 'required|string|max:255',
-            'state_province' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
+            'country' => 'nullable|string|max:255',
+            'state_province' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
             'home_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'grid_image' => 'nullable|string|max:255',
+            'grid_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'status' => 'nullable|in:draft,active,inactive',
+            'specialist_ids' => 'nullable|string',
         ];
     }
 }
