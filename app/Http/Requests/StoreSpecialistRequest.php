@@ -28,7 +28,7 @@ class StoreSpecialistRequest extends FormRequest
             'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'bio' => 'nullable|string|max:1000',
             'contact_no' => 'required|string|max:255',
-            'country' => 'required|string|max:255',
+            'country_id' => 'required|exists:countries,id',
             'state_province' => 'required|string|max:255',
             'city' => 'required|string|max:255',
             'address' => 'required|string',

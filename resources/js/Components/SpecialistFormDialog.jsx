@@ -31,7 +31,7 @@ const SpecialistFormDialog = ({open, onClose, specialist = null, reSetForm =fals
         profile_pic: null,
         bio: '',
         contact_no: '',
-        country: '',
+        country_id: null,
         state_province: '',
         city: '',
         address: '',
@@ -57,7 +57,7 @@ const SpecialistFormDialog = ({open, onClose, specialist = null, reSetForm =fals
                 profile_pic: null, // don't preload a File object
                 bio: specialist.bio || '',
                 contact_no: specialist.contact_no || '',
-                country: specialist.country || '',
+                country_id: specialist.country_id || null,
                 state_province: specialist.state_province || '',
                 city: specialist.city || '',
                 address: specialist.address || '',
@@ -256,16 +256,34 @@ const SpecialistFormDialog = ({open, onClose, specialist = null, reSetForm =fals
                             />
                         </Grid>
                         <Grid size={{xs: 12, sm: 6}}>
-                            <TextField
-                                fullWidth
-                                size="small"
-                                label="Country"
-                                value={data.country}
-                                onChange={(e) => setData('country', e.target.value)}
-                                error={!!errors.country}
-                                helperText={errors.country}
-                                required
-                            />
+                            <FormControl fullWidth required size="small" error={!!errors.country_id}>
+                                <InputLabel>Country</InputLabel>
+                                <Select
+                                    value={data.country_id || ''}
+                                    label="Country"
+                                    onChange={(e) => setData('country_id', e.target.value)}
+                                >
+                                    {props.countries?.map((country) => (
+                                        <MenuItem key={country.id} value={country.id}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                {country.flag_url && (
+                                                    <Avatar
+                                                        src={country.flag_url}
+                                                        alt={country.name}
+                                                        sx={{ width: 20, height: 20 }}
+                                                    />
+                                                )}
+                                                <Typography variant="body2">{country.name}</Typography>
+                                            </Box>
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                                {errors.country_id && (
+                                    <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                                        {errors.country_id}
+                                    </Typography>
+                                )}
+                            </FormControl>
                         </Grid>
                         <Grid size={{xs: 12, sm: 6}}>
                             <TextField

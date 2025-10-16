@@ -12,6 +12,7 @@ class Country extends Model
 
     protected $fillable = [
         'name',
+        'code',
         'flag_url',
     ];
 
@@ -20,6 +21,14 @@ class Country extends Model
         return [
             // No special casting needed for simplified model
         ];
+    }
+
+    /**
+     * Get the specialists for the country.
+     */
+    public function specialists(): HasMany
+    {
+        return $this->hasMany(Specialist::class);
     }
 
     /**

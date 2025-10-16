@@ -53,7 +53,7 @@ class SpecialistRepository implements SpecialistRepositoryInterface
             });
         }
 
-        return $query->orderBy('created_at', 'desc')->get();
+        return $query->with('country')->orderBy('created_at', 'desc')->get();
     }
 
     public function getAllPaginated(array $filters = [], int $perPage = 15): LengthAwarePaginator
@@ -74,17 +74,17 @@ class SpecialistRepository implements SpecialistRepositoryInterface
             });
         }
 
-        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+        return $query->with('country')->orderBy('created_at', 'desc')->paginate($perPage);
     }
 
     public function getActive(): Collection
     {
-        return Specialist::active()->get();
+        return Specialist::active()->with('country')->get();
     }
 
     public function getInactive(): Collection
     {
-        return Specialist::inactive()->get();
+        return Specialist::inactive()->with('country')->get();
     }
 
     public function search(string $query): Collection
@@ -94,7 +94,7 @@ class SpecialistRepository implements SpecialistRepositoryInterface
               ->orWhere('last_name', 'like', "%{$query}%")
               ->orWhere('email', 'like', "%{$query}%")
               ->orWhere('contact_no', 'like', "%{$query}%");
-        })->get();
+        })->with('country')->get();
     }
 
     public function getStatistics(): array

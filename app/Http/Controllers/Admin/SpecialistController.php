@@ -7,10 +7,12 @@ use App\Actions\Specialist\DeleteSpecialistAction;
 use App\Actions\Specialist\GetSpecialistsAction;
 use App\Actions\Specialist\UpdateSpecialistAction;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\SpecialistListResource;
 use App\Http\Resources\SpecialistResource;
 use App\Http\Requests\StoreSpecialistRequest;
 use App\Http\Requests\UpdateSpecialistRequest;
 use App\Models\Specialist;
+use App\Models\Country;
 use App\Services\SpecialistOperationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -35,9 +37,11 @@ class SpecialistController extends Controller
     {
         $filters = $request->only(['status', 'search']);
         $specialists = $this->getSpecialistsAction->execute($filters);
+        $countries = Country::orderBy('name')->get(['id', 'name', 'code', 'flag_url']);
 
         return Inertia::render('Admin/Specialists/List', [
-            'specialists' => SpecialistResource::collection($specialists),
+            'specialists' => SpecialistListResource::collection($specialists),
+            'countries' => $countries,
             'resetForm' => $reSetForm,
         ]);
     }

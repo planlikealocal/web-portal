@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Country;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 
 class CountryController extends Controller
@@ -19,5 +20,22 @@ class CountryController extends Controller
         return Inertia::render('Admin/Countries', [
             'countries' => $countries,
         ]);
+    }
+
+    /**
+     * Get countries for autocomplete
+     */
+    public function autocomplete(Request $request): JsonResponse
+    {
+        $search = $request->get('search', '');
+        
+        $countries = Country::when($search, function ($query, $search) {
+            return $query->where('name', 'like', "%{$search}%");
+        })
+        ->orderBy('name')
+        ->limit(20)
+        ->get(['id', 'name', 'code', 'flag_url']);
+        
+        return response()->json($countries);
     }
 }

@@ -48,6 +48,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         
         // Countries routes
         Route::get('/countries', [CountryController::class, 'index'])->name('countries.index');
+        Route::get('/countries/autocomplete', [CountryController::class, 'autocomplete'])->name('countries.autocomplete');
         
         // Test notification route (for development/demo purposes)
         Route::post('/test-notifications', function () {

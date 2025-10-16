@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Specialist extends Model
 {
@@ -16,7 +17,7 @@ class Specialist extends Model
         'profile_pic',
         'bio',
         'contact_no',
-        'country',
+        'country_id',
         'state_province',
         'city',
         'address',
@@ -50,6 +51,14 @@ class Specialist extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
+    }
+
+    /**
+     * Get the country for the specialist.
+     */
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
     }
 
     /**

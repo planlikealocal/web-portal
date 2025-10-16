@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
 
-class SpecialistResource extends JsonResource
+class SpecialistListResource extends JsonResource
 {
     static $wrap = false;
     /**
@@ -26,14 +26,7 @@ class SpecialistResource extends JsonResource
             'bio' => $this->bio,
             'contact_no' => $this->contact_no,
             'country_id' => $this->country_id,
-            'country' => $this->whenLoaded('country', function () {
-                return [
-                    'id' => $this->country->id,
-                    'name' => $this->country->name,
-                    'code' => $this->country->code,
-                    'flag_url' => $this->country->flag_url,
-                ];
-            }),
+            'country' => $this->country?->name,
             'state_province' => $this->state_province,
             'city' => $this->city,
             'address' => $this->address,

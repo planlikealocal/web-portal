@@ -12,8 +12,8 @@ class SpecialistValidationService implements ValidationServiceInterface
         $validated = [];
 
         // Validate required fields
-        $requiredFields = ['first_name', 'last_name', 'email', 'contact_no', 'country', 'state_province', 'city', 'address', 'postal_code', 'status'];
-        
+        $requiredFields = ['first_name', 'last_name', 'email', 'contact_no', 'country_id', 'state_province', 'city', 'address', 'postal_code', 'status'];
+
         foreach ($requiredFields as $field) {
             if (!isset($data[$field]) || empty($data[$field])) {
                 throw new \InvalidArgumentException("Field {$field} is required");
@@ -46,11 +46,11 @@ class SpecialistValidationService implements ValidationServiceInterface
     public function validateEmailUniqueness(string $email, ?Specialist $excludeSpecialist = null): bool
     {
         $query = Specialist::where('email', $email);
-        
+
         if ($excludeSpecialist) {
             $query->where('id', '!=', $excludeSpecialist->id);
         }
-        
+
         return $query->count() === 0;
     }
 
@@ -58,7 +58,7 @@ class SpecialistValidationService implements ValidationServiceInterface
     {
         // Remove non-numeric characters
         $cleanNumber = preg_replace('/[^0-9]/', '', $phoneNumber);
-        
+
         // Check if it's a valid length (adjust based on your requirements)
         return strlen($cleanNumber) >= 10 && strlen($cleanNumber) <= 15;
     }
