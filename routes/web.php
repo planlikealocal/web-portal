@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SpecialistController;
 use App\Http\Controllers\Admin\DestinationController;
+use App\Http\Controllers\Admin\CountryController;
 use Illuminate\Support\Facades\Route;
 
 // Website routes
@@ -44,6 +45,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/destinations/{destination}/images', [DestinationController::class, 'storeImage'])->name('destinations.images.store');
         Route::match(['post', 'put'], '/destinations/{destination}/images/{image}', [DestinationController::class, 'updateImage'])->name('destinations.images.update');
         Route::delete('/destinations/{destination}/images/{image}', [DestinationController::class, 'destroyImage'])->name('destinations.images.destroy');
+        
+        // Countries routes
+        Route::get('/countries', [CountryController::class, 'index'])->name('countries.index');
         
         // Test notification route (for development/demo purposes)
         Route::post('/test-notifications', function () {

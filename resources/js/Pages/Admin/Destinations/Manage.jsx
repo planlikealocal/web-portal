@@ -16,6 +16,10 @@ import {
     Avatar,
     Fab,
     Divider,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -30,7 +34,7 @@ import MultiSelect from '../../../Components/MultiSelect.jsx';
 import ImageUploadDialog from '../../../Components/ImageUploadDialog.jsx';
 
 const Manage = (props) => {
-    const {destination, specialists = []} = props;
+    const {destination, specialists = [], countries = []} = props;
     const [basicInfo, setBasicInfo] = useState({
         name: destination.name || '',
         description: destination.description || '',
@@ -38,7 +42,7 @@ const Manage = (props) => {
         overview: destination.overview || '',
         home_image: destination.home_image || null,
         grid_image: destination.grid_image || null,
-        country: destination.country || null,
+        country_id: destination.country_id || null,
         state_province: destination.state_province || null,
         specialist_ids: destination.specialist_ids ? 
             (Array.isArray(destination.specialist_ids) ? destination.specialist_ids : destination.specialist_ids.split(',').map(id => parseInt(id.trim()))) : 
@@ -78,7 +82,9 @@ const Manage = (props) => {
         formData.append('description', basicInfo.description);
         formData.append('overview_title', basicInfo.overview_title);
         formData.append('overview', basicInfo.overview);
-        formData.append('country', basicInfo.country || '');
+        if (basicInfo.country_id) {
+            formData.append('country_id', basicInfo.country_id);
+        }
         formData.append('state_province', basicInfo.state_province || '');
         formData.append('specialist_ids', JSON.stringify(basicInfo.specialist_ids || []));
 
@@ -244,14 +250,35 @@ const Manage = (props) => {
                                         />
                                     </Grid>
                                     <Grid size={{xs: 6}}>
-                                        <TextField
-                                            label="Country"
-                                            value={basicInfo.country}
-                                            onChange={(e) => handleBasicInfoChange('country')(e.target.value)}
-                                            error={!!basicInfoErrors.country}
-                                            helperText={basicInfoErrors.country}
-                                            fullWidth
-                                        />
+                                        <FormControl fullWidth error={!!basicInfoErrors.country_id}>
+                                            <InputLabel>Country</InputLabel>
+                                            <Select
+                                                value={basicInfo.country_id || ''}
+                                                onChange={(e) => handleBasicInfoChange('country_id')(e.target.value)}
+                                                label="Country"
+                                            >
+                                                <MenuItem value="">
+                                                    <em>Select a country</em>
+                                                </MenuItem>
+                                                {countries.map((country) => (
+                                                    <MenuItem key={country.id} value={country.id}>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                            <Avatar 
+                                                                src={country.flag_url} 
+                                                                sx={{ width: 20, height: 12 }}
+                                                                variant="rounded"
+                                                            />
+                                                            {country.name}
+                                                        </Box>
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                            {basicInfoErrors.country_id && (
+                                                <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                                                    {basicInfoErrors.country_id}
+                                                </Typography>
+                                            )}
+                                        </FormControl>
                                     </Grid>
                                     <Grid size={{xs: 6}}>
                                         <TextField

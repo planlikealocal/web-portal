@@ -20,8 +20,9 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
-        // Seed specialists and destination images
+        // Seed specialists, countries, and destination images
         $this->call([
+            CountrySeeder::class,
             SpecialistSeeder::class,
             DestinationImageSeeder::class,
         ]);

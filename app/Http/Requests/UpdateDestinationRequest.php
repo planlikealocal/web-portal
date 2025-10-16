@@ -26,7 +26,7 @@ class UpdateDestinationRequest extends FormRequest
             'overview_title' => 'required|string|max:255',
             'overview' => 'nullable|string',
             'description' => 'nullable|string',
-            'country' => 'nullable|string|max:255',
+            'country_id' => 'nullable|integer|exists:countries,id',
             'state_province' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'home_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',

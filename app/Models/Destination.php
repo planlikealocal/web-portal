@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Destination extends Model
 {
@@ -16,12 +17,12 @@ class Destination extends Model
         'overview_title',
         'overview',
         'status',
-        'country',
         'state_province',
         'city',
         'home_image',
         'grid_image',
         'specialist_ids',
+        'country_id',
     ];
 
     protected function casts(): array
@@ -67,6 +68,14 @@ class Destination extends Model
     public function itineraries(): HasMany
     {
         return $this->hasMany(DestinationItinerary::class);
+    }
+
+    /**
+     * Get the country for the destination.
+     */
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
     }
 
     /**

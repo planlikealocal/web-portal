@@ -16,7 +16,6 @@ class DestinationRepository implements DestinationRepositoryInterface
 
     public function update(Destination $destination, array $data): Destination
     {
-
         $destination->update($data);
         return $destination->fresh();
     }
@@ -28,12 +27,12 @@ class DestinationRepository implements DestinationRepositoryInterface
 
     public function find(int $id): ?Destination
     {
-        return Destination::with(['images', 'seasons', 'activities', 'itineraries'])->find($id);
+        return Destination::with(['images', 'seasons', 'activities', 'itineraries', 'country'])->find($id);
     }
 
     public function getAll(array $filters = []): Collection
     {
-        $query = Destination::with(['images']);
+        $query = Destination::with(['images', 'country']);
 
         if (isset($filters['status'])) {
             $query->where('status', $filters['status']);
