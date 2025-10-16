@@ -47,6 +47,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::match(['post', 'put'], '/destinations/{destination}/images/{image}', [DestinationController::class, 'updateImage'])->name('destinations.images.update');
         Route::delete('/destinations/{destination}/images/{image}', [DestinationController::class, 'destroyImage'])->name('destinations.images.destroy');
         
+        // Destination Seasons routes
+        Route::post('/destinations/{destination}/seasons', [DestinationController::class, 'storeSeason'])->name('destinations.seasons.store');
+        Route::put('/destinations/{destination}/seasons/{season}', [DestinationController::class, 'updateSeason'])->name('destinations.seasons.update');
+        Route::delete('/destinations/{destination}/seasons/{season}', [DestinationController::class, 'destroySeason'])->name('destinations.seasons.destroy');
+        
+        // Destination Activities routes
+        Route::post('/destinations/{destination}/activities', [DestinationController::class, 'storeActivity'])->name('destinations.activities.store');
+        Route::put('/destinations/{destination}/activities/{activity}', [DestinationController::class, 'updateActivity'])->name('destinations.activities.update');
+        Route::delete('/destinations/{destination}/activities/{activity}', [DestinationController::class, 'destroyActivity'])->name('destinations.activities.destroy');
+        
         // Countries routes
         Route::get('/countries', [CountryController::class, 'index'])->name('countries.index');
         Route::get('/countries/autocomplete', [CountryController::class, 'autocomplete'])->name('countries.autocomplete');

@@ -32,6 +32,8 @@ import AdminLayout from '../../../Layouts/AdminLayout.jsx';
 import ImageUploader from '../../../Components/ImageUploader.jsx';
 import MultiSelect from '../../../Components/MultiSelect.jsx';
 import ImageUploadDialog from '../../../Components/ImageUploadDialog.jsx';
+import SeasonDialog from '../../../Components/SeasonDialog.jsx';
+import ActivityDialog from '../../../Components/ActivityDialog.jsx';
 
 const Manage = (props) => {
     const {destination, specialists = [], countries = []} = props;
@@ -75,8 +77,10 @@ const Manage = (props) => {
     const [activityDialogOpen, setActivityDialogOpen] = useState(false);
     const [itineraryDialogOpen, setItineraryDialogOpen] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [seasonDeleteConfirmOpen, setSeasonDeleteConfirmOpen] = useState(false);
     const [editing, setEditing] = useState(null);
     const [imageToDelete, setImageToDelete] = useState(null);
+    const [seasonToDelete, setSeasonToDelete] = useState(null);
 
     const handleBasicInfoChange = (field) => (value) => {
         // If country changes, clear selected specialists first, then update country
@@ -184,9 +188,21 @@ const Manage = (props) => {
     };
 
     const handleDeleteSeason = (seasonId) => {
-        if (confirm('Are you sure you want to delete this season?')) {
-            router.delete(`/admin/destinations/${destination.id}/seasons/${seasonId}`);
+        setSeasonToDelete(seasonId);
+        setSeasonDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteSeason = () => {
+        if (seasonToDelete) {
+            router.delete(`/admin/destinations/${destination.id}/seasons/${seasonToDelete}`);
+            setSeasonDeleteConfirmOpen(false);
+            setSeasonToDelete(null);
         }
+    };
+
+    const cancelDeleteSeason = () => {
+        setSeasonDeleteConfirmOpen(false);
+        setSeasonToDelete(null);
     };
 
     const handleAddActivity = () => {
@@ -231,7 +247,7 @@ const Manage = (props) => {
                 <Card sx={{mb: 2}}>
                     <CardContent>
                         <Typography variant="h6" sx={{mb: 2}}>
-                            1. Basic Information
+                           Basic Information
                         </Typography>
                         <Grid container spacing={2}>
                             <Grid size={{xs: 6}}>
@@ -411,7 +427,7 @@ const Manage = (props) => {
                     <CardContent>
                         <Box sx={{display: 'flex', justifyContent: 'space-between', aligns: 'center', mb: 2}}>
                             <Typography variant="h6">
-                                2. Destination Images
+                                Destination Images
                             </Typography>
                             <Fab size="small" color="primary" onClick={handleAddImage}>
                                 <AddIcon/>
@@ -419,7 +435,7 @@ const Manage = (props) => {
                         </Box>
                         <Grid container spacing={2}>
                             {destination.images?.map((image) => (
-                                <Grid size={{xs: 2}} sm={3} md={2} lg={2} key={image.id}>
+                                <Grid size={{xs: 2}} key={image.id}>
                                     <Card
                                         sx={{
                                             height: '100%',
@@ -527,7 +543,7 @@ const Manage = (props) => {
                     <CardContent>
                         <Box sx={{display: 'flex', justifyContent: 'space-between', aligns: 'center', mb: 2}}>
                             <Typography variant="h6">
-                                3. Destination Seasons
+                                Destination Seasons
                             </Typography>
                             <Fab size="small" color="primary" onClick={handleAddSeason}>
                                 <AddIcon/>
@@ -535,9 +551,9 @@ const Manage = (props) => {
                         </Box>
                         <Grid container spacing={2}>
                             {destination.seasons?.map((season) => (
-                                <Grid size={{xs: 12}} sm={6} md={4} key={season.id}>
-                                    <Card>
-                                        <CardContent>
+                                <Grid size={{xs: 4}} key={season.id}>
+                                    <Card  variant="outlined">
+                                        <CardContent sx={{p: 1, flex: 1}}>
                                             <Box sx={{
                                                 display: 'flex',
                                                 justifyContent: 'space-between',
@@ -563,7 +579,29 @@ const Manage = (props) => {
                                             <Typography variant="body2" color="text.secondary" sx={{mb: 1}}>
                                                 Duration: {season.duration}
                                             </Typography>
-                                            <Typography variant="body2">
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    height: 60,
+                                                    overflow: 'auto',
+                                                    mb: 1,
+                                                    pr: 0.5,
+                                                    '&::-webkit-scrollbar': {
+                                                        width: '4px',
+                                                    },
+                                                    '&::-webkit-scrollbar-track': {
+                                                        background: '#f1f1f1',
+                                                        borderRadius: '2px',
+                                                    },
+                                                    '&::-webkit-scrollbar-thumb': {
+                                                        background: '#c1c1c1',
+                                                        borderRadius: '2px',
+                                                    },
+                                                    '&::-webkit-scrollbar-thumb:hover': {
+                                                        background: '#a8a8a8',
+                                                    },
+                                                }}
+                                            >
                                                 {season.description}
                                             </Typography>
                                             <Chip
@@ -592,7 +630,7 @@ const Manage = (props) => {
                     <CardContent>
                         <Box sx={{display: 'flex', justifyContent: 'space-between', aligns: 'center', mb: 2}}>
                             <Typography variant="h6">
-                                4. Destination Activities
+                                Destination Activities
                             </Typography>
                             <Fab size="small" color="primary" onClick={handleAddActivity}>
                                 <AddIcon/>
@@ -601,53 +639,112 @@ const Manage = (props) => {
                         <Grid container spacing={2}>
                             {destination.activities?.map((activity) => (
                                 <Grid size={{xs: 12}} sm={6} md={4} key={activity.id}>
-                                    <Card>
-                                        <CardContent>
-                                            <Box sx={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                aligns: 'flex-start',
-                                                mb: 1
-                                            }}>
-                                                <Typography variant="h6">{activity.name}</Typography>
-                                                <Box>
-                                                    <IconButton
-                                                        size="small"
-                                                        onClick={() => handleEditActivity(activity)}
-                                                    >
-                                                        <EditIcon fontSize="small"/>
-                                                    </IconButton>
-                                                    <IconButton
-                                                        size="small"
-                                                        onClick={() => handleDeleteActivity(activity.id)}
-                                                    >
-                                                        <DeleteIcon fontSize="small"/>
-                                                    </IconButton>
-                                                </Box>
-                                            </Box>
-                                            {activity.image_url && (
+                                    <Card
+                                        sx={{
+                                            height: '100%',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                                            '&:hover': {
+                                                transform: 'translateY(-4px)',
+                                                boxShadow: 3,
+                                            }
+                                        }}
+                                    >
+                                        <Box sx={{position: 'relative', flex: 1}}>
+                                            {activity.image_url ? (
                                                 <Box
                                                     component="img"
                                                     src={activity.image_url}
                                                     alt={activity.name}
                                                     sx={{
                                                         width: '100%',
-                                                        height: 100,
+                                                        height: 150,
                                                         objectFit: 'cover',
-                                                        borderRadius: 1,
-                                                        mb: 1,
+                                                        borderRadius: '4px 4px 0 0',
                                                     }}
                                                 />
+                                            ) : (
+                                                <Box
+                                                    sx={{
+                                                        width: '100%',
+                                                        height: 150,
+                                                        bgcolor: '#f5f5f5',
+                                                        borderRadius: '4px 4px 0 0',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        color: 'text.secondary'
+                                                    }}
+                                                >
+                                                    <Typography variant="body2">No Image</Typography>
+                                                </Box>
                                             )}
+                                            <Box sx={{
+                                                position: 'absolute',
+                                                top: 4,
+                                                right: 4,
+                                                display: 'flex',
+                                                gap: 0.5
+                                            }}>
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={() => handleEditActivity(activity)}
+                                                    sx={{
+                                                        bgcolor: 'rgba(255, 255, 255, 0.9)',
+                                                        backdropFilter: 'blur(4px)',
+                                                        width: 24,
+                                                        height: 24,
+                                                        '&:hover': {
+                                                            bgcolor: 'rgba(255, 255, 255, 1)',
+                                                        }
+                                                    }}
+                                                >
+                                                    <EditIcon sx={{fontSize: '0.8rem'}}/>
+                                                </IconButton>
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={() => handleDeleteActivity(activity.id)}
+                                                    sx={{
+                                                        bgcolor: 'rgba(255, 255, 255, 0.9)',
+                                                        backdropFilter: 'blur(4px)',
+                                                        width: 24,
+                                                        height: 24,
+                                                        '&:hover': {
+                                                            bgcolor: 'rgba(255, 255, 255, 1)',
+                                                        }
+                                                    }}
+                                                >
+                                                    <DeleteIcon sx={{fontSize: '0.8rem'}}/>
+                                                </IconButton>
+                                            </Box>
+                                        </Box>
+                                        <CardContent sx={{p: 2, flex: 0}}>
+                                            <Typography variant="h6" sx={{mb: 1}}>
+                                                {activity.name}
+                                            </Typography>
                                         </CardContent>
                                     </Card>
                                 </Grid>
                             ))}
                             {(!destination.activities || destination.activities.length === 0) && (
                                 <Grid size={{xs: 12}}>
-                                    <Typography color="text.secondary" textAlign="center">
-                                        No activities added yet. Click the + button to add activities.
-                                    </Typography>
+                                    <Box
+                                        sx={{
+                                            textAlign: 'center',
+                                            py: 4,
+                                            border: '2px dashed #e0e0e0',
+                                            borderRadius: 2,
+                                            bgcolor: '#fafafa'
+                                        }}
+                                    >
+                                        <Typography color="text.secondary" variant="h6" sx={{mb: 1}}>
+                                            No activities added yet
+                                        </Typography>
+                                        <Typography color="text.secondary" variant="body2">
+                                            Click the + button above to add destination activities
+                                        </Typography>
+                                    </Box>
                                 </Grid>
                             )}
                         </Grid>
@@ -659,7 +756,7 @@ const Manage = (props) => {
                     <CardContent>
                         <Box sx={{display: 'flex', justifyContent: 'space-between', aligns: 'center', mb: 2}}>
                             <Typography variant="h6">
-                                5. Destination Itineraries
+                                Destination Itineraries
                             </Typography>
                             <Fab size="small" color="primary" onClick={handleAddItinerary}>
                                 <AddIcon/>
@@ -748,6 +845,28 @@ const Manage = (props) => {
                     </DialogContent>
                 </Dialog>
 
+                {/* Season Dialog */}
+                <SeasonDialog
+                    open={seasonDialogOpen}
+                    onClose={() => {
+                        setSeasonDialogOpen(false);
+                        setEditing(null);
+                    }}
+                    destination={destination}
+                    editing={editing}
+                />
+
+                {/* Activity Dialog */}
+                <ActivityDialog
+                    open={activityDialogOpen}
+                    onClose={() => {
+                        setActivityDialogOpen(false);
+                        setEditing(null);
+                    }}
+                    destination={destination}
+                    editing={editing}
+                />
+
                 {/* Delete Confirmation Dialog */}
                 <Dialog
                     open={deleteConfirmOpen}
@@ -772,6 +891,38 @@ const Manage = (props) => {
                         </Button>
                         <Button
                             onClick={confirmDeleteImage}
+                            color="error"
+                            variant="contained"
+                        >
+                            Delete
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Season Delete Confirmation Dialog */}
+                <Dialog
+                    open={seasonDeleteConfirmOpen}
+                    onClose={cancelDeleteSeason}
+                    maxWidth="sm"
+                    fullWidth
+                >
+                    <DialogTitle>
+                        Confirm Delete Season
+                    </DialogTitle>
+                    <DialogContent>
+                        <Typography>
+                            Are you sure you want to delete this season? This action cannot be undone.
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            onClick={cancelDeleteSeason}
+                            color="primary"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={confirmDeleteSeason}
                             color="error"
                             variant="contained"
                         >

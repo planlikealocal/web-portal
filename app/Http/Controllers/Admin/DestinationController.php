@@ -15,6 +15,8 @@ use App\Http\Requests\StoreDestinationRequest;
 use App\Http\Requests\UpdateDestinationRequest;
 use App\Models\Destination;
 use App\Models\DestinationImage;
+use App\Models\DestinationSeason;
+use App\Models\DestinationActivity;
 use App\Models\Country;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -341,6 +343,182 @@ class DestinationController extends Controller
 
         return redirect()->route('admin.destinations.manage', $destination->id)
             ->with('success', 'Image deleted successfully.');
+    }
+
+    /**
+     * Store a new destination season
+     */
+    public function storeSeason(Request $request, Destination $destination)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'duration' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'boolean',
+        ]);
+
+        $data = $request->only(['name', 'duration', 'description', 'status']);
+        $data['destination_id'] = $destination->id;
+        $data['status'] = $request->boolean('status', true);
+
+        DestinationSeason::create($data);
+
+        return redirect()->route('admin.destinations.manage', $destination->id)
+            ->with('success', 'Season added successfully.');
+    }
+
+    /**
+     * Update a destination season
+     */
+    public function updateSeason(Request $request, Destination $destination, DestinationSeason $season)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'duration' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'boolean',
+        ]);
+
+        $data = $request->only(['name', 'duration', 'description']);
+        $data['status'] = $request->boolean('status', true);
+
+        $season->update($data);
+
+        return redirect()->route('admin.destinations.manage', $destination->id)
+            ->with('success', 'Season updated successfully.');
+    }
+
+    /**
+     * Delete a destination season
+     */
+    public function destroySeason(Destination $destination, DestinationSeason $season)
+    {
+        $season->delete();
+
+        return redirect()->route('admin.destinations.manage', $destination->id)
+            ->with('success', 'Season deleted successfully.');
+    }
+
+    /**
+     * Store a new destination activity
+     */
+    public function storeActivity(Request $request, Destination $destination)
+    {
+        // Log the request for debugging
+        \Log::info('Store activity request', [
+            'destination_id' => $destination->id,
+            'request_data' => $request->all(),
+            'files_count' => $request->hasFile('images') ? count($request->file('images')) : 0
+        ]);
+
+        // Check if we have multiple activities or single activity
+        $hasMultipleActivities = $request->hasFile('images') && is_array($request->file('images'));
+        $hasSingleActivity = $request->hasFile('image');
+
+        if ($hasMultipleActivities) {
+            // Handle multiple activities
+            $request->validate([
+                'names' => 'required|array',
+                'names.*' => 'required|string|max:255',
+                'images' => 'required|array',
+                'images.*' => 'required|image|mimes:jpeg,png,jpg,gif',
+            ]);
+
+            $names = $request->input('names', []);
+            $images = $request->file('images');
+
+            $createdActivities = [];
+
+            foreach ($images as $index => $file) {
+                $data = [
+                    'name' => $names[$index] ?? "Activity " . ($index + 1),
+                    'destination_id' => $destination->id,
+                ];
+
+                // Handle image upload
+                $path = $file->store('destination-activities', 'public');
+                $data['image_url'] = Storage::disk('public')->url($path);
+
+                $createdActivities[] = DestinationActivity::create($data);
+            }
+
+            $count = count($createdActivities);
+            return redirect()->route('admin.destinations.manage', $destination->id)
+                ->with('success', "{$count} activit" . ($count > 1 ? 'ies' : 'y') . " added successfully.");
+
+        } elseif ($hasSingleActivity) {
+            // Handle single activity (backward compatibility)
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            ]);
+
+            $data = $request->only(['name']);
+            $data['destination_id'] = $destination->id;
+
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $path = $file->store('destination-activities', 'public');
+                $data['image_url'] = Storage::disk('public')->url($path);
+            }
+
+            DestinationActivity::create($data);
+
+            return redirect()->route('admin.destinations.manage', $destination->id)
+                ->with('success', 'Activity added successfully.');
+        } else {
+            return redirect()->route('admin.destinations.manage', $destination->id)
+                ->with('error', 'No activities provided.');
+        }
+    }
+
+    /**
+     * Update a destination activity
+     */
+    public function updateActivity(Request $request, Destination $destination, DestinationActivity $activity)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+        ]);
+
+        $data = $request->only(['name']);
+
+        // Handle image upload if new image provided
+        if ($request->hasFile('image')) {
+            // Delete old image
+            if ($activity->image_url) {
+                $oldPath = str_replace(Storage::disk('public')->url(''), '', $activity->image_url);
+                Storage::disk('public')->delete($oldPath);
+            }
+
+            $file = $request->file('image');
+            $path = $file->store('destination-activities', 'public');
+            $data['image_url'] = Storage::disk('public')->url($path);
+        }
+
+        $activity->update($data);
+
+        return redirect()->route('admin.destinations.manage', $destination->id)
+            ->with('success', 'Activity updated successfully.');
+    }
+
+    /**
+     * Delete a destination activity
+     */
+    public function destroyActivity(Destination $destination, DestinationActivity $activity)
+    {
+        // Delete image file
+        if ($activity->image_url) {
+            $path = str_replace(Storage::disk('public')->url(''), '', $activity->image_url);
+            Storage::disk('public')->delete($path);
+        }
+
+        $activity->delete();
+
+        return redirect()->route('admin.destinations.manage', $destination->id)
+            ->with('success', 'Activity deleted successfully.');
     }
 
 }
