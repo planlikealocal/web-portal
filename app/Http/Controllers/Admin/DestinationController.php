@@ -167,12 +167,17 @@ class DestinationController extends Controller
     /**
      * Show the destination management page
      */
-public function manage(Destination $destination): Response
+    public function manage(Destination $destination): Response
     {
         $destination->load(['images', 'seasons', 'activities', 'itineraries', 'country']);
 
-        // Load all active specialists for the multi-select
-        $specialists = $this->getSpecialistsAction->execute(['status' => 'active']);
+        // Load specialists filtered by destination's country if available
+        $filters = ['status' => 'active'];
+        if ($destination->country_id) {
+            $filters['country_id'] = $destination->country_id;
+        }
+        $specialists = $this->getSpecialistsAction->execute($filters);
+        
         // Load all countries for the select box
         $countries = Country::orderBy('name')->get();
         return Inertia::render('Admin/Destinations/Manage', [
@@ -183,38 +188,102 @@ public function manage(Destination $destination): Response
     }
 
     /**
-     * Store a new destination image
+     * Get specialists filtered by country
+     */
+    public function getSpecialistsByCountry(Request $request)
+    {
+        $countryId = $request->input('country_id');
+        
+        $filters = ['status' => 'active'];
+        if ($countryId) {
+            $filters['country_id'] = $countryId;
+        }
+        
+        $specialists = $this->getSpecialistsAction->execute($filters);
+        
+        return response()->json([
+            'specialists' => SpecialistResource::collection($specialists)
+        ]);
+    }
+
+    /**
+     * Store new destination images (supports multiple images)
      */
     public function storeImage(Request $request, Destination $destination)
     {
         // Log the request for debugging
         \Log::info('Store image request', [
             'destination_id' => $destination->id,
-            'request_data' => $request->all()
+            'request_data' => $request->all(),
+            'files_count' => $request->hasFile('images') ? count($request->file('images')) : 0
         ]);
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif',
-        ]);
+        // Check if we have multiple images or single image
+        $hasMultipleImages = $request->hasFile('images') && is_array($request->file('images'));
+        $hasSingleImage = $request->hasFile('image');
 
-        $data = $request->only(['name', 'description']);
-        $data['image_type'] = 'gallery'; // Always gallery
+        if ($hasMultipleImages) {
+            // Handle multiple images
+            $request->validate([
+                'names' => 'required|array',
+                'names.*' => 'required|string|max:255',
+                'descriptions' => 'nullable|array',
+                'descriptions.*' => 'nullable|string',
+                'images' => 'required|array',
+                'images.*' => 'required|image|mimes:jpeg,png,jpg,gif',
+            ]);
 
-        // Handle image upload
-        if ($request->hasFile('image')) {
+            $names = $request->input('names', []);
+            $descriptions = $request->input('descriptions', []);
+            $images = $request->file('images');
+
+            $createdImages = [];
+
+            foreach ($images as $index => $file) {
+                $data = [
+                    'name' => $names[$index] ?? "Image " . ($index + 1),
+                    'description' => $descriptions[$index] ?? '',
+                    'image_type' => 'gallery',
+                    'destination_id' => $destination->id,
+                ];
+
+                // Handle image upload
+                $path = $file->store('destination-images', 'public');
+                $data['url'] = Storage::disk('public')->url($path);
+
+                $createdImages[] = DestinationImage::create($data);
+            }
+
+            $count = count($createdImages);
+            return redirect()->route('admin.destinations.manage', $destination->id)
+                ->with('success', "{$count} image" . ($count > 1 ? 's' : '') . " added successfully.");
+
+        } elseif ($hasSingleImage) {
+            // Handle single image (backward compatibility)
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'image' => 'required|image|mimes:jpeg,png,jpg,gif',
+            ]);
+
+            $data = $request->only(['name', 'description']);
+            $data['image_type'] = 'gallery'; // Always gallery
+
+            // Handle image upload
             $file = $request->file('image');
             $path = $file->store('destination-images', 'public');
             $data['url'] = Storage::disk('public')->url($path);
+
+            $data['destination_id'] = $destination->id;
+
+            DestinationImage::create($data);
+
+            return redirect()->route('admin.destinations.manage', $destination->id)
+                ->with('success', 'Image added successfully.');
+        } else {
+            return redirect()->route('admin.destinations.manage', $destination->id)
+                ->with('error', 'No images provided.');
         }
-
-        $data['destination_id'] = $destination->id;
-
-        DestinationImage::create($data);
-
-        return redirect()->route('admin.destinations.manage', $destination->id)
-            ->with('success', 'Image added successfully.');
     }
 
     /**

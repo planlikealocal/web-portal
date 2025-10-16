@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
     Box,
     Typography,
@@ -51,6 +51,23 @@ const Manage = (props) => {
     });
     const [basicInfoErrors, setBasicInfoErrors] = useState({});
     const [savingBasicInfo, setSavingBasicInfo] = useState(false);
+    const [filteredSpecialists, setFilteredSpecialists] = useState(specialists);
+
+    // Initialize filtered specialists
+    useEffect(() => {
+        setFilteredSpecialists(specialists);
+    }, [specialists]);
+
+    // Function to fetch specialists by country
+    const fetchSpecialistsByCountry = async (countryId) => {
+        try {
+            const response = await fetch(`/admin/destinations/specialists-by-country?country_id=${countryId || ''}`);
+            const data = await response.json();
+            setFilteredSpecialists(data.specialists);
+        } catch (error) {
+            console.error('Error fetching specialists:', error);
+        }
+    };
 
     // Dialog states
     const [imageDialogOpen, setImageDialogOpen] = useState(false);
@@ -62,10 +79,22 @@ const Manage = (props) => {
     const [imageToDelete, setImageToDelete] = useState(null);
 
     const handleBasicInfoChange = (field) => (value) => {
-        setBasicInfo(prev => ({
-            ...prev,
-            [field]: value
-        }));
+        // If country changes, clear selected specialists first, then update country
+        if (field === 'country_id') {
+            setBasicInfo(prev => ({
+                ...prev,
+                [field]: value,
+                specialist_ids: [] // Clear specialists when country changes
+            }));
+            // Fetch specialists for the new country
+            fetchSpecialistsByCountry(value);
+        } else {
+            setBasicInfo(prev => ({
+                ...prev,
+                [field]: value
+            }));
+        }
+
         if (basicInfoErrors[field]) {
             setBasicInfoErrors(prev => ({
                 ...prev,
@@ -258,16 +287,16 @@ const Manage = (props) => {
                                                 value={basicInfo.country_id || ''}
                                                 onChange={(e) => handleBasicInfoChange('country_id')(e.target.value)}
                                                 label="Country"
-                                            >
+                                                variant="outlined">
                                                 <MenuItem value="">
                                                     <em>Select a country</em>
                                                 </MenuItem>
                                                 {countries.map((country) => (
                                                     <MenuItem key={country.id} value={country.id}>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
                                                             <Avatar
                                                                 src={country.flag_url}
-                                                                sx={{ width: 20, height: 12 }}
+                                                                sx={{width: 20, height: 12}}
                                                                 variant="rounded"
                                                             />
                                                             {country.name}
@@ -276,7 +305,7 @@ const Manage = (props) => {
                                                 ))}
                                             </Select>
                                             {basicInfoErrors.country_id && (
-                                                <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                                                <Typography variant="caption" color="error" sx={{mt: 0.5, ml: 1.5}}>
                                                     {basicInfoErrors.country_id}
                                                 </Typography>
                                             )}
@@ -297,7 +326,7 @@ const Manage = (props) => {
                                             label="Specialists"
                                             value={basicInfo.specialist_ids}
                                             onChange={handleBasicInfoChange('specialist_ids')}
-                                            options={specialists.map(specialist => ({
+                                            options={filteredSpecialists.map(specialist => ({
                                                 id: specialist.id,
                                                 name: specialist.full_name || `${specialist.first_name} ${specialist.last_name}`
                                             }))}
@@ -415,7 +444,13 @@ const Manage = (props) => {
                                                     borderRadius: '4px 4px 0 0',
                                                 }}
                                             />
-                                            <Box sx={{position: 'absolute', top: 4, right: 4, display: 'flex', gap: 0.5}}>
+                                            <Box sx={{
+                                                position: 'absolute',
+                                                top: 4,
+                                                right: 4,
+                                                display: 'flex',
+                                                gap: 0.5
+                                            }}>
                                                 <IconButton
                                                     size="small"
                                                     onClick={() => handleEditImage(image)}

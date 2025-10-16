@@ -111,4 +111,16 @@ class Destination extends Model
         $parts = array_filter([$this->city, $this->state_province, $this->country]);
         return implode(', ', $parts);
     }
+
+    /**
+     * Get the specialist count for this destination
+     */
+    public function getSpecialistCountAttribute(): int
+    {
+        if (!$this->specialist_ids || !is_array($this->specialist_ids)) {
+            return 0;
+        }
+        
+        return count($this->specialist_ids);
+    }
 }

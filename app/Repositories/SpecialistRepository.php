@@ -43,6 +43,10 @@ class SpecialistRepository implements SpecialistRepositoryInterface
             $query->where('status', $filters['status']);
         }
 
+        if (isset($filters['country_id'])) {
+            $query->where('country_id', $filters['country_id']);
+        }
+
         if (isset($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
@@ -62,6 +66,10 @@ class SpecialistRepository implements SpecialistRepositoryInterface
 
         if (isset($filters['status'])) {
             $query->where('status', $filters['status']);
+        }
+
+        if (isset($filters['country_id'])) {
+            $query->where('country_id', $filters['country_id']);
         }
 
         if (isset($filters['search'])) {

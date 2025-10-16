@@ -40,6 +40,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/destinations/{destination}', [DestinationController::class, 'update'])->name('destinations.update');
         Route::delete('/destinations/{destination}', [DestinationController::class, 'destroy'])->name('destinations.destroy');
         Route::post('/destinations/{destination}/toggle-status', [DestinationController::class, 'toggleStatus'])->name('destinations.toggle-status');
+        Route::get('/destinations/specialists-by-country', [DestinationController::class, 'getSpecialistsByCountry'])->name('destinations.specialists-by-country');
         
         // Destination Images routes
         Route::post('/destinations/{destination}/images', [DestinationController::class, 'storeImage'])->name('destinations.images.store');

@@ -29,6 +29,7 @@ class DestinationListResource extends JsonResource
             'grid_image' => $this->grid_image,
             'banner_image' => $this->banner_image,
             'specialist_ids' => $this->specialist_ids,
+            'specialist_count' => $this->specialist_count,
             'main_image' => $this->main_image?->url,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

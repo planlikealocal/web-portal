@@ -108,10 +108,10 @@ const List = (props) => {
             },
         },
         {
-            field: 'specialists',
+            field: 'specialist_count',
             headerName: 'Specialists',
             width: 100,
-            renderCell: (params) => '0', // Placeholder - will be implemented later
+            renderCell: (params) => params.value || 0,
         },
         {
             field: 'status',
