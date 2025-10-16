@@ -65,6 +65,7 @@ const List = (props) => {
                         src={params.value}
                         alt="Destination"
                         sx={{
+                            marginTop: '6px',
                             width: 60,
                             height: 40,
                             borderRadius: 1,
@@ -74,6 +75,7 @@ const List = (props) => {
                 ) : (
                     <Box
                         sx={{
+                            marginTop: '6px',
                             width: 60,
                             height: 40,
                             borderRadius: 1,
@@ -118,7 +120,7 @@ const List = (props) => {
             renderCell: (params) => (
                 <Box
                     sx={{
-                        color: params.value === 'active' ? 'success.main' : 
+                        color: params.value === 'active' ? 'success.main' :
                                params.value === 'draft' ? 'warning.main' : 'error.main',
                         fontWeight: 'bold',
                         textTransform: 'capitalize',

@@ -21,6 +21,7 @@ class Destination extends Model
         'city',
         'home_image',
         'grid_image',
+        'banner_image',
         'specialist_ids',
         'country_id',
     ];

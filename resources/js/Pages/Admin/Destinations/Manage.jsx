@@ -42,10 +42,11 @@ const Manage = (props) => {
         overview: destination.overview || '',
         home_image: destination.home_image || null,
         grid_image: destination.grid_image || null,
+        banner_image: destination.banner_image || null,
         country_id: destination.country_id || null,
         state_province: destination.state_province || null,
-        specialist_ids: destination.specialist_ids ? 
-            (Array.isArray(destination.specialist_ids) ? destination.specialist_ids : destination.specialist_ids.split(',').map(id => parseInt(id.trim()))) : 
+        specialist_ids: destination.specialist_ids ?
+            (Array.isArray(destination.specialist_ids) ? destination.specialist_ids : destination.specialist_ids.split(',').map(id => parseInt(id.trim()))) :
             [],
     });
     const [basicInfoErrors, setBasicInfoErrors] = useState({});
@@ -94,6 +95,9 @@ const Manage = (props) => {
         }
         if (basicInfo.grid_image instanceof File) {
             formData.append('grid_image', basicInfo.grid_image);
+        }
+        if (basicInfo.banner_image instanceof File) {
+            formData.append('banner_image', basicInfo.banner_image);
         }
 
         router.post(`/admin/destinations/${destination.id}`, formData, {
@@ -198,12 +202,10 @@ const Manage = (props) => {
                 <Card sx={{mb: 2}}>
                     <CardContent>
                         <Typography variant="h6" sx={{mb: 2}}>
-                            1. Home Page Information
+                            1. Basic Information
                         </Typography>
                         <Grid container spacing={2}>
                             <Grid size={{xs: 6}}>
-
-
                                 <Grid container spacing={2}>
                                     <Grid size={{xs: 6}}>
                                         <TextField
@@ -263,8 +265,8 @@ const Manage = (props) => {
                                                 {countries.map((country) => (
                                                     <MenuItem key={country.id} value={country.id}>
                                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                            <Avatar 
-                                                                src={country.flag_url} 
+                                                            <Avatar
+                                                                src={country.flag_url}
                                                                 sx={{ width: 20, height: 12 }}
                                                                 variant="rounded"
                                                             />
@@ -305,10 +307,10 @@ const Manage = (props) => {
                                     </Grid>
                                 </Grid>
                             </Grid>
-                            <Grid size={{xs: 3}}>
-                                <Card sx={{mb: 2, minHeight: 356}} variant="outlined">
+                            <Grid size={{xs: 2}}>
+                                <Card sx={{height: 418}} variant="outlined">
                                     <CardContent>
-                                        <Typography variant="h6" sx={{mb: 2}}>
+                                        <Typography variant="p" sx={{mb: 2, fontSize: '0.8rem'}}>
                                             Home Page Image
                                         </Typography>
                                         <ImageUploader
@@ -317,30 +319,48 @@ const Manage = (props) => {
                                             error={!!basicInfoErrors.home_image}
                                             helperText={basicInfoErrors.home_image}
                                             label={""}
-                                            previewHeight={200}
-                                            previewWidth={300}
+                                            previewHeight={300}
                                         />
                                     </CardContent>
                                 </Card>
                             </Grid>
-
-                            <Grid size={{xs: 3}}>
-                                <Card sx={{mb: 2, minHeight: 356}} variant="outlined">
-                                    <CardContent>
-                                        <Typography variant="h6" sx={{mb: 2}}>
-                                            Grid Image
-                                        </Typography>
-                                        <ImageUploader
-                                            value={basicInfo.grid_image}
-                                            onChange={handleBasicInfoChange('grid_image')}
-                                            error={!!basicInfoErrors.grid_image}
-                                            helperText={basicInfoErrors.grid_image}
-                                            label={""}
-                                            previewHeight={200}
-                                            previewWidth={300}
-                                        />
-                                    </CardContent>
-                                </Card>
+                            <Grid size={{xs: 4}}>
+                                <Grid container spacing={2}>
+                                    <Grid size={{xs: 6}}>
+                                        <Card sx={{height: 200}} variant="outlined">
+                                            <CardContent>
+                                                <Typography variant="p" sx={{mb: 2, fontSize: '0.8rem'}}>
+                                                    Grid Image
+                                                </Typography>
+                                                <ImageUploader
+                                                    value={basicInfo.grid_image}
+                                                    onChange={handleBasicInfoChange('grid_image')}
+                                                    error={!!basicInfoErrors.grid_image}
+                                                    helperText={basicInfoErrors.grid_image}
+                                                    label={""}
+                                                    previewHeight={100}
+                                                />
+                                            </CardContent>
+                                        </Card>
+                                    </Grid>
+                                    <Grid size={{xs: 12}}>
+                                        <Card sx={{mb: 2, height: 200}} variant="outlined">
+                                            <CardContent>
+                                                <Typography variant="p" sx={{mb: 2, fontSize: '0.8rem'}}>
+                                                    Banner Image
+                                                </Typography>
+                                                <ImageUploader
+                                                    value={basicInfo.banner_image}
+                                                    onChange={handleBasicInfoChange('banner_image')}
+                                                    error={!!basicInfoErrors.banner_image}
+                                                    helperText={basicInfoErrors.banner_image}
+                                                    label={""}
+                                                    previewHeight={100}
+                                                />
+                                            </CardContent>
+                                        </Card>
+                                    </Grid>
+                                </Grid>
                             </Grid>
                             <Grid size={{xs: 12}} style={{display: 'flex', justifyContent: 'flex-end'}}>
                                 <Button
@@ -371,8 +391,8 @@ const Manage = (props) => {
                         <Grid container spacing={2}>
                             {destination.images?.map((image) => (
                                 <Grid size={{xs: 2}} sm={3} md={2} lg={2} key={image.id}>
-                                    <Card 
-                                        sx={{ 
+                                    <Card
+                                        sx={{
                                             height: '100%',
                                             display: 'flex',
                                             flexDirection: 'column',
@@ -445,9 +465,9 @@ const Manage = (props) => {
                             ))}
                             {(!destination.images || destination.images.length === 0) && (
                                 <Grid size={{xs: 12}}>
-                                    <Box 
-                                        sx={{ 
-                                            textAlign: 'center', 
+                                    <Box
+                                        sx={{
+                                            textAlign: 'center',
                                             py: 4,
                                             border: '2px dashed #e0e0e0',
                                             borderRadius: 2,
@@ -675,8 +695,8 @@ const Manage = (props) => {
                 </Card>
 
                 {/* Image Upload Dialog */}
-                <Dialog 
-                    open={imageDialogOpen} 
+                <Dialog
+                    open={imageDialogOpen}
                     onClose={handleCloseImageDialog}
                     maxWidth="md"
                     fullWidth
@@ -709,13 +729,13 @@ const Manage = (props) => {
                         </Typography>
                     </DialogContent>
                     <DialogActions>
-                        <Button 
+                        <Button
                             onClick={cancelDeleteImage}
                             color="primary"
                         >
                             Cancel
                         </Button>
-                        <Button 
+                        <Button
                             onClick={confirmDeleteImage}
                             color="error"
                             variant="contained"

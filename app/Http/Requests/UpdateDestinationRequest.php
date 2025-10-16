@@ -29,8 +29,9 @@ class UpdateDestinationRequest extends FormRequest
             'country_id' => 'nullable|integer|exists:countries,id',
             'state_province' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
-            'home_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'grid_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'home_image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            'grid_image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            'banner_image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
             'status' => 'nullable|in:draft,active,inactive',
             'specialist_ids' => 'nullable|string',
         ];

@@ -141,6 +141,12 @@ class DestinationController extends Controller
             $path = $file->store('destinations', 'public');
             $data['grid_image'] = Storage::disk('public')->url($path);
         }
+
+        if ($request->hasFile('banner_image')) {
+            $file = $request->file('banner_image');
+            $path = $file->store('destinations', 'public');
+            $data['banner_image'] = Storage::disk('public')->url($path);
+        }
         $destination = $this->updateDestinationAction->execute($destination, $data);
 
         return redirect()->route('admin.destinations.manage', $destination->id)
