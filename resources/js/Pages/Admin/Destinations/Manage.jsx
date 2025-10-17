@@ -26,6 +26,9 @@ import {
     Edit as EditIcon,
     Delete as DeleteIcon,
     Save as SaveIcon,
+    CloudUpload as UploadIcon,
+    ToggleOn as ToggleOnIcon,
+    ToggleOff as ToggleOffIcon,
 } from '@mui/icons-material';
 import {router, usePage} from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout.jsx';
@@ -34,6 +37,8 @@ import MultiSelect from '../../../Components/MultiSelect.jsx';
 import ImageUploadDialog from '../../../Components/ImageUploadDialog.jsx';
 import SeasonDialog from '../../../Components/SeasonDialog.jsx';
 import ActivityDialog from '../../../Components/ActivityDialog.jsx';
+import ActivityBulkUploadDialog from '../../../Components/ActivityBulkUploadDialog.jsx';
+import ItineraryDialog from '../../../Components/ItineraryDialog.jsx';
 
 const Manage = (props) => {
     const {destination, specialists = [], countries = []} = props;
@@ -75,12 +80,18 @@ const Manage = (props) => {
     const [imageDialogOpen, setImageDialogOpen] = useState(false);
     const [seasonDialogOpen, setSeasonDialogOpen] = useState(false);
     const [activityDialogOpen, setActivityDialogOpen] = useState(false);
+    const [activityBulkDialogOpen, setActivityBulkDialogOpen] = useState(false);
     const [itineraryDialogOpen, setItineraryDialogOpen] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [seasonDeleteConfirmOpen, setSeasonDeleteConfirmOpen] = useState(false);
+    const [activityDeleteConfirmOpen, setActivityDeleteConfirmOpen] = useState(false);
+    const [itineraryDeleteConfirmOpen, setItineraryDeleteConfirmOpen] = useState(false);
+    const [toggleStatusConfirmOpen, setToggleStatusConfirmOpen] = useState(false);
     const [editing, setEditing] = useState(null);
     const [imageToDelete, setImageToDelete] = useState(null);
     const [seasonToDelete, setSeasonToDelete] = useState(null);
+    const [activityToDelete, setActivityToDelete] = useState(null);
+    const [itineraryToDelete, setItineraryToDelete] = useState(null);
 
     const handleBasicInfoChange = (field) => (value) => {
         // If country changes, clear selected specialists first, then update country
@@ -210,15 +221,31 @@ const Manage = (props) => {
         setActivityDialogOpen(true);
     };
 
+    const handleBulkUploadActivities = () => {
+        setActivityBulkDialogOpen(true);
+    };
+
     const handleEditActivity = (activity) => {
         setEditing(activity);
         setActivityDialogOpen(true);
     };
 
     const handleDeleteActivity = (activityId) => {
-        if (confirm('Are you sure you want to delete this activity?')) {
-            router.delete(`/admin/destinations/${destination.id}/activities/${activityId}`);
+        setActivityToDelete(activityId);
+        setActivityDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteActivity = () => {
+        if (activityToDelete) {
+            router.delete(`/admin/destinations/${destination.id}/activities/${activityToDelete}`);
+            setActivityDeleteConfirmOpen(false);
+            setActivityToDelete(null);
         }
+    };
+
+    const cancelDeleteActivity = () => {
+        setActivityDeleteConfirmOpen(false);
+        setActivityToDelete(null);
     };
 
     const handleAddItinerary = () => {
@@ -232,17 +259,60 @@ const Manage = (props) => {
     };
 
     const handleDeleteItinerary = (itineraryId) => {
-        if (confirm('Are you sure you want to delete this itinerary?')) {
-            router.delete(`/admin/destinations/${destination.id}/itineraries/${itineraryId}`);
+        setItineraryToDelete(itineraryId);
+        setItineraryDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteItinerary = () => {
+        if (itineraryToDelete) {
+            router.delete(`/admin/destinations/${destination.id}/itineraries/${itineraryToDelete}`);
+            setItineraryDeleteConfirmOpen(false);
+            setItineraryToDelete(null);
         }
+    };
+
+    const cancelDeleteItinerary = () => {
+        setItineraryDeleteConfirmOpen(false);
+        setItineraryToDelete(null);
+    };
+
+    const handleToggleStatus = () => {
+        setToggleStatusConfirmOpen(true);
+    };
+
+    const confirmToggleStatus = () => {
+        router.post(`/admin/destinations/${destination.id}/toggle-status`);
+        setToggleStatusConfirmOpen(false);
+    };
+
+    const cancelToggleStatus = () => {
+        setToggleStatusConfirmOpen(false);
     };
 
     return (
         <AdminLayout>
             <Box sx={{p: 3}}>
-                <Typography variant="h4" component="h1" sx={{mb: 3}}>
-                    Manage Destination: {destination.name}
-                </Typography>
+                <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3}}>
+                    <Typography variant="h4" component="h1">
+                        Manage Destination: {destination.name}
+                    </Typography>
+                    <Box sx={{display: 'flex', alignItems: 'center', gap: 2}}>
+                        <Chip
+                            label={destination.status === 'active' ? 'Active' : 'Inactive'}
+                            color={destination.status === 'active' ? 'success' : 'error'}
+                            variant="outlined"
+                        />
+                        <Button
+                            variant={destination.status === 'active' ? 'outlined' : 'contained'}
+                            color={destination.status === 'active' ? 'error' : 'success'}
+                            startIcon={destination.status === 'active' ? <ToggleOffIcon /> : <ToggleOnIcon />}
+                            onClick={handleToggleStatus}
+                            sx={{minWidth: 140}}
+                        >
+                            {destination.status === 'active' ? 'Deactivate' : 'Activate'}
+                        </Button>
+                    </Box>
+                </Box>
                 {/* Section 1: Home Page Information */}
                 <Card sx={{mb: 2}}>
                     <CardContent>
@@ -628,17 +698,100 @@ const Manage = (props) => {
                 {/* Section 4: Destination Activities */}
                 <Card sx={{mb: 3}}>
                     <CardContent>
-                        <Box sx={{display: 'flex', justifyContent: 'space-between', aligns: 'center', mb: 2}}>
+                        <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
                             <Typography variant="h6">
                                 Destination Activities
                             </Typography>
-                            <Fab size="small" color="primary" onClick={handleAddActivity}>
+                            <Box sx={{display: 'flex', gap: 1}}>
+                                <Fab size="small" color="secondary" onClick={handleBulkUploadActivities}>
+                                    <UploadIcon/>
+                                </Fab>
+                                <Fab size="small" color="primary" onClick={handleAddActivity}>
+                                    <AddIcon/>
+                                </Fab>
+                            </Box>
+                        </Box>
+                        <Grid container spacing={2}>
+                            {destination.activities?.map((activity) => (
+                                <Grid size={{xs: 3}} key={activity.id}>
+                                    <Card>
+                                        <CardContent>
+                                            <Box sx={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                aligns: 'flex-start',
+                                                mb: 1
+                                            }}>
+                                                <Typography variant="h6">{activity.name}</Typography>
+                                                <Box>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => handleEditActivity(activity)}
+                                                    >
+                                                        <EditIcon fontSize="small"/>
+                                                    </IconButton>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => handleDeleteActivity(activity.id)}
+                                                    >
+                                                        <DeleteIcon fontSize="small"/>
+                                                    </IconButton>
+                                                </Box>
+                                            </Box>
+                                            {activity.description && (
+                                                <Typography variant="body2" color="text.secondary" sx={{mb: 1}}>
+                                                    {activity.description}
+                                                </Typography>
+                                            )}
+                                            {activity.image_url && (
+                                                <Box
+                                                    component="img"
+                                                    src={activity.image_url}
+                                                    alt={activity.name}
+                                                    sx={{
+                                                        width: '100%',
+                                                        height: 100,
+                                                        objectFit: 'cover',
+                                                        borderRadius: 1,
+                                                        mb: 1,
+                                                    }}
+                                                />
+                                            )}
+                                            <Chip
+                                                label={activity.status ? 'Active' : 'Inactive'}
+                                                size="small"
+                                                color={activity.status ? 'success' : 'default'}
+                                                sx={{mt: 1}}
+                                            />
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                            ))}
+                            {(!destination.activities || destination.activities.length === 0) && (
+                                <Grid size={{xs: 12}}>
+                                    <Typography color="text.secondary" textAlign="center">
+                                        No activities added yet. Click the + button to add activities.
+                                    </Typography>
+                                </Grid>
+                            )}
+                        </Grid>
+                    </CardContent>
+                </Card>
+
+                {/* Section 5: Destination Itineraries */}
+                <Card sx={{mb: 3}}>
+                    <CardContent>
+                        <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
+                            <Typography variant="h6">
+                                Destination Itineraries
+                            </Typography>
+                            <Fab size="small" color="primary" onClick={handleAddItinerary}>
                                 <AddIcon/>
                             </Fab>
                         </Box>
                         <Grid container spacing={2}>
-                            {destination.activities?.map((activity) => (
-                                <Grid size={{xs: 12}} sm={6} md={4} key={activity.id}>
+                            {destination.itineraries?.map((itinerary) => (
+                                <Grid size={{xs: 3}} sm={6} md={4} key={itinerary.id}>
                                     <Card
                                         sx={{
                                             height: '100%',
@@ -652,33 +805,18 @@ const Manage = (props) => {
                                         }}
                                     >
                                         <Box sx={{position: 'relative', flex: 1}}>
-                                            {activity.image_url ? (
+                                            {itinerary.image_url && (
                                                 <Box
                                                     component="img"
-                                                    src={activity.image_url}
-                                                    alt={activity.name}
+                                                    src={itinerary.image_url}
+                                                    alt={itinerary.title}
                                                     sx={{
                                                         width: '100%',
-                                                        height: 150,
+                                                        height: 200,
                                                         objectFit: 'cover',
                                                         borderRadius: '4px 4px 0 0',
                                                     }}
                                                 />
-                                            ) : (
-                                                <Box
-                                                    sx={{
-                                                        width: '100%',
-                                                        height: 150,
-                                                        bgcolor: '#f5f5f5',
-                                                        borderRadius: '4px 4px 0 0',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        color: 'text.secondary'
-                                                    }}
-                                                >
-                                                    <Typography variant="body2">No Image</Typography>
-                                                </Box>
                                             )}
                                             <Box sx={{
                                                 position: 'absolute',
@@ -688,8 +826,7 @@ const Manage = (props) => {
                                                 gap: 0.5
                                             }}>
                                                 <IconButton
-                                                    size="small"
-                                                    onClick={() => handleEditActivity(activity)}
+                                                    onClick={() => handleEditItinerary(itinerary)}
                                                     sx={{
                                                         bgcolor: 'rgba(255, 255, 255, 0.9)',
                                                         backdropFilter: 'blur(4px)',
@@ -703,8 +840,7 @@ const Manage = (props) => {
                                                     <EditIcon sx={{fontSize: '0.8rem'}}/>
                                                 </IconButton>
                                                 <IconButton
-                                                    size="small"
-                                                    onClick={() => handleDeleteActivity(activity.id)}
+                                                    onClick={() => handleDeleteItinerary(itinerary.id)}
                                                     sx={{
                                                         bgcolor: 'rgba(255, 255, 255, 0.9)',
                                                         backdropFilter: 'blur(4px)',
@@ -720,14 +856,46 @@ const Manage = (props) => {
                                             </Box>
                                         </Box>
                                         <CardContent sx={{p: 2, flex: 0}}>
-                                            <Typography variant="h6" sx={{mb: 1}}>
-                                                {activity.name}
+                                            <Typography variant="h6" sx={{mb: 1, fontSize: '1rem'}}>
+                                                {itinerary.title}
                                             </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                                sx={{
+                                                    height: 60,
+                                                    overflow: 'auto',
+                                                    mb: 1,
+                                                    pr: 0.5,
+                                                    '&::-webkit-scrollbar': {
+                                                        width: '4px',
+                                                    },
+                                                    '&::-webkit-scrollbar-track': {
+                                                        background: '#f1f1f1',
+                                                        borderRadius: '2px',
+                                                    },
+                                                    '&::-webkit-scrollbar-thumb': {
+                                                        background: '#c1c1c1',
+                                                        borderRadius: '2px',
+                                                    },
+                                                    '&::-webkit-scrollbar-thumb:hover': {
+                                                        background: '#a8a8a8',
+                                                    },
+                                                }}
+                                            >
+                                                {itinerary.description}
+                                            </Typography>
+                                            <Chip
+                                                label={itinerary.status}
+                                                size="small"
+                                                color={itinerary.status === 'active' ? 'success' : itinerary.status === 'draft' ? 'warning' : 'default'}
+                                                sx={{mt: 1}}
+                                            />
                                         </CardContent>
                                     </Card>
                                 </Grid>
                             ))}
-                            {(!destination.activities || destination.activities.length === 0) && (
+                            {(!destination.itineraries || destination.itineraries.length === 0) && (
                                 <Grid size={{xs: 12}}>
                                     <Box
                                         sx={{
@@ -739,87 +907,12 @@ const Manage = (props) => {
                                         }}
                                     >
                                         <Typography color="text.secondary" variant="h6" sx={{mb: 1}}>
-                                            No activities added yet
+                                            No itineraries added yet
                                         </Typography>
                                         <Typography color="text.secondary" variant="body2">
-                                            Click the + button above to add destination activities
+                                            Click the + button above to add destination itineraries
                                         </Typography>
                                     </Box>
-                                </Grid>
-                            )}
-                        </Grid>
-                    </CardContent>
-                </Card>
-
-                {/* Section 5: Destination Itineraries */}
-                <Card sx={{mb: 3}}>
-                    <CardContent>
-                        <Box sx={{display: 'flex', justifyContent: 'space-between', aligns: 'center', mb: 2}}>
-                            <Typography variant="h6">
-                                Destination Itineraries
-                            </Typography>
-                            <Fab size="small" color="primary" onClick={handleAddItinerary}>
-                                <AddIcon/>
-                            </Fab>
-                        </Box>
-                        <Grid container spacing={2}>
-                            {destination.itineraries?.map((itinerary) => (
-                                <Grid size={{xs: 12}} sm={6} md={4} key={itinerary.id}>
-                                    <Card>
-                                        <CardContent>
-                                            <Box sx={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                aligns: 'flex-start',
-                                                mb: 1
-                                            }}>
-                                                <Typography variant="h6">{itinerary.title}</Typography>
-                                                <Box>
-                                                    <IconButton
-                                                        size="small"
-                                                        onClick={() => handleEditItinerary(itinerary)}
-                                                    >
-                                                        <EditIcon fontSize="small"/>
-                                                    </IconButton>
-                                                    <IconButton
-                                                        size="small"
-                                                        onClick={() => handleDeleteItinerary(itinerary.id)}
-                                                    >
-                                                        <DeleteIcon fontSize="small"/>
-                                                    </IconButton>
-                                                </Box>
-                                            </Box>
-                                            <Typography variant="body2" sx={{mb: 1}}>
-                                                {itinerary.description}
-                                            </Typography>
-                                            {itinerary.image_url && (
-                                                <Box
-                                                    component="img"
-                                                    src={itinerary.image_url}
-                                                    alt={itinerary.title}
-                                                    sx={{
-                                                        width: '100%',
-                                                        height: 100,
-                                                        objectFit: 'cover',
-                                                        borderRadius: 1,
-                                                        mb: 1,
-                                                    }}
-                                                />
-                                            )}
-                                            <Chip
-                                                label={itinerary.status}
-                                                size="small"
-                                                color={itinerary.status === 'active' ? 'success' : 'default'}
-                                            />
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            ))}
-                            {(!destination.itineraries || destination.itineraries.length === 0) && (
-                                <Grid size={{xs: 12}}>
-                                    <Typography color="text.secondary" textAlign="center">
-                                        No itineraries added yet. Click the + button to add itineraries.
-                                    </Typography>
                                 </Grid>
                             )}
                         </Grid>
@@ -866,6 +959,40 @@ const Manage = (props) => {
                     destination={destination}
                     editing={editing}
                 />
+
+                {/* Activity Bulk Upload Dialog */}
+                <ActivityBulkUploadDialog
+                    open={activityBulkDialogOpen}
+                    onClose={() => {
+                        setActivityBulkDialogOpen(false);
+                    }}
+                    destination={destination}
+                />
+
+                {/* Itinerary Dialog */}
+                <Dialog
+                    open={itineraryDialogOpen}
+                    onClose={() => {
+                        setItineraryDialogOpen(false);
+                        setEditing(null);
+                    }}
+                    maxWidth="md"
+                    fullWidth
+                >
+                    <DialogTitle>
+                        {editing ? 'Edit Itinerary' : 'Add New Itinerary'}
+                    </DialogTitle>
+                    <DialogContent>
+                        <ItineraryDialog
+                            destination={destination}
+                            editing={editing}
+                            onClose={() => {
+                                setItineraryDialogOpen(false);
+                                setEditing(null);
+                            }}
+                        />
+                    </DialogContent>
+                </Dialog>
 
                 {/* Delete Confirmation Dialog */}
                 <Dialog
@@ -927,6 +1054,108 @@ const Manage = (props) => {
                             variant="contained"
                         >
                             Delete
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Activity Delete Confirmation Dialog */}
+                <Dialog
+                    open={activityDeleteConfirmOpen}
+                    onClose={cancelDeleteActivity}
+                    maxWidth="sm"
+                    fullWidth
+                >
+                    <DialogTitle>
+                        Confirm Delete Activity
+                    </DialogTitle>
+                    <DialogContent>
+                        <Typography>
+                            Are you sure you want to delete this activity? This action cannot be undone.
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            onClick={cancelDeleteActivity}
+                            color="primary"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={confirmDeleteActivity}
+                            color="error"
+                            variant="contained"
+                        >
+                            Delete
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Itinerary Delete Confirmation Dialog */}
+                <Dialog
+                    open={itineraryDeleteConfirmOpen}
+                    onClose={cancelDeleteItinerary}
+                    maxWidth="sm"
+                    fullWidth
+                >
+                    <DialogTitle>
+                        Confirm Delete Itinerary
+                    </DialogTitle>
+                    <DialogContent>
+                        <Typography>
+                            Are you sure you want to delete this itinerary? This action cannot be undone.
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            onClick={cancelDeleteItinerary}
+                            color="primary"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={confirmDeleteItinerary}
+                            color="error"
+                            variant="contained"
+                        >
+                            Delete
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Toggle Status Confirmation Dialog */}
+                <Dialog
+                    open={toggleStatusConfirmOpen}
+                    onClose={cancelToggleStatus}
+                    maxWidth="sm"
+                    fullWidth
+                >
+                    <DialogTitle>
+                        {destination.status === 'active' ? 'Deactivate Destination' : 'Activate Destination'}
+                    </DialogTitle>
+                    <DialogContent>
+                        <Typography>
+                            Are you sure you want to {destination.status === 'active' ? 'deactivate' : 'activate'} the destination "{destination.name}"?
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{mt: 2}}>
+                            {destination.status === 'active' 
+                                ? 'Deactivating will make this destination unavailable to users.' 
+                                : 'Activating will make this destination available to users.'
+                            }
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            onClick={cancelToggleStatus}
+                            color="primary"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={confirmToggleStatus}
+                            color={destination.status === 'active' ? 'error' : 'success'}
+                            variant="contained"
+                        >
+                            {destination.status === 'active' ? 'Deactivate' : 'Activate'}
                         </Button>
                     </DialogActions>
                 </Dialog>

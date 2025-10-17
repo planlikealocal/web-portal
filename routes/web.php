@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\SpecialistController;
 use App\Http\Controllers\Admin\DestinationController;
 use App\Http\Controllers\Admin\CountryController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 // Website routes
 Route::get('/', [WebsiteController::class, 'home'])->name('home');
@@ -54,8 +55,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         
         // Destination Activities routes
         Route::post('/destinations/{destination}/activities', [DestinationController::class, 'storeActivity'])->name('destinations.activities.store');
+        Route::post('/destinations/{destination}/activities/bulk', [DestinationController::class, 'storeBulkActivities'])->name('destinations.activities.bulk');
         Route::put('/destinations/{destination}/activities/{activity}', [DestinationController::class, 'updateActivity'])->name('destinations.activities.update');
         Route::delete('/destinations/{destination}/activities/{activity}', [DestinationController::class, 'destroyActivity'])->name('destinations.activities.destroy');
+        
+        // Destination Itineraries routes
+        Route::post('/destinations/{destination}/itineraries', [DestinationController::class, 'storeItinerary'])->name('destinations.itineraries.store');
+        Route::put('/destinations/{destination}/itineraries/{itinerary}', [DestinationController::class, 'updateItinerary'])->name('destinations.itineraries.update');
+        Route::delete('/destinations/{destination}/itineraries/{itinerary}', [DestinationController::class, 'destroyItinerary'])->name('destinations.itineraries.destroy');
         
         // Countries routes
         Route::get('/countries', [CountryController::class, 'index'])->name('countries.index');

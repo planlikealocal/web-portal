@@ -57,7 +57,9 @@ class DestinationResource extends JsonResource
                     return [
                         'id' => $activity->id,
                         'name' => $activity->name,
+                        'description' => $activity->description,
                         'image_url' => $activity->image_url,
+                        'status' => $activity->status,
                     ];
                 });
             }),
