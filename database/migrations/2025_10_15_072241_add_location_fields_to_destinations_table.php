@@ -26,8 +26,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('destinations', function (Blueprint $table) {
-            $table->foreignId('location_id')->constrained()->onDelete('cascade');
             $table->dropColumn(['country', 'state_province', 'city']);
+            // Note: location_id column was already removed in the up() method
+            // and locations table was dropped, so we can't recreate the foreign key
         });
     }
 };
