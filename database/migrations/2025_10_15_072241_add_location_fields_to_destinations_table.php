@@ -15,8 +15,6 @@ return new class extends Migration
             $table->string('country')->nullable();
             $table->string('state_province')->nullable();
             $table->string('city')->nullable();
-            $table->dropForeign(['location_id']);
-            $table->dropColumn('location_id');
         });
     }
 
