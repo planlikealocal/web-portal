@@ -63,10 +63,38 @@ class CountrySeeder extends Seeder
                 'code' => 'GR',
                 'flag_url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Flag_of_Greece.svg/40px-Flag_of_Greece.svg.png',
             ],
+            [
+                'name' => 'United Arab Emirates',
+                'code' => 'AE',
+                'flag_url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Flag_of_the_United_Arab_Emirates.svg/40px-Flag_of_the_United_Arab_Emirates.svg.png',
+            ],
+            [
+                'name' => 'India',
+                'code' => 'IN',
+                'flag_url' => 'https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Flag_of_India.svg/40px-Flag_of_India.svg.png',
+            ],
+            [
+                'name' => 'South Africa',
+                'code' => 'ZA',
+                'flag_url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Flag_of_South_Africa.svg/40px-Flag_of_South_Africa.svg.png',
+            ],
+            [
+                'name' => 'Brazil',
+                'code' => 'BR',
+                'flag_url' => 'https://upload.wikimedia.org/wikipedia/en/thumb/0/05/Flag_of_Brazil.svg/40px-Flag_of_Brazil.svg.png',
+            ],
+            [
+                'name' => 'Switzerland',
+                'code' => 'CH',
+                'flag_url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Flag_of_Switzerland.svg/40px-Flag_of_Switzerland.svg.png',
+            ],
         ];
 
         foreach ($countries as $country) {
-            Country::create($country);
+            Country::firstOrCreate(
+                ['code' => $country['code']],
+                $country
+            );
         }
     }
 }
