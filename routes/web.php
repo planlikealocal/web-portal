@@ -6,6 +6,9 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SpecialistController;
 use App\Http\Controllers\Admin\DestinationController;
 use App\Http\Controllers\Admin\CountryController;
+use App\Http\Controllers\Specialist\AuthController as SpecialistAuthController;
+use App\Http\Controllers\Specialist\DashboardController as SpecialistDashboardController;
+use App\Http\Controllers\Specialist\AppointmentController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -30,6 +33,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/specialists/{specialist}/edit', [SpecialistController::class, 'edit'])->name('specialists.edit');
         Route::post('/specialists', [SpecialistController::class, 'store'])->name('specialists.store');
         Route::post('/specialists/{specialist}', [SpecialistController::class, 'update'])->name('specialists.update');
+        Route::post('/specialists/{specialist}/reset-password', [SpecialistController::class, 'resetPassword'])->name('specialists.reset-password');
         Route::delete('/specialists/{specialist}', [SpecialistController::class, 'destroy'])->name('specialists.destroy');
         
         // Destination routes
@@ -75,5 +79,28 @@ Route::prefix('admin')->name('admin.')->group(function () {
             
             return redirect()->back()->with($type, $message);
         })->name('test.notifications');
+    });
+});
+
+// Specialist authentication routes
+Route::prefix('specialist')->name('specialist.')->group(function () {
+    Route::get('/login', [SpecialistAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [SpecialistAuthController::class, 'login']);
+    Route::post('/logout', [SpecialistAuthController::class, 'logout'])->name('logout');
+    
+    // Password reset routes
+    Route::get('/forgot-password', [SpecialistAuthController::class, 'showForgotPasswordForm'])->name('forgot-password');
+    Route::post('/forgot-password', [SpecialistAuthController::class, 'sendResetLink']);
+    Route::get('/reset-password/{token}', [SpecialistAuthController::class, 'showResetForm'])->name('reset-password');
+    Route::post('/reset-password', [SpecialistAuthController::class, 'resetPassword']);
+
+    // Protected specialist routes
+    Route::middleware(['specialist'])->group(function () {
+        Route::get('/', [SpecialistDashboardController::class, 'index'])->name('dashboard');
+        
+        // Appointments routes
+        Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
+        Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointments.create');
+        Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
     });
 });

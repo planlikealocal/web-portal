@@ -6,6 +6,7 @@ use App\Actions\Specialist\CreateSpecialistAction;
 use App\Actions\Specialist\DeleteSpecialistAction;
 use App\Actions\Specialist\GetSpecialistsAction;
 use App\Actions\Specialist\UpdateSpecialistAction;
+use App\Actions\Specialist\ResetSpecialistPasswordAction;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\SpecialistListResource;
 use App\Http\Resources\SpecialistResource;
@@ -25,6 +26,7 @@ class SpecialistController extends Controller
         private CreateSpecialistAction     $createSpecialistAction,
         private UpdateSpecialistAction     $updateSpecialistAction,
         private DeleteSpecialistAction     $deleteSpecialistAction,
+        private ResetSpecialistPasswordAction $resetSpecialistPasswordAction,
         private SpecialistOperationService $operationService,
     )
     {
@@ -120,6 +122,22 @@ class SpecialistController extends Controller
 
         return redirect()->route('admin.specialists.index')
             ->with('success', 'Specialist deleted successfully.');
+    }
+
+    /**
+     * Reset specialist password
+     */
+    public function resetPassword(Specialist $specialist)
+    {
+        $result = $this->resetSpecialistPasswordAction->execute($specialist);
+
+        if ($result['success']) {
+            return redirect()->route('admin.specialists.index')
+                ->with('success', $result['message']);
+        }
+
+        return redirect()->route('admin.specialists.index')
+            ->with('error', $result['message']);
     }
 
     /**
