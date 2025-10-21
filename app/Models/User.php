@@ -22,6 +22,10 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'google_access_token',
+        'google_refresh_token',
+        'google_token_expires',
+        'google_calendar_id',
     ];
 
     /**
@@ -32,6 +36,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'google_access_token',
+        'google_refresh_token',
     ];
 
     /**
@@ -44,6 +50,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'google_token_expires' => 'datetime',
         ];
     }
 
@@ -61,5 +68,38 @@ class User extends Authenticatable
     public function isSpecialist(): bool
     {
         return $this->role === 'specialist';
+    }
+
+    /**
+     * Check if user has Google Calendar connected
+     */
+    public function hasGoogleCalendarConnected(): bool
+    {
+        return !empty($this->google_access_token);
+    }
+
+    /**
+     * Check if Google access token is expired
+     */
+    public function isGoogleTokenExpired(): bool
+    {
+        if (!$this->google_token_expires) {
+            return true;
+        }
+        
+        return now()->isAfter($this->google_token_expires);
+    }
+
+    /**
+     * Disconnect Google Calendar
+     */
+    public function disconnectGoogleCalendar(): void
+    {
+        $this->update([
+            'google_access_token' => null,
+            'google_refresh_token' => null,
+            'google_token_expires' => null,
+            'google_calendar_id' => null,
+        ]);
     }
 }

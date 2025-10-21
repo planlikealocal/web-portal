@@ -6,17 +6,22 @@ import {
   Typography,
   Grid,
   Paper,
+  Alert,
+  Button,
+  AlertTitle
 } from '@mui/material';
 import {
   CalendarToday as CalendarIcon,
   Person as PersonIcon,
   TrendingUp as TrendingUpIcon,
+  Warning
 } from '@mui/icons-material';
+import { Link } from '@inertiajs/react';
 import SpecialistLayout from '../../Layouts/SpecialistLayout';
 
 const SpecialistDashboard = ({ user, specialist }) => {
   return (
-    <SpecialistLayout>
+    <SpecialistLayout user={user}>
       <Box>
         <Typography variant="h4" gutterBottom>
           Welcome back, {user?.name}!
@@ -24,6 +29,27 @@ const SpecialistDashboard = ({ user, specialist }) => {
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
           Here's an overview of your specialist portal
         </Typography>
+
+        {/* Google Calendar Connection Alert */}
+        {!user?.hasGoogleCalendarConnected && (
+          <Alert 
+            severity="warning" 
+            sx={{ mb: 3 }}
+            action={
+              <Button 
+                color="inherit" 
+                size="small" 
+                component={Link}
+                href="/specialist/google-calendar-settings"
+              >
+                Connect Now
+              </Button>
+            }
+          >
+            <AlertTitle>Google Calendar Required</AlertTitle>
+            You need to connect your Google Calendar to access appointment features and enable client bookings.
+          </Alert>
+        )}
 
         <Grid container spacing={3}>
           {/* Quick Stats Cards */}

@@ -23,7 +23,13 @@ class DashboardController extends Controller
         }
         
         return Inertia::render('Specialist/Dashboard', [
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'hasGoogleCalendarConnected' => $user->hasGoogleCalendarConnected(),
+                'isGoogleTokenExpired' => $user->isGoogleTokenExpired(),
+            ],
             'specialist' => $specialist,
         ]);
     }

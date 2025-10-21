@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Specialist\AuthController as SpecialistAuthController;
 use App\Http\Controllers\Specialist\DashboardController as SpecialistDashboardController;
 use App\Http\Controllers\Specialist\AppointmentController;
+use App\Http\Controllers\GoogleController;
+use App\Http\Controllers\AppointmentBookingController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -17,6 +19,9 @@ Route::get('/', [WebsiteController::class, 'home'])->name('home');
 Route::get('/about', [WebsiteController::class, 'about'])->name('about');
 Route::get('/contact', [WebsiteController::class, 'contact'])->name('contact');
 Route::post('/contact', [WebsiteController::class, 'contactSubmit'])->name('contact.submit');
+
+// Public appointment booking
+Route::get('/book-appointment', [AppointmentBookingController::class, 'index'])->name('appointment.booking');
 
 // Admin authentication routes
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -94,13 +99,37 @@ Route::prefix('specialist')->name('specialist.')->group(function () {
     Route::get('/reset-password/{token}', [SpecialistAuthController::class, 'showResetForm'])->name('reset-password');
     Route::post('/reset-password', [SpecialistAuthController::class, 'resetPassword']);
 
-    // Protected specialist routes
-    Route::middleware(['specialist'])->group(function () {
+    // ALL specialist routes require Google Calendar connection
+    Route::middleware(['specialist', 'specialist.google.calendar'])->group(function () {
         Route::get('/', [SpecialistDashboardController::class, 'index'])->name('dashboard');
         
         // Appointments routes
         Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
         Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointments.create');
         Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
+        
+        // Add any other specialist routes here - they will all require Google Calendar
+        // Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+        // Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+        // Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
     });
+
+    // Specialist routes that DON'T require Google Calendar (exceptions)
+    Route::middleware(['specialist'])->group(function () {
+        // Google Calendar settings (excluded from Google Calendar requirement)
+        Route::get('/google-calendar-settings', [AppointmentBookingController::class, 'googleCalendarSettings'])->name('google-calendar.settings');
+    });
+});
+
+// Google Calendar OAuth routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/google/redirect', [GoogleController::class, 'redirect'])->name('google.redirect');
+    Route::get('/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
+    Route::post('/google/disconnect', [GoogleController::class, 'disconnect'])->name('google.disconnect');
+});
+
+// Public API routes for appointment booking
+Route::prefix('api')->group(function () {
+    Route::get('/availability/{user}', [GoogleController::class, 'getAvailability'])->name('api.availability');
+    Route::post('/appointments', [GoogleController::class, 'createAppointment'])->name('api.appointments.create');
 });

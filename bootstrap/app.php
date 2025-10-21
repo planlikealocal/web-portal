@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'specialist' => \App\Http\Middleware\SpecialistMiddleware::class,
+            'google.calendar' => \App\Http\Middleware\EnsureGoogleCalendarConnected::class,
+            'specialist.google.calendar' => \App\Http\Middleware\RequireGoogleCalendarForSpecialists::class,
         ]);
         
         $middleware->web(append: [

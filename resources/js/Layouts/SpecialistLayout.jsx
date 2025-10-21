@@ -13,6 +13,9 @@ import {
   Toolbar,
   Typography,
   ThemeProvider,
+  Chip,
+  Alert,
+  Button
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -21,6 +24,8 @@ import {
   Logout as LogoutIcon,
   Home as HomeIcon,
   Person as PersonIcon,
+  Settings as SettingsIcon,
+  Warning
 } from '@mui/icons-material';
 import { Link, router } from '@inertiajs/react';
 import adminTheme from '../themes/adminTheme';
@@ -28,7 +33,7 @@ import Notification from '../Components/Notification';
 
 const drawerWidth = 240;
 
-const SpecialistLayout = ({ children }) => {
+const SpecialistLayout = ({ children, user }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleDrawerToggle = () => {
@@ -42,6 +47,7 @@ const SpecialistLayout = ({ children }) => {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, href: '/specialist' },
     { text: 'Appointments', icon: <CalendarIcon />, href: '/specialist/appointments' },
+    { text: 'Google Calendar', icon: <SettingsIcon />, href: '/specialist/google-calendar-settings' },
     { text: 'Profile', icon: <PersonIcon />, href: '/specialist/profile' },
     { text: 'Back to Website', icon: <HomeIcon />, href: '/' },
   ];
@@ -53,6 +59,32 @@ const SpecialistLayout = ({ children }) => {
           Specialist Portal
         </Typography>
       </Toolbar>
+      
+      {/* Google Calendar Status */}
+      {user && (
+        <Box sx={{ p: 2 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            Google Calendar Status
+          </Typography>
+          <Chip
+            label={user.hasGoogleCalendarConnected ? 'Connected' : 'Not Connected'}
+            color={user.hasGoogleCalendarConnected ? 'success' : 'error'}
+            size="small"
+            icon={user.hasGoogleCalendarConnected ? <CalendarIcon /> : <Warning />}
+          />
+          {!user.hasGoogleCalendarConnected && (
+            <Button
+              size="small"
+              component={Link}
+              href="/specialist/google-calendar-settings"
+              sx={{ mt: 1, width: '100%' }}
+            >
+              Connect Now
+            </Button>
+          )}
+        </Box>
+      )}
+      
       <List>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
