@@ -216,4 +216,30 @@ class GoogleController extends Controller
             return redirect('/specialist/google-calendar-settings')->with('error', 'Failed to disconnect Google Calendar.');
         }
     }
+
+    /**
+     * Refresh Google Calendar token
+     */
+    public function refreshToken(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user->hasGoogleCalendarConnected()) {
+                return response()->json(['error' => 'Google Calendar is not connected'], 400);
+            }
+            
+            $refreshed = $this->googleCalendarService->refreshToken($user);
+            
+            if ($refreshed) {
+                return response()->json(['success' => true, 'message' => 'Token refreshed successfully']);
+            } else {
+                return response()->json(['error' => 'Failed to refresh token. Please reconnect your Google Calendar.'], 400);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Token refresh failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to refresh token. Please reconnect your Google Calendar.'], 500);
+        }
+    }
 }

@@ -65,15 +65,22 @@ class GoogleCalendarService
     /**
      * Refresh the access token using refresh token
      */
-    protected function refreshToken(): bool
+    public function refreshToken(User $user = null): bool
     {
         try {
-            if (!$this->user->google_refresh_token) {
-                Log::error('No refresh token available for user: ' . $this->user->id);
+            $targetUser = $user ?: $this->user;
+            
+            if (!$targetUser) {
+                Log::error('No user provided for token refresh');
+                return false;
+            }
+            
+            if (!$targetUser->google_refresh_token) {
+                Log::error('No refresh token available for user: ' . $targetUser->id);
                 return false;
             }
 
-            $this->client->setRefreshToken($this->user->google_refresh_token);
+            $this->client->setRefreshToken($targetUser->google_refresh_token);
             $accessToken = $this->client->fetchAccessTokenWithRefreshToken();
 
             if (isset($accessToken['error'])) {
@@ -82,13 +89,17 @@ class GoogleCalendarService
             }
 
             // Update user with new tokens
-            $this->user->update([
+            $targetUser->update([
                 'google_access_token' => $accessToken['access_token'],
                 'google_token_expires' => Carbon::now()->addSeconds($accessToken['expires_in']),
             ]);
 
-            $this->client->setAccessToken($accessToken['access_token']);
-            $this->calendarService = new Calendar($this->client);
+            // Update the service's user reference if it's the same user
+            if ($this->user && $this->user->id === $targetUser->id) {
+                $this->user = $targetUser->fresh();
+                $this->client->setAccessToken($accessToken['access_token']);
+                $this->calendarService = new Calendar($this->client);
+            }
 
             return true;
 

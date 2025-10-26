@@ -19,7 +19,7 @@ import {
   Chip,
   Divider
 } from '@mui/material';
-import WebsiteLayout from '../Layouts/WebsiteLayout';
+import WebsiteLayout from '../../Layouts/WebsiteLayout.jsx';
 
 export default function AppointmentBooking({ specialists = [] }) {
     const [selectedSpecialist, setSelectedSpecialist] = useState(null);
@@ -40,16 +40,16 @@ export default function AppointmentBooking({ specialists = [] }) {
         setSelectedSpecialist(specialist);
         setLoading(true);
         setError('');
-        
+
         try {
             const response = await fetch(`/api/availability/${specialist.id}?duration=${bookingForm.duration}`);
             const data = await response.json();
-            
+
             if (data.error) {
                 setError(data.error);
                 return;
             }
-            
+
             setAvailableSlots(data.available_slots || []);
         } catch (error) {
             console.error('Error fetching availability:', error);
@@ -73,7 +73,7 @@ export default function AppointmentBooking({ specialists = [] }) {
 
     const handleBookingSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!selectedSpecialist || !selectedSlot) {
             setError('Please select a specialist and time slot');
             return;
@@ -81,7 +81,7 @@ export default function AppointmentBooking({ specialists = [] }) {
 
         setLoading(true);
         setError('');
-        
+
         try {
             const response = await fetch('/api/appointments', {
                 method: 'POST',
@@ -101,7 +101,7 @@ export default function AppointmentBooking({ specialists = [] }) {
             });
 
             const data = await response.json();
-            
+
             if (data.success) {
                 setSuccess('Appointment booked successfully! You will receive a confirmation email shortly.');
                 // Reset form
@@ -129,7 +129,7 @@ export default function AppointmentBooking({ specialists = [] }) {
     return (
         <WebsiteLayout>
             <Head title="Book Appointment" />
-            
+
             <Container maxWidth="lg" sx={{ py: 4 }}>
                 <Card>
                     <CardContent sx={{ p: 4 }}>
@@ -212,7 +212,7 @@ export default function AppointmentBooking({ specialists = [] }) {
                                 <Typography variant="h6" gutterBottom>
                                     2. Choose a Time Slot
                                 </Typography>
-                                
+
                                 <Box sx={{ mb: 3 }}>
                                     <FormControl sx={{ minWidth: 200 }}>
                                         <InputLabel>Duration</InputLabel>
@@ -273,7 +273,7 @@ export default function AppointmentBooking({ specialists = [] }) {
                                 <Typography variant="h6" gutterBottom>
                                     3. Your Details
                                 </Typography>
-                                
+
                                 <Box component="form" onSubmit={handleBookingSubmit} sx={{ mt: 2 }}>
                                     <Grid container spacing={3}>
                                         <Grid item xs={12} sm={6}>
@@ -286,7 +286,7 @@ export default function AppointmentBooking({ specialists = [] }) {
                                                 required
                                             />
                                         </Grid>
-                                        
+
                                         <Grid item xs={12} sm={6}>
                                             <TextField
                                                 fullWidth

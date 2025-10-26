@@ -11,6 +11,7 @@ use App\Http\Controllers\Specialist\DashboardController as SpecialistDashboardCo
 use App\Http\Controllers\Specialist\AppointmentController;
 use App\Http\Controllers\GoogleController;
 use App\Http\Controllers\AppointmentBookingController;
+use App\Http\Controllers\DestinationsController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\Storage;
 Route::get('/', [WebsiteController::class, 'home'])->name('home');
 Route::get('/about', [WebsiteController::class, 'about'])->name('about');
 Route::get('/contact', [WebsiteController::class, 'contact'])->name('contact');
+Route::get('/destinations', [DestinationsController::class, 'index'])->name('destinations');
+Route::get('/api/destinations', [DestinationsController::class, 'loadMore'])->name('destinations.load-more');
 Route::post('/contact', [WebsiteController::class, 'contactSubmit'])->name('contact.submit');
 
 // Public appointment booking
@@ -126,6 +129,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/google/redirect', [GoogleController::class, 'redirect'])->name('google.redirect');
     Route::get('/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
     Route::post('/google/disconnect', [GoogleController::class, 'disconnect'])->name('google.disconnect');
+    Route::post('/google/refresh-token', [GoogleController::class, 'refreshToken'])->name('google.refresh-token');
 });
 
 // Public API routes for appointment booking

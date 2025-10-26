@@ -27,13 +27,14 @@ import {
   Security,
   Notifications
 } from '@mui/icons-material';
-import SpecialistLayout from '../Layouts/SpecialistLayout';
-import GoogleCalendarRequiredModal from '../Components/GoogleCalendarRequiredModal';
+import SpecialistLayout from '../../Layouts/SpecialistLayout.jsx';
+import GoogleCalendarRequiredModal from '../../Components/GoogleCalendarRequiredModal.jsx';
 
 export default function GoogleCalendarSettings({ user }) {
     const { flash } = usePage().props;
     const [connecting, setConnecting] = useState(false);
     const [disconnecting, setDisconnecting] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
     const [showRequiredModal, setShowRequiredModal] = useState(!user.hasGoogleCalendarConnected);
 
     // Check if user has successfully connected Google Calendar
@@ -52,7 +53,7 @@ export default function GoogleCalendarSettings({ user }) {
     const handleDisconnect = () => {
         if (confirm('Are you sure you want to disconnect your Google Calendar? This will prevent automatic appointment booking.')) {
             setDisconnecting(true);
-            
+
             fetch('/google/disconnect', {
                 method: 'POST',
                 headers: {
@@ -68,6 +69,29 @@ export default function GoogleCalendarSettings({ user }) {
         }
     };
 
+    const handleRefreshToken = () => {
+        setRefreshing(true);
+
+        fetch('/google/refresh-token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.error || 'Failed to refresh token');
+                setRefreshing(false);
+            }
+        }).catch(() => {
+            alert('Failed to refresh token');
+            setRefreshing(false);
+        });
+    };
+
     const handleModalClose = () => {
         // Only allow closing if Google Calendar is connected
         if (user.hasGoogleCalendarConnected) {
@@ -78,14 +102,14 @@ export default function GoogleCalendarSettings({ user }) {
     return (
         <SpecialistLayout user={user}>
             <Head title="Google Calendar Settings" />
-            
+
             {/* Required Modal */}
-            <GoogleCalendarRequiredModal 
+            <GoogleCalendarRequiredModal
                 user={user}
                 open={showRequiredModal}
                 onClose={handleModalClose}
             />
-            
+
             <Container maxWidth="md" sx={{ py: 4 }}>
                 <Card>
                     <CardContent sx={{ p: 4 }}>
@@ -102,7 +126,7 @@ export default function GoogleCalendarSettings({ user }) {
                                 {flash.success}
                             </Alert>
                         )}
-                        
+
                         {flash?.error && (
                             <Alert severity="error" sx={{ mb: 3 }}>
                                 {flash.error}
@@ -112,8 +136,8 @@ export default function GoogleCalendarSettings({ user }) {
                         {user.hasGoogleCalendarConnected ? (
                             <Box>
                                 {/* Connected State */}
-                                <Alert 
-                                    severity="success" 
+                                <Alert
+                                    severity="success"
                                     icon={<CheckCircle />}
                                     sx={{ mb: 3 }}
                                 >
@@ -143,11 +167,24 @@ export default function GoogleCalendarSettings({ user }) {
                                             <Typography variant="body2" color="text.secondary">
                                                 Token Status
                                             </Typography>
-                                            <Chip
-                                                label={user.isGoogleTokenExpired ? 'Expired' : 'Valid'}
-                                                color={user.isGoogleTokenExpired ? 'error' : 'success'}
-                                                size="small"
-                                            />
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Chip
+                                                    label={user.isGoogleTokenExpired ? 'Expired' : 'Valid'}
+                                                    color={user.isGoogleTokenExpired ? 'error' : 'success'}
+                                                    size="small"
+                                                />
+                                                {user.isGoogleTokenExpired && (
+                                                    <Button
+                                                        size="small"
+                                                        variant="outlined"
+                                                        onClick={handleRefreshToken}
+                                                        disabled={refreshing}
+                                                        sx={{ ml: 1 }}
+                                                    >
+                                                        {refreshing ? 'Refreshing...' : 'Refresh'}
+                                                    </Button>
+                                                )}
+                                            </Box>
                                         </Grid>
                                         {user.google_token_expires && (
                                             <Grid item xs={12}>
@@ -177,8 +214,8 @@ export default function GoogleCalendarSettings({ user }) {
                         ) : (
                             <Box>
                                 {/* Not Connected State */}
-                                <Alert 
-                                    severity="warning" 
+                                <Alert
+                                    severity="warning"
                                     icon={<Warning />}
                                     sx={{ mb: 3 }}
                                 >

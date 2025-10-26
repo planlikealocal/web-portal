@@ -50,7 +50,7 @@ class DestinationRepository implements DestinationRepositoryInterface
         return $query->orderBy('created_at', 'desc')->get();
     }
 
-    public function getAllPaginated(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    public function getAllPaginated(array $filters = [], int $perPage = 15, int $page = 1): LengthAwarePaginator
     {
         $query = Destination::with(['images']);
 
@@ -67,7 +67,7 @@ class DestinationRepository implements DestinationRepositoryInterface
             });
         }
 
-        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+        return $query->orderBy('created_at', 'desc')->paginate($perPage, ['*'], 'page', $page);
     }
 
     public function getActive(): Collection

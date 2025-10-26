@@ -1,18 +1,18 @@
 import React from 'react';
 import { Typography, Box, Container, Button, Grid } from '@mui/material';
 import { Link } from '@inertiajs/react';
-import WebsiteLayout from '../Layouts/WebsiteLayout';
+import WebsiteLayout from '../../Layouts/WebsiteLayout.jsx';
 
 const Home = () => {
   return (
     <WebsiteLayout>
       <Container maxWidth="md">
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
             minHeight: '60vh',
             textAlign: 'center'
           }}
@@ -23,7 +23,7 @@ const Home = () => {
           <Typography variant="h5" component="h2" color="text.secondary" sx={{ mb: 4 }}>
             Your gateway to amazing travel experiences
           </Typography>
-          
+
           <Grid container spacing={3} justifyContent="center">
             <Grid item>
               <Button
