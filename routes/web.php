@@ -21,6 +21,7 @@ Route::get('/about', [WebsiteController::class, 'about'])->name('about');
 Route::get('/contact', [WebsiteController::class, 'contact'])->name('contact');
 Route::get('/destinations', [DestinationsController::class, 'index'])->name('destinations');
 Route::get('/api/destinations', [DestinationsController::class, 'loadMore'])->name('destinations.load-more');
+Route::get('/api/regions', [DestinationsController::class, 'getRegionsByCountry'])->name('regions.by-country');
 Route::get('/api/countries', [App\Http\Controllers\Admin\CountryController::class, 'list'])->name('countries.list');
 Route::post('/contact', [WebsiteController::class, 'contactSubmit'])->name('contact.submit');
 

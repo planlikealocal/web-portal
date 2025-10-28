@@ -3,10 +3,11 @@ import { router } from '@inertiajs/react';
 import WebsiteLayout from '../../Layouts/WebsiteLayout.jsx';
 import { Autocomplete, TextField } from '@mui/material';
 
-const Destinations = ({ destinations: initialDestinations, pagination: initialPagination, filters: initialFilters = {}, countries: initialCountries = [] }) => {
+const Destinations = ({ destinations: initialDestinations, pagination: initialPagination, filters: initialFilters = {}, countries: initialCountries = [], regions: initialRegions = [] }) => {
   const [destinations, setDestinations] = useState(initialDestinations || []);
   const [pagination, setPagination] = useState(initialPagination || {});
   const [countries] = useState(initialCountries);
+  const [regions, setRegions] = useState(initialRegions);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const isAppendingRef = useRef(false);
   const [filters, setFilters] = useState({
@@ -14,15 +15,6 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
     region: '',
     style: ''
   });
-
-  // Define region options with "All" option
-  const regionOptions = [
-    { id: 'all', name: 'All Regions' },
-    { id: 'europe', name: 'Europe' },
-    { id: 'asia', name: 'Asia' },
-    { id: 'africa', name: 'Africa' },
-    { id: 'americas', name: 'Americas' }
-  ];
 
   // Define activity options with "All" option
   const activityOptions = [
@@ -38,6 +30,28 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
     { id: 'all', name: 'All Countries' },
     ...countries
   ];
+
+  // Add "All Regions" option to the beginning of regions array
+  const regionsWithAll = [
+    { id: 'all', name: 'All Regions' },
+    ...regions
+  ];
+
+  // Update regions when country changes - regions come from main request
+  useEffect(() => {
+    if (filters.country_id && filters.country_id !== 'all') {
+      // Clear region filter when country changes
+      setFilters(prev => ({ ...prev, region: '' }));
+    } else {
+      setRegions([]);
+      setFilters(prev => ({ ...prev, region: '' }));
+    }
+  }, [filters.country_id]);
+
+  // Update regions when prop changes (from Inertia)
+  useEffect(() => {
+    setRegions(initialRegions);
+  }, [initialRegions]);
 
   // Update destinations when props change (but not when appending more)
   useEffect(() => {
@@ -61,12 +75,16 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
       [filterType]: filterValue
     }));
 
-    // If country filter is changed, reload page with filter to maintain URL state
+    // If country filter is changed, reload page with filter to get regions
     if (filterType === 'country_id') {
       const filters = { country_id: filterValue || undefined };
       router.get('/destinations', filters, {
         preserveScroll: true,
-        replace: true
+        replace: true,
+        onSuccess: (page) => {
+          // Regions will come from the page props
+          setFilters(prev => ({ ...prev, region: '' }));
+        }
       });
     }
   };
@@ -175,13 +193,13 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
                           {/* Region Filter */}
                           <div>
                               <Autocomplete
-                                  options={regionOptions}
+                                  options={regionsWithAll}
                                   value={(() => {
                                     const regionId = filters.region;
                                     if (!regionId || regionId === '') {
-                                      return regionOptions.find(r => r.id === 'all') || regionOptions[0];
+                                      return regionsWithAll.find(r => r.id === 'all') || regionsWithAll[0];
                                     }
-                                    return regionOptions.find(r => String(r.id) === String(regionId)) || regionOptions[0];
+                                    return regionsWithAll.find(r => String(r.id) === String(regionId)) || regionsWithAll[0];
                                   })()}
                                   onChange={(event, region) => {
                                     if (region === null) {
@@ -202,6 +220,7 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
                                     });
                                     return filtered;
                                   }}
+                                  disabled={!filters.country_id || filters.country_id === 'all'}
                                   renderInput={(params) => (
                                       <TextField
                                           {...params}

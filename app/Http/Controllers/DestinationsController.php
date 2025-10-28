@@ -24,7 +24,7 @@ class DestinationsController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'code', 'flag_url', 'destinations_count']);
 
-        return Inertia::render('Web/Destinations', [
+        $response = [
             'destinations' => DestinationListResource::collection($destinations->items()),
             'pagination' => [
                 'current_page' => $destinations->currentPage(),
@@ -35,7 +35,29 @@ class DestinationsController extends Controller
             ],
             'filters' => $filters,
             'countries' => $countries
-        ]);
+        ];
+
+        // Add regions to response if country_id is provided
+        $regions = [];
+        if (!empty($filters['country_id'])) {
+            $regions = \App\Models\Destination::where('country_id', $filters['country_id'])
+                ->whereNotNull('state_province')
+                ->distinct()
+                ->pluck('state_province')
+                ->map(function ($region) {
+                    return [
+                        'id' => strtolower(str_replace(' ', '_', $region)),
+                        'name' => $region
+                    ];
+                })
+                ->values()
+                ->sortBy('name')
+                ->values()
+                ->toArray();
+        }
+        $response['regions'] = $regions;
+
+        return Inertia::render('Web/Destinations', $response);
     }
 
     public function loadMore(Request $request)
@@ -55,5 +77,35 @@ class DestinationsController extends Controller
                 'has_more_pages' => $destinations->hasMorePages(),
             ]
         ]);
+    }
+
+    public function getRegionsByCountry(Request $request)
+    {
+        $countryId = $request->get('country_id');
+        
+        if (!$countryId) {
+            return response()->json(['regions' => []]);
+        }
+
+        $regions = \App\Models\Destination::where('country_id', $countryId)
+            ->whereNotNull('state_province')
+            ->distinct()
+            ->pluck('state_province')
+            ->map(function ($region) {
+                return [
+                    'id' => strtolower(str_replace(' ', '_', $region)),
+                    'name' => $region
+                ];
+            })
+            ->values()
+            ->sortBy('name')
+            ->values();
+
+        // Return JSON response for AJAX calls, or Inertia response
+        if ($request->expectsJson() || $request->header('X-Inertia')) {
+            return response()->json(['regions' => $regions]);
+        }
+
+        return Inertia::render('Web/Destinations', ['regions' => $regions->toArray()]);
     }
 }
