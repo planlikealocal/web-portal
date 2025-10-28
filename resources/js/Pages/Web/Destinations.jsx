@@ -1,47 +1,108 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { router } from '@inertiajs/react';
 import WebsiteLayout from '../../Layouts/WebsiteLayout.jsx';
+import { Autocomplete, TextField } from '@mui/material';
 
-const Destinations = ({ destinations: initialDestinations, pagination: initialPagination }) => {
+const Destinations = ({ destinations: initialDestinations, pagination: initialPagination, filters: initialFilters = {}, countries: initialCountries = [] }) => {
   const [destinations, setDestinations] = useState(initialDestinations || []);
   const [pagination, setPagination] = useState(initialPagination || {});
-  const [loading, setLoading] = useState(false);
+  const [countries] = useState(initialCountries);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const isAppendingRef = useRef(false);
   const [filters, setFilters] = useState({
-    country: '',
+    country_id: initialFilters.country_id || '',
     region: '',
     style: ''
   });
 
+  // Define region options with "All" option
+  const regionOptions = [
+    { id: 'all', name: 'All Regions' },
+    { id: 'europe', name: 'Europe' },
+    { id: 'asia', name: 'Asia' },
+    { id: 'africa', name: 'Africa' },
+    { id: 'americas', name: 'Americas' }
+  ];
+
+  // Define activity options with "All" option
+  const activityOptions = [
+    { id: 'all', name: 'All Activities' },
+    { id: 'adventure', name: 'Adventure' },
+    { id: 'cultural', name: 'Cultural' },
+    { id: 'relaxation', name: 'Relaxation' },
+    { id: 'luxury', name: 'Luxury' }
+  ];
+
+  // Add "All Countries" option to the beginning of countries array
+  const countriesWithAll = [
+    { id: 'all', name: 'All Countries' },
+    ...countries
+  ];
+
+  // Update destinations when props change (but not when appending more)
+  useEffect(() => {
+    if (!isAppendingRef.current) {
+      setDestinations(initialDestinations || []);
+      setPagination(initialPagination || {});
+      setFilters(prev => ({
+        ...prev,
+        country_id: initialFilters.country_id || ''
+      }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDestinations?.length, initialPagination?.current_page, initialFilters.country_id]);
+
   const handleFilterChange = (filterType, value) => {
+    // If "all" is selected, set to empty string to clear the filter
+    const filterValue = value === 'all' ? '' : (value || '');
+    
     setFilters(prev => ({
       ...prev,
-      [filterType]: value
+      [filterType]: filterValue
     }));
+
+    // If country filter is changed, reload page with filter to maintain URL state
+    if (filterType === 'country_id') {
+      const filters = { country_id: filterValue || undefined };
+      router.get('/destinations', filters, {
+        preserveScroll: true,
+        replace: true
+      });
+    }
   };
 
-  const loadMoreDestinations = async () => {
-    if (loading || !pagination.has_more_pages) return;
+  const loadMoreDestinations = () => {
+    if (!pagination.has_more_pages || isLoadingMore) return;
 
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/destinations?page=${pagination.current_page + 1}`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      });
+    setIsLoadingMore(true);
+    isAppendingRef.current = true;
 
-      if (response.ok) {
-        const data = await response.json();
-        setDestinations(prev => [...prev, ...data.destinations]);
-        setPagination(data.pagination);
-      }
-    } catch (error) {
-      console.error('Error loading more destinations:', error);
-    } finally {
-      setLoading(false);
+    const params = {
+      page: pagination.current_page + 1
+    };
+
+    if (filters.country_id) {
+      params.country_id = filters.country_id;
     }
+
+    // Use partial reload with onSuccess to append data instead of replace
+    router.get('/destinations', params, {
+      preserveState: true,
+      preserveScroll: true,
+      only: ['destinations', 'pagination'],
+      onSuccess: (page) => {
+        // Append new destinations to existing ones
+        const newDestinations = page.props.destinations || [];
+        setDestinations(prev => [...prev, ...newDestinations]);
+        setPagination(page.props.pagination);
+        setIsLoadingMore(false);
+        isAppendingRef.current = false;
+      },
+      onError: () => {
+        setIsLoadingMore(false);
+        isAppendingRef.current = false;
+      }
+    });
   };
 
   return (
@@ -71,52 +132,126 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           {/* Country Filter */}
                           <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                              <select
-                                  value={filters.country}
-                                  onChange={(e) => handleFilterChange('country', e.target.value)}
-                                  className="input-field"
-                              >
-                                  <option value="">Select Country</option>
-                                  <option value="france">France</option>
-                                  <option value="italy">Italy</option>
-                                  <option value="spain">Spain</option>
-                                  <option value="japan">Japan</option>
-                                  <option value="thailand">Thailand</option>
-                                  <option value="greece">Greece</option>
-                              </select>
+                              <Autocomplete
+                                  options={countriesWithAll}
+                                  value={(() => {
+                                    const countryId = filters.country_id;
+                                    if (!countryId || countryId === '') {
+                                      return countriesWithAll.find(c => c.id === 'all') || countriesWithAll[0];
+                                    }
+                                    return countriesWithAll.find(c => String(c.id) === String(countryId)) || countriesWithAll[0];
+                                  })()}
+                                  onChange={(event, country) => {
+                                    if (country === null) {
+                                      handleFilterChange('country_id', 'all');
+                                    } else {
+                                      handleFilterChange('country_id', country.id);
+                                    }
+                                  }}
+                                  getOptionLabel={(option) => option?.name || ''}
+                                  isOptionEqualToValue={(option, value) => {
+                                    if (!option || !value) return false;
+                                    return String(option.id) === String(value.id);
+                                  }}
+                                  filterOptions={(options, state) => {
+                                    const filtered = options.filter(option => {
+                                      if (option.id === 'all') return true;
+                                      return option.name.toLowerCase().includes(state.inputValue.toLowerCase());
+                                    });
+                                    return filtered;
+                                  }}
+                                  renderInput={(params) => (
+                                      <TextField
+                                          {...params}
+                                          label="Country"
+                                          variant="outlined"
+                                          size="small"
+                                          disabled={isLoadingMore}
+                                      />
+                                  )}
+                              />
                           </div>
 
                           {/* Region Filter */}
                           <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Region</label>
-                              <select
-                                  value={filters.region}
-                                  onChange={(e) => handleFilterChange('region', e.target.value)}
-                                  className="input-field"
-                              >
-                                  <option value="">Select Region</option>
-                                  <option value="europe">Europe</option>
-                                  <option value="asia">Asia</option>
-                                  <option value="africa">Africa</option>
-                                  <option value="americas">Americas</option>
-                              </select>
+                              <Autocomplete
+                                  options={regionOptions}
+                                  value={(() => {
+                                    const regionId = filters.region;
+                                    if (!regionId || regionId === '') {
+                                      return regionOptions.find(r => r.id === 'all') || regionOptions[0];
+                                    }
+                                    return regionOptions.find(r => String(r.id) === String(regionId)) || regionOptions[0];
+                                  })()}
+                                  onChange={(event, region) => {
+                                    if (region === null) {
+                                      handleFilterChange('region', 'all');
+                                    } else {
+                                      handleFilterChange('region', region.id);
+                                    }
+                                  }}
+                                  getOptionLabel={(option) => option?.name || ''}
+                                  isOptionEqualToValue={(option, value) => {
+                                    if (!option || !value) return false;
+                                    return String(option.id) === String(value.id);
+                                  }}
+                                  filterOptions={(options, state) => {
+                                    const filtered = options.filter(option => {
+                                      if (option.id === 'all') return true;
+                                      return option.name.toLowerCase().includes(state.inputValue.toLowerCase());
+                                    });
+                                    return filtered;
+                                  }}
+                                  renderInput={(params) => (
+                                      <TextField
+                                          {...params}
+                                          label="Region"
+                                          variant="outlined"
+                                          size="small"
+                                      />
+                                  )}
+                              />
                           </div>
 
-                          {/* Style Filter */}
+                          {/* Activities Filter */}
                           <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Style</label>
-                              <select
-                                  value={filters.style}
-                                  onChange={(e) => handleFilterChange('style', e.target.value)}
-                                  className="input-field"
-                              >
-                                  <option value="">Select Style</option>
-                                  <option value="adventure">Adventure</option>
-                                  <option value="cultural">Cultural</option>
-                                  <option value="relaxation">Relaxation</option>
-                                  <option value="luxury">Luxury</option>
-                              </select>
+                              <Autocomplete
+                                  options={activityOptions}
+                                  value={(() => {
+                                    const activityId = filters.style;
+                                    if (!activityId || activityId === '') {
+                                      return activityOptions.find(a => a.id === 'all') || activityOptions[0];
+                                    }
+                                    return activityOptions.find(a => String(a.id) === String(activityId)) || activityOptions[0];
+                                  })()}
+                                  onChange={(event, activity) => {
+                                    if (activity === null) {
+                                      handleFilterChange('style', 'all');
+                                    } else {
+                                      handleFilterChange('style', activity.id);
+                                    }
+                                  }}
+                                  getOptionLabel={(option) => option?.name || ''}
+                                  isOptionEqualToValue={(option, value) => {
+                                    if (!option || !value) return false;
+                                    return String(option.id) === String(value.id);
+                                  }}
+                                  filterOptions={(options, state) => {
+                                    const filtered = options.filter(option => {
+                                      if (option.id === 'all') return true;
+                                      return option.name.toLowerCase().includes(state.inputValue.toLowerCase());
+                                    });
+                                    return filtered;
+                                  }}
+                                  renderInput={(params) => (
+                                      <TextField
+                                          {...params}
+                                          label="Activities"
+                                          variant="outlined"
+                                          size="small"
+                                      />
+                                  )}
+                              />
                           </div>
                       </div>
                   </div>
@@ -191,10 +326,10 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
                       <div className="text-center">
                           <button
                               onClick={loadMoreDestinations}
-                              disabled={loading}
+                              disabled={isLoadingMore}
                               className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                              {loading ? 'Loading...' : 'Load more'}
+                              {isLoadingMore ? 'Loading...' : 'Load more'}
                           </button>
                       </div>
                   )}

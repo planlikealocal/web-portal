@@ -38,6 +38,10 @@ class DestinationRepository implements DestinationRepositoryInterface
             $query->where('status', $filters['status']);
         }
 
+        if (isset($filters['country_id'])) {
+            $query->where('country_id', $filters['country_id']);
+        }
+
         if (isset($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
@@ -52,10 +56,14 @@ class DestinationRepository implements DestinationRepositoryInterface
 
     public function getAllPaginated(array $filters = [], int $perPage = 15, int $page = 1): LengthAwarePaginator
     {
-        $query = Destination::with(['images']);
+        $query = Destination::with(['images', 'country']);
 
         if (isset($filters['status'])) {
             $query->where('status', $filters['status']);
+        }
+
+        if (isset($filters['country_id'])) {
+            $query->where('country_id', $filters['country_id']);
         }
 
         if (isset($filters['search'])) {
