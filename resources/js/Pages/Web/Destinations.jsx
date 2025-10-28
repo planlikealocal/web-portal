@@ -3,27 +3,19 @@ import { router } from '@inertiajs/react';
 import WebsiteLayout from '../../Layouts/WebsiteLayout.jsx';
 import { Autocomplete, TextField } from '@mui/material';
 
-const Destinations = ({ destinations: initialDestinations, pagination: initialPagination, filters: initialFilters = {}, countries: initialCountries = [], regions: initialRegions = [] }) => {
+const Destinations = ({ destinations: initialDestinations, pagination: initialPagination, filters: initialFilters = {}, countries: initialCountries = [], regions: initialRegions = [], activities: initialActivities = [] }) => {
   const [destinations, setDestinations] = useState(initialDestinations || []);
   const [pagination, setPagination] = useState(initialPagination || {});
   const [countries] = useState(initialCountries);
   const [regions, setRegions] = useState(initialRegions);
+  const [activities, setActivities] = useState(initialActivities);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const isAppendingRef = useRef(false);
   const [filters, setFilters] = useState({
     country_id: initialFilters.country_id || '',
     region: '',
-    style: ''
+    activity: ''
   });
-
-  // Define activity options with "All" option
-  const activityOptions = [
-    { id: 'all', name: 'All Activities' },
-    { id: 'adventure', name: 'Adventure' },
-    { id: 'cultural', name: 'Cultural' },
-    { id: 'relaxation', name: 'Relaxation' },
-    { id: 'luxury', name: 'Luxury' }
-  ];
 
   // Add "All Countries" option to the beginning of countries array
   const countriesWithAll = [
@@ -37,14 +29,21 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
     ...regions
   ];
 
-  // Update regions when country changes - regions come from main request
+  // Add "All Activities" option to the beginning of activities array
+  const activitiesWithAll = [
+    { id: 'all', name: 'All Activities' },
+    ...activities
+  ];
+
+  // Update regions and activities when country changes
   useEffect(() => {
     if (filters.country_id && filters.country_id !== 'all') {
-      // Clear region filter when country changes
-      setFilters(prev => ({ ...prev, region: '' }));
+      // Clear filters when country changes
+      setFilters(prev => ({ ...prev, region: '', activity: '' }));
     } else {
       setRegions([]);
-      setFilters(prev => ({ ...prev, region: '' }));
+      setActivities([]);
+      setFilters(prev => ({ ...prev, region: '', activity: '' }));
     }
   }, [filters.country_id]);
 
@@ -52,6 +51,11 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
   useEffect(() => {
     setRegions(initialRegions);
   }, [initialRegions]);
+
+  // Update activities when prop changes (from Inertia)
+  useEffect(() => {
+    setActivities(initialActivities);
+  }, [initialActivities]);
 
   // Update destinations when props change (but not when appending more)
   useEffect(() => {
@@ -75,18 +79,43 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
       [filterType]: filterValue
     }));
 
-    // If country filter is changed, reload page with filter to get regions
-    if (filterType === 'country_id') {
-      const filters = { country_id: filterValue || undefined };
-      router.get('/destinations', filters, {
-        preserveScroll: true,
-        replace: true,
-        onSuccess: (page) => {
-          // Regions will come from the page props
-          setFilters(prev => ({ ...prev, region: '' }));
-        }
-      });
+    // Build filter params
+    const filterParams = {};
+    if (filters.country_id && filterType !== 'country_id') {
+      filterParams.country_id = filters.country_id;
+    } else {
+      filterParams.country_id = filterType === 'country_id' ? filterValue : filters.country_id || undefined;
     }
+    
+    if (filterType === 'region') {
+      // For region, we need to find the actual region name from the regions list
+      const selectedRegion = regions.find(r => r.id === filterValue);
+      filterParams.region = selectedRegion ? selectedRegion.name : filterValue;
+    } else if (filters.region) {
+      const currentRegion = regions.find(r => r.id === filters.region);
+      filterParams.region = currentRegion ? currentRegion.name : filters.region;
+    }
+    
+    if (filterType === 'activity') {
+      // For activity, we need to find the actual activity name from the activities list
+      const selectedActivity = activities.find(a => a.id === filterValue);
+      filterParams.activity = selectedActivity ? selectedActivity.name : filterValue;
+    } else if (filters.activity) {
+      const currentActivity = activities.find(a => a.id === filters.activity);
+      filterParams.activity = currentActivity ? currentActivity.name : filters.activity;
+    }
+
+    // Reload page with filters
+    router.get('/destinations', filterParams, {
+      preserveScroll: true,
+      replace: true,
+      onSuccess: (page) => {
+        if (filterType === 'country_id') {
+          // Clear filters when country changes
+          setFilters(prev => ({ ...prev, region: '', activity: '' }));
+        }
+      }
+    });
   };
 
   const loadMoreDestinations = () => {
@@ -235,19 +264,19 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
                           {/* Activities Filter */}
                           <div>
                               <Autocomplete
-                                  options={activityOptions}
+                                  options={activitiesWithAll}
                                   value={(() => {
-                                    const activityId = filters.style;
+                                    const activityId = filters.activity;
                                     if (!activityId || activityId === '') {
-                                      return activityOptions.find(a => a.id === 'all') || activityOptions[0];
+                                      return activitiesWithAll.find(a => a.id === 'all') || activitiesWithAll[0];
                                     }
-                                    return activityOptions.find(a => String(a.id) === String(activityId)) || activityOptions[0];
+                                    return activitiesWithAll.find(a => String(a.id) === String(activityId)) || activitiesWithAll[0];
                                   })()}
                                   onChange={(event, activity) => {
                                     if (activity === null) {
-                                      handleFilterChange('style', 'all');
+                                      handleFilterChange('activity', 'all');
                                     } else {
-                                      handleFilterChange('style', activity.id);
+                                      handleFilterChange('activity', activity.id);
                                     }
                                   }}
                                   getOptionLabel={(option) => option?.name || ''}
@@ -262,6 +291,7 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
                                     });
                                     return filtered;
                                   }}
+                                  disabled={!filters.country_id || filters.country_id === 'all'}
                                   renderInput={(params) => (
                                       <TextField
                                           {...params}

@@ -15,9 +15,12 @@ class DestinationsController extends Controller
 
     public function index(Request $request)
     {
-        $filters = $request->only(['status', 'search', 'country_id', 'page']);
+        $filters = $request->only(['status', 'search', 'country_id', 'region', 'activity', 'page']);
         $page = $filters['page'] ?? 1;
-        $destinations = $this->getDestinationsAction->executePaginated($filters, 6, $page);
+        // Remove page from filters for the action
+        $actionFilters = $filters;
+        unset($actionFilters['page']);
+        $destinations = $this->getDestinationsAction->executePaginated($actionFilters, 6, $page);
 
          
         $countries = Country::withCount('destinations')
@@ -56,6 +59,28 @@ class DestinationsController extends Controller
                 ->toArray();
         }
         $response['regions'] = $regions;
+
+        // Add activities to response if country_id is provided
+        $activities = [];
+        if (!empty($filters['country_id'])) {
+            $activities = \App\Models\DestinationActivity::whereHas('destination', function ($query) use ($filters) {
+                $query->where('country_id', $filters['country_id']);
+            })
+                ->where('status', 'active')
+                ->distinct()
+                ->pluck('name')
+                ->map(function ($activity) {
+                    return [
+                        'id' => strtolower(str_replace(' ', '_', $activity)),
+                        'name' => $activity
+                    ];
+                })
+                ->values()
+                ->sortBy('name')
+                ->values()
+                ->toArray();
+        }
+        $response['activities'] = $activities;
 
         return Inertia::render('Web/Destinations', $response);
     }

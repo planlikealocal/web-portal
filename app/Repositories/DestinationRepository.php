@@ -66,6 +66,19 @@ class DestinationRepository implements DestinationRepositoryInterface
             $query->where('country_id', $filters['country_id']);
         }
 
+        if (isset($filters['region'])) {
+            // The region filter is already the state_province value from the database
+            $query->where('state_province', $filters['region']);
+        }
+
+        if (isset($filters['activity'])) {
+            // Filter by activity name from destination_activities table
+            $query->whereHas('activities', function ($q) use ($filters) {
+                $q->where('name', $filters['activity'])
+                  ->where('status', 'active');
+            });
+        }
+
         if (isset($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
