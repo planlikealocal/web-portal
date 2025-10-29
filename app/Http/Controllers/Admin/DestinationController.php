@@ -96,7 +96,7 @@ class DestinationController extends Controller
      */
     public function show(Destination $destination): Response
     {
-        $destination->load(['location', 'images', 'seasons', 'activities', 'itineraries']);
+        $destination->load(['country', 'images', 'seasons', 'activities', 'itineraries']);
 
         return Inertia::render('Admin/Destinations/Show', [
             'destination' => new DestinationResource($destination),

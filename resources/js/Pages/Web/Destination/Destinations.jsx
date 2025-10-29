@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { router } from '@inertiajs/react';
-import WebsiteLayout from '../../Layouts/WebsiteLayout.jsx';
+import { router, Link } from '@inertiajs/react';
+import WebsiteLayout from '../../../Layouts/WebsiteLayout.jsx';
 import { Autocomplete, TextField } from '@mui/material';
 
 const Destinations = ({ destinations: initialDestinations, pagination: initialPagination, filters: initialFilters = {}, countries: initialCountries = [], regions: initialRegions = [], activities: initialActivities = [] }) => {
@@ -349,7 +349,7 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       {destinations.slice(0, 3).map((destination) => (
-                          <div key={destination.id} className="card p-6">
+                          <Link key={destination.id} href={`/destinations/${destination.id}`} className="card p-6 hover:shadow-lg transition-shadow cursor-pointer block">
                               <div className="flex items-center mb-4">
                                   <svg className="w-4 h-4 text-gray-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                       <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
@@ -369,7 +369,7 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
                               </div>
                               <h3 className="text-lg font-medium text-gray-900 mb-2">{destination.name}</h3>
                               <p className="text-sm text-gray-600 overflow-hidden" style={{display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'}}>{destination.description}</p>
-                          </div>
+                          </Link>
                       ))}
                   </div>
               </div>
@@ -383,7 +383,7 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                       {destinations.slice(3, 6).map((destination) => (
-                          <div key={destination.id} className="card p-6">
+                          <Link key={destination.id} href={`/destinations/${destination.id}`} className="card p-6 hover:shadow-lg transition-shadow cursor-pointer block">
                               <div className="flex items-center mb-4">
                                   <svg className="w-4 h-4 text-gray-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                       <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
@@ -403,7 +403,7 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
                               </div>
                               <h3 className="text-lg font-medium text-gray-900 mb-2">{destination.name}</h3>
                               <p className="text-sm text-gray-600 overflow-hidden" style={{display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'}}>{destination.description}</p>
-                          </div>
+                          </Link>
                       ))}
                   </div>
               </div>
@@ -417,7 +417,7 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
                       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                               {destinations.slice(6).map((destination, index) => (
-                                  <div key={destination.id} className="card p-6">
+                                  <Link key={destination.id} href={`/destinations/${destination.id}`} className="card p-6 hover:shadow-lg transition-shadow cursor-pointer block">
                                       <div className="flex items-center mb-4">
                                           <svg className="w-4 h-4 text-gray-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                               <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
@@ -437,7 +437,7 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
                                       </div>
                                       <h3 className="text-lg font-medium text-gray-900 mb-2">{destination.name}</h3>
                                       <p className="text-sm text-gray-600 overflow-hidden" style={{display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'}}>{destination.description}</p>
-                                  </div>
+                                  </Link>
                               ))}
                           </div>
                       </div>

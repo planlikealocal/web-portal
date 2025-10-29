@@ -32,13 +32,15 @@ class DestinationResource extends JsonResource
             'specialist_ids' => $this->specialist_ids,
             'images' => $this->whenLoaded('images', function () {
                 return $this->images->map(function ($image) {
-                    return [
-                        'id' => $image->id,
-                        'name' => $image->name,
-                        'description' => $image->description,
-                        'image_type' => $image->image_type,
-                        'url' => $image->url,
-                    ];
+                    if ($image->image_type === 'gallery') {
+                        return [
+                            'id' => $image->id,
+                            'name' => $image->name,
+                            'description' => $image->description,
+                            'image_type' => $image->image_type,
+                            'url' => $image->url,
+                        ];
+                    }
                 });
             }),
             'seasons' => $this->whenLoaded('seasons', function () {

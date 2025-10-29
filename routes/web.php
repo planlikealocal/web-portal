@@ -20,6 +20,7 @@ Route::get('/', [WebsiteController::class, 'home'])->name('home');
 Route::get('/about', [WebsiteController::class, 'about'])->name('about');
 Route::get('/contact', [WebsiteController::class, 'contact'])->name('contact');
 Route::get('/destinations', [DestinationsController::class, 'index'])->name('destinations');
+Route::get('/destinations/{destination}', [DestinationsController::class, 'show'])->name('destinations.show');
 Route::get('/api/destinations', [DestinationsController::class, 'loadMore'])->name('destinations.load-more');
 Route::get('/api/regions', [DestinationsController::class, 'getRegionsByCountry'])->name('regions.by-country');
 Route::get('/api/countries', [App\Http\Controllers\Admin\CountryController::class, 'list'])->name('countries.list');
@@ -51,6 +52,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/destinations/create', [DestinationController::class, 'create'])->name('destinations.create');
         Route::get('/destinations/{destination}/manage', [DestinationController::class, 'manage'])->name('destinations.manage');
         Route::get('/destinations/{destination}/edit', [DestinationController::class, 'edit'])->name('destinations.edit');
+        Route::get('/destinations/{destination}', [DestinationController::class, 'show'])->name('destinations.show');
         Route::post('/destinations', [DestinationController::class, 'store'])->name('destinations.store');
         Route::post('/destinations/{destination}', [DestinationController::class, 'update'])->name('destinations.update');
         Route::delete('/destinations/{destination}', [DestinationController::class, 'destroy'])->name('destinations.destroy');

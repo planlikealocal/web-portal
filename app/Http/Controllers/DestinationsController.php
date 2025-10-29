@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Actions\Destination\GetDestinationsAction;
 use App\Http\Resources\DestinationListResource;
+use App\Http\Resources\DestinationResource;
 use App\Models\Country;
+use App\Models\Destination;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -82,7 +84,7 @@ class DestinationsController extends Controller
         }
         $response['activities'] = $activities;
 
-        return Inertia::render('Web/Destinations', $response);
+        return Inertia::render('Web/Destination/Destinations', $response);
     }
 
     public function loadMore(Request $request)
@@ -131,6 +133,23 @@ class DestinationsController extends Controller
             return response()->json(['regions' => $regions]);
         }
 
-        return Inertia::render('Web/Destinations', ['regions' => $regions->toArray()]);
+        return Inertia::render('Web/Destination/Destinations', ['regions' => $regions->toArray()]);
+    }
+
+    public function show($id)
+    {
+        // Find destination by ID - use findOrFail to get 404 if not found
+        $destination = Destination::findOrFail($id);
+
+        // Only show active destinations publicly
+        if ($destination->status !== 'active') {
+            abort(404, 'Destination is not available. Only active destinations can be viewed.');
+        }
+
+        $destination->load(['country', 'images', 'seasons', 'activities', 'itineraries']);
+
+        return Inertia::render('Web/Destination/DestinationShow', [
+            'destination' => new DestinationResource($destination),
+        ]);
     }
 }
