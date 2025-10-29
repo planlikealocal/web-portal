@@ -57,18 +57,40 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
     setActivities(initialActivities);
   }, [initialActivities]);
 
-  // Update destinations when props change (but not when appending more)
+  // Initialize destinations on mount
   useEffect(() => {
-    if (!isAppendingRef.current) {
-      setDestinations(initialDestinations || []);
+    if (destinations.length === 0 && initialDestinations && initialDestinations.length > 0) {
+      setDestinations(initialDestinations);
       setPagination(initialPagination || {});
-      setFilters(prev => ({
-        ...prev,
-        country_id: initialFilters.country_id || ''
-      }));
+    }
+  }, []);
+
+  // Update destinations when filters change (but not when appending more pages)
+  useEffect(() => {
+    // Only reset destinations when filters actually change, not when page changes
+    if (!isAppendingRef.current) {
+      const currentCountryId = filters.country_id || '';
+      const newCountryId = initialFilters.country_id || '';
+      const currentRegion = filters.region || '';
+      const newRegion = initialFilters.region || '';
+      const currentActivity = filters.activity || '';
+      const newActivity = initialFilters.activity || '';
+      
+      // Only reset if filters changed
+      if (currentCountryId !== newCountryId || 
+          currentRegion !== newRegion || 
+          currentActivity !== newActivity) {
+        setDestinations(initialDestinations || []);
+        setPagination(initialPagination || {});
+        setFilters({
+          country_id: newCountryId,
+          region: newRegion,
+          activity: newActivity
+        });
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialDestinations?.length, initialPagination?.current_page, initialFilters.country_id]);
+  }, [initialFilters.country_id, initialFilters.region, initialFilters.activity]);
 
   const handleFilterChange = (filterType, value) => {
     // If "all" is selected, set to empty string to clear the filter
@@ -128,8 +150,23 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
       page: pagination.current_page + 1
     };
 
-    if (filters.country_id) {
+    // Include all active filters
+    if (filters.country_id && filters.country_id !== 'all') {
       params.country_id = filters.country_id;
+    }
+    
+    if (filters.region && filters.region !== 'all') {
+      const currentRegion = regions.find(r => r.id === filters.region);
+      if (currentRegion) {
+        params.region = currentRegion.name;
+      }
+    }
+    
+    if (filters.activity && filters.activity !== 'all') {
+      const currentActivity = activities.find(a => a.id === filters.activity);
+      if (currentActivity) {
+        params.activity = currentActivity.name;
+      }
     }
 
     // Use partial reload with onSuccess to append data instead of replace
@@ -138,7 +175,7 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
       preserveScroll: true,
       only: ['destinations', 'pagination'],
       onSuccess: (page) => {
-        // Append new destinations to existing ones
+        // Append new destinations to existing ones at the bottom
         const newDestinations = page.props.destinations || [];
         setDestinations(prev => [...prev, ...newDestinations]);
         setPagination(page.props.pagination);
@@ -369,19 +406,6 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
                           </div>
                       ))}
                   </div>
-
-                  {/* Load More Button */}
-                  {pagination.has_more_pages && (
-                      <div className="text-center">
-                          <button
-                              onClick={loadMoreDestinations}
-                              disabled={isLoadingMore}
-                              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                              {isLoadingMore ? 'Loading...' : 'Load more'}
-                          </button>
-                      </div>
-                  )}
               </div>
           </section>
 
@@ -419,6 +443,23 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
                       </div>
                   </section>
               </>
+          )}
+
+          {/* Load More Button - Always at the bottom after all destinations */}
+          {pagination.has_more_pages && (
+              <section className="bg-white py-8">
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                      <div className="text-center">
+                          <button
+                              onClick={loadMoreDestinations}
+                              disabled={isLoadingMore}
+                              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                              {isLoadingMore ? 'Loading...' : 'Load more'}
+                          </button>
+                      </div>
+                  </div>
+              </section>
           )}
 
           {/* Call to Action Section */}
