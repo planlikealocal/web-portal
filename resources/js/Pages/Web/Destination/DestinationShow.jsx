@@ -6,6 +6,7 @@ import ImagesTab from './components/ImagesTab.jsx';
 import SeasonsTab from './components/SeasonsTab.jsx';
 import ActivitiesTab from './components/ActivitiesTab.jsx';
 import ItinerariesTab from './components/ItinerariesTab.jsx';
+import PlanTripTab from './components/PlanTripTab.jsx';
 import WebsiteLayout from '../../../Layouts/WebsiteLayout.jsx';
 import {
     Box,
@@ -43,10 +44,10 @@ const DestinationShow = ({ destination }) => {
                             }}
                         >
                             <Tab label="OVERVIEW" id="destination-tab-0" aria-controls="destination-tabpanel-0" />
-                            <Tab label={`BEST TIME TO GO (${destination.seasons?.length || 0})`} id="destination-tab-2" aria-controls="destination-tabpanel-2" />
-                            <Tab label={`ACTIVITIES (${destination.activities?.length || 0})`} id="destination-tab-3" aria-controls="destination-tabpanel-3" />
-                            <Tab label={`ITINERARIES (${destination.itineraries?.length || 0})`} id="destination-tab-4" aria-controls="destination-tabpanel-4" />
-                            <Tab label={`PLAN YOUT TRIP (${destination.itineraries?.length || 0})`} id="destination-tab-4" aria-controls="destination-tabpanel-4" />
+                            <Tab label={`BEST TIME TO GO (${destination.seasons?.length || 0})`} id="destination-tab-1" aria-controls="destination-tabpanel-1" />
+                            <Tab label={`ACTIVITIES (${destination.activities?.length || 0})`} id="destination-tab-2" aria-controls="destination-tabpanel-2" />
+                            <Tab label={`ITINERARIES (${destination.itineraries?.length || 0})`} id="destination-tab-3" aria-controls="destination-tabpanel-3" />
+                            <Tab label="PLAN YOUR TRIP" id="destination-tab-4" aria-controls="destination-tabpanel-4" />
                         </Tabs>
                     </Box>
 
@@ -67,6 +68,11 @@ const DestinationShow = ({ destination }) => {
                     {/* Itineraries Tab */}
                     <TabPanel value={activeTab} index={3}>
                         <ItinerariesTab itineraries={destination.itineraries} />
+                    </TabPanel>
+
+                    {/* Plan Your Trip Tab */}
+                    <TabPanel value={activeTab} index={4}>
+                        <PlanTripTab destination={destination} />
                     </TabPanel>
                 </div>
 
