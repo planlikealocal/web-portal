@@ -9,11 +9,6 @@ const ActivitiesTab = ({ activities }) => {
                     <CardContent>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                             <Typography variant="h6">{activity.name}</Typography>
-                            <Chip
-                                label={activity.status ? 'Active' : 'Inactive'}
-                                size="small"
-                                color={activity.status ? 'success' : 'default'}
-                            />
                         </Box>
                         {activity.description && (
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>

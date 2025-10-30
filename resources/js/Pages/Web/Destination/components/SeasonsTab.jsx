@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Card, CardContent, Typography, Chip } from '@mui/material';
+import { Box, Card, CardContent, Typography, Chip, CardActions } from '@mui/material';
 
 const SeasonsTab = ({ seasons }) => {
     return seasons && seasons.length > 0 ? (
@@ -7,23 +7,24 @@ const SeasonsTab = ({ seasons }) => {
             {seasons.map((season) => (
                 <Card key={season.id} variant="outlined">
                     <CardContent>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                            <Typography variant="h6">{season.name}</Typography>
-                            <Chip
-                                label={season.status ? 'Active' : 'Inactive'}
-                                size="small"
-                                color={season.status ? 'success' : 'default'}
-                            />
+                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', mb: 1 }}>
+                            <Typography variant="h6">{season.duration}</Typography>
+                    
                         </Box>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                            Duration: {season.duration}
-                        </Typography>
+            
                         {season.description && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                            <Typography variant="body2" color="text.secondary" 
+                            sx={{ mt: 1, textAlign: 'center', minHeight: '200px' }}>
                                 {season.description}
                             </Typography>
                         )}
+                
+                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', mb: 1 }}>
+                            <Typography variant="h5">{season.name}</Typography>
+                        </Box>  
                     </CardContent>
+            
+                        
                 </Card>
             ))}
         </div>

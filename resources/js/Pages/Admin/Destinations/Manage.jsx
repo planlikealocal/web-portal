@@ -504,8 +504,8 @@ const Manage = (props) => {
                             </Fab>
                         </Box>
                         <Grid container spacing={2}>
-                            {destination.images?.map((image) => (
-                                <Grid size={{xs: 2}} key={image.id}>
+                            {(destination.images || []).filter(Boolean).map((image, idx) => (
+                                <Grid size={{xs: 2}} key={image.id || idx}>
                                     <Card
                                         sx={{
                                             height: '100%',
@@ -521,8 +521,8 @@ const Manage = (props) => {
                                         <Box sx={{position: 'relative', flex: 1}}>
                                             <Box
                                                 component="img"
-                                                src={image.url}
-                                                alt={image.name}
+                                                src={image?.url || ''}
+                                                alt={image?.name || 'Image'}
                                                 sx={{
                                                     width: '100%',
                                                     height: 120,
@@ -571,10 +571,10 @@ const Manage = (props) => {
                                         </Box>
                                         <CardContent sx={{p: 1, flex: 0}}>
                                             <Typography variant="caption" noWrap sx={{mb: 0.5, display: 'block'}}>
-                                                {image.name}
+                                                {image?.name || 'Untitled'}
                                             </Typography>
                                             <Chip
-                                                label={image.image_type}
+                                                label={image?.image_type || 'Image'}
                                                 size="small"
                                                 color="primary"
                                                 variant="outlined"
@@ -783,7 +783,7 @@ const Manage = (props) => {
                     <CardContent>
                         <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
                             <Typography variant="h6">
-                                Destination Itineraries
+                                Destination Itinerary Manage
                             </Typography>
                             <Fab size="small" color="primary" onClick={handleAddItinerary}>
                                 <AddIcon/>
@@ -907,7 +907,7 @@ const Manage = (props) => {
                                         }}
                                     >
                                         <Typography color="text.secondary" variant="h6" sx={{mb: 1}}>
-                                            No itineraries added yet
+                                            No itinerary item added yet
                                         </Typography>
                                         <Typography color="text.secondary" variant="body2">
                                             Click the + button above to add destination itineraries

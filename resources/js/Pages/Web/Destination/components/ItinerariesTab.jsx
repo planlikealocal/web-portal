@@ -21,17 +21,7 @@ const ItinerariesTab = ({ itineraries }) => {
                     <CardContent>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                             <Typography variant="h6">{itinerary.title}</Typography>
-                            <Chip
-                                label={itinerary.status}
-                                size="small"
-                                color={
-                                    itinerary.status === 'active'
-                                        ? 'success'
-                                        : itinerary.status === 'draft'
-                                        ? 'warning'
-                                        : 'default'
-                                }
-                            />
+                        
                         </Box>
                         <Typography
                             variant="body2"
