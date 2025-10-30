@@ -1,25 +1,96 @@
-import React, { useState } from 'react';
-import HeaderSection from './components/HeaderSection.jsx';
-import TabPanel from './components/TabPanel.jsx';
-import OverviewTab from './components/OverviewTab.jsx';
-import ImagesTab from './components/ImagesTab.jsx';
-import SeasonsTab from './components/SeasonsTab.jsx';
-import ActivitiesTab from './components/ActivitiesTab.jsx';
-import ItinerariesTab from './components/ItinerariesTab.jsx';
-import PlanTripTab from './components/PlanTripTab.jsx';
-import WebsiteLayout from '../../../Layouts/WebsiteLayout.jsx';
-import {
-    Box,
-    Tabs,
-    Tab,
-} from '@mui/material';
-import { } from '@mui/icons-material';
+import React, { useState, useEffect, useRef } from "react";
+import HeaderSection from "./components/HeaderSection.jsx";
+import OverviewTab from "./components/OverviewTab.jsx";
+import SeasonsTab from "./components/SeasonsTab.jsx";
+import ActivitiesTab from "./components/ActivitiesTab.jsx";
+import ItinerariesTab from "./components/ItinerariesTab.jsx";
+import PlanTripTab from "./components/PlanTripTab.jsx";
+import WebsiteLayout from "../../../Layouts/WebsiteLayout.jsx";
+import { Box, ButtonGroup, Button } from "@mui/material";
+
+const tabs = [
+    { id: 'overview-tab', label: 'OVERVIEW' },
+    { id: 'seasons-tab', label: 'BEST TIME TO GO' },
+    { id: 'itineraries-tab', label: 'ITINERARIES' },
+    { id: 'activities-tab', label: 'ACTIVITIES' },
+    { id: 'plan-trip-tab', label: 'PLAN YOUR TRIP' }
+];
 
 const DestinationShow = ({ destination }) => {
-    const [activeTab, setActiveTab] = useState(0);
+    const [activeTab, setActiveTab] = useState('overview-tab');
+    const observerRef = useRef(null);
 
-    const handleTabChange = (event, newValue) => {
-        setActiveTab(newValue);
+    useEffect(() => {
+        const tabIds = tabs.map(tab => tab.id);
+        
+        // Create Intersection Observer to track which section is in view
+        observerRef.current = new IntersectionObserver(
+            (entries) => {
+                // Find the entry with the highest intersection ratio (most visible)
+                let mostVisible = null;
+                let maxRatio = 0;
+
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting && entry.intersectionRatio > maxRatio) {
+                        maxRatio = entry.intersectionRatio;
+                        mostVisible = entry.target.id;
+                    }
+                });
+
+                // If we found a most visible section, set it as active
+                if (mostVisible) {
+                    setActiveTab(mostVisible);
+                } else {
+                    // Fallback: find the section closest to the viewport top
+                    const visibleEntries = entries.filter(e => e.isIntersecting);
+                    if (visibleEntries.length > 0) {
+                        visibleEntries.sort((a, b) => {
+                            const aTop = a.boundingClientRect.top;
+                            const bTop = b.boundingClientRect.top;
+                            return Math.abs(aTop - 100) - Math.abs(bTop - 100);
+                        });
+                        setActiveTab(visibleEntries[0].target.id);
+                    }
+                }
+            },
+            {
+                root: null,
+                rootMargin: '-100px 0px -60% 0px', // Account for sticky header and trigger earlier
+                threshold: [0, 0.1, 0.3, 0.5, 0.7, 1.0]
+            }
+        );
+
+        // Observe all tab sections after a small delay to ensure they're rendered
+        const timeoutId = setTimeout(() => {
+            tabIds.forEach((tabId) => {
+                const element = document.getElementById(tabId);
+                if (element && observerRef.current) {
+                    observerRef.current.observe(element);
+                }
+            });
+        }, 100);
+
+        return () => {
+            clearTimeout(timeoutId);
+            if (observerRef.current) {
+                observerRef.current.disconnect();
+            }
+        };
+    }, []);
+
+    const handleTabClick = (tabId) => {
+        const element = document.getElementById(tabId);
+        if (element) {
+            setActiveTab(tabId);
+            const offset = 150; // Account for sticky header
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }
     };
 
     return (
@@ -29,51 +100,47 @@ const DestinationShow = ({ destination }) => {
 
                 {/* Tabs Section */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-                        <Tabs
-                            value={activeTab}
-                            onChange={handleTabChange}
-                            aria-label="destination preview tabs"
-                            sx={{
-                                '& .MuiTab-root': {
-                                    textTransform: 'none',
-                                    fontSize: '1rem',
-                                    fontWeight: 500,
-                                    minHeight: 60,
-                                },
-                            }}
+                    <Box
+                        sx={{
+                            mb: 3,
+                            position: 'sticky',
+                            top: 65,
+                            zIndex: 100,
+                            backgroundColor: 'white',
+                            pt: 2,
+                            pb: 2,
+                        }}
+                    >
+                        <ButtonGroup
+                            variant="outlined"
+                            aria-label="Basic button group"
                         >
-                            <Tab label="OVERVIEW" id="destination-tab-0" aria-controls="destination-tabpanel-0" />
-                            <Tab label={`BEST TIME TO GO (${destination.seasons?.length || 0})`} id="destination-tab-1" aria-controls="destination-tabpanel-1" />
-                            <Tab label={`ACTIVITIES (${destination.activities?.length || 0})`} id="destination-tab-2" aria-controls="destination-tabpanel-2" />
-                            <Tab label={`ITINERARIES (${destination.itineraries?.length || 0})`} id="destination-tab-3" aria-controls="destination-tabpanel-3" />
-                            <Tab label="PLAN YOUR TRIP" id="destination-tab-4" aria-controls="destination-tabpanel-4" />
-                        </Tabs>
+                            {tabs.map((tab) => (
+                                <Button
+                                    key={tab.id}
+                                    onClick={() => handleTabClick(tab.id)}
+                                    variant={activeTab === tab.id ? 'contained' : 'outlined'}
+                                    sx={{
+                                        backgroundColor: activeTab === tab.id ? 'primary.main' : 'transparent',
+                                        color: activeTab === tab.id ? 'white' : 'primary.main',
+                                        '&:hover': {
+                                            backgroundColor: activeTab === tab.id ? 'primary.dark' : 'primary.light',
+                                            color: activeTab === tab.id ? 'white' : 'primary.main',
+                                        }
+                                    }}
+                                >
+                                    {tab.label}
+                                </Button>
+                            ))}
+                        </ButtonGroup>
+        
                     </Box>
 
-                    {/* Tab Panels */}
-                    <TabPanel value={activeTab} index={0}>
-                        <OverviewTab destination={destination} />
-                    </TabPanel>
-                    {/* Seasons Tab */}
-                    <TabPanel value={activeTab} index={1}>
-                        <SeasonsTab seasons={destination.seasons} />
-                    </TabPanel>
-
-                    {/* Activities Tab */}
-                    <TabPanel value={activeTab} index={2}>
-                        <ActivitiesTab activities={destination.activities} />
-                    </TabPanel>
-
-                    {/* Itineraries Tab */}
-                    <TabPanel value={activeTab} index={3}>
-                        <ItinerariesTab itineraries={destination.itineraries} />
-                    </TabPanel>
-
-                    {/* Plan Your Trip Tab */}
-                    <TabPanel value={activeTab} index={4}>
-                        <PlanTripTab destination={destination} />
-                    </TabPanel>
+                    <OverviewTab destination={destination} className="mb-6" id="overview-tab"/>
+                    <SeasonsTab seasons={destination.seasons} className="mb-6" id="seasons-tab"/>
+                    <ItinerariesTab itineraries={destination.itineraries} className="mb-6" id="itineraries-tab"/>
+                    <ActivitiesTab activities={destination.activities} className="mb-6" id="activities-tab"/>
+                    <PlanTripTab destination={destination} className="mb-6" id="plan-trip-tab"/>
                 </div>
 
                 {/* Bottom spacing */}

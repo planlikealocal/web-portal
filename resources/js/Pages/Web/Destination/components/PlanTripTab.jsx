@@ -1,13 +1,26 @@
 import React, { useMemo } from 'react';
+import { router } from '@inertiajs/react';
 import { Box, Card, CardContent, Typography, Button, Avatar } from '@mui/material';
 import { LocationOn as LocationIcon } from '@mui/icons-material';
 
-const PlanTripTab = ({ destination }) => {
+const PlanTripTab = ({ destination, id }) => {
     const specialists = destination?.specialists || [];
     const primary = useMemo(() => specialists.find((s) => s) || null, [specialists]);
 
+    const handleSchedulePlanning = () => {
+        if (!primary?.id) {
+            alert('No specialist available');
+            return;
+        }
+
+        router.post('/plans', {
+            specialist_id: primary.id,
+            destination_id: destination?.id || null,
+        });
+    };
+
     return (
-        <Box>
+        <Box id={id}>
             
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 2 }}>
             <Typography variant="h3" sx={{ mb: 1 }}>
@@ -45,6 +58,7 @@ const PlanTripTab = ({ destination }) => {
                         variant="contained"
                         color="primary"
                         sx={{ mt: 1 }}
+                        onClick={handleSchedulePlanning}
                     >
                         {`Schedule planning with ${primary?.full_name || 'a specialist'}`}
                     </Button>

@@ -30,7 +30,6 @@ class DatabaseSeeder extends Seeder
             SpecialistSeeder::class,
             DestinationSeeder::class,
             DestinationImageSeeder::class,
-            DestinationImageSeeder::class,
         ]);
     }
 }

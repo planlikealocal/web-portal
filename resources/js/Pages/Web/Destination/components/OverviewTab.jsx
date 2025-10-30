@@ -1,9 +1,9 @@
 import React from 'react';
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import ImageCarousel from './ImageCarousel.jsx';
-const OverviewTab = ({ destination }) => {
+const OverviewTab = ({ destination, className, id }) => {
     return (
-        <div className="space-y-6">
+        <div id={id} className={`space-y-6 ${className}`}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {destination.overview_title && (
                 <Card>
@@ -25,20 +25,6 @@ const OverviewTab = ({ destination }) => {
                 )}
             
             </div>
-
-            {destination.description && (
-                <Card>
-                    <CardContent>
-                        <Typography variant="h6" gutterBottom>
-                            Description
-                        </Typography>
-                        <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                            {destination.description}
-                        </Typography>
-                    </CardContent>
-                </Card>
-            )}
-
             
         </div>
     );

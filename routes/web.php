@@ -12,6 +12,7 @@ use App\Http\Controllers\Specialist\AppointmentController;
 use App\Http\Controllers\GoogleController;
 use App\Http\Controllers\AppointmentBookingController;
 use App\Http\Controllers\DestinationsController;
+use App\Http\Controllers\PlanController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -28,6 +29,11 @@ Route::post('/contact', [WebsiteController::class, 'contactSubmit'])->name('cont
 
 // Public appointment booking
 Route::get('/book-appointment', [AppointmentBookingController::class, 'index'])->name('appointment.booking');
+
+// Plan routes
+Route::post('/plans', [PlanController::class, 'store'])->name('plans.store');
+Route::get('/plans/{plan}', [PlanController::class, 'show'])->name('plans.show');
+Route::put('/plans/{plan}', [PlanController::class, 'update'])->name('plans.update');
 
 // Admin authentication routes
 Route::prefix('admin')->name('admin.')->group(function () {

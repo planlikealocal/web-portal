@@ -1,9 +1,9 @@
 import React from 'react';
 import { Box, Card, CardContent, Typography, Chip } from '@mui/material';
 
-const ItinerariesTab = ({ itineraries }) => {
+const ItinerariesTab = ({ itineraries, className, id }) => {
     return itineraries && itineraries.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div id={id} className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${className}`}>
             {itineraries.map((itinerary) => (
                 <Card key={itinerary.id}>
                     {itinerary.image_url && (
@@ -41,6 +41,7 @@ const ItinerariesTab = ({ itineraries }) => {
         </div>
     ) : (
         <Box
+            id={id}
             sx={{
                 textAlign: 'center',
                 py: 8,

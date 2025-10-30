@@ -1,9 +1,9 @@
 import React from 'react';
 import { Box, Card, CardContent, Typography, Chip } from '@mui/material';
 
-const ActivitiesTab = ({ activities }) => {
+const ActivitiesTab = ({ activities, className, id }) => {
     return activities && activities.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div id={id} className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${className}`}>
             {activities.map((activity) => (
                 <Card key={activity.id}>
                     <CardContent>
@@ -35,6 +35,7 @@ const ActivitiesTab = ({ activities }) => {
         </div>
     ) : (
         <Box
+            id={id}
             sx={{
                 textAlign: 'center',
                 py: 8,

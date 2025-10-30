@@ -1,9 +1,9 @@
 import React from 'react';
 import { Box, Card, CardContent, Typography, Chip, CardActions } from '@mui/material';
 
-const SeasonsTab = ({ seasons }) => {
+const SeasonsTab = ({ seasons, className, id }) => {
     return seasons && seasons.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div id={id} className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${className}`}>
             {seasons.map((season) => (
                 <Card key={season.id} variant="outlined">
                     <CardContent>
@@ -30,6 +30,7 @@ const SeasonsTab = ({ seasons }) => {
         </div>
     ) : (
         <Box
+            id={id}
             sx={{
                 textAlign: 'center',
                 py: 8,
