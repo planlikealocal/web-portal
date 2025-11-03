@@ -42,26 +42,54 @@ const PlanTripTab = ({ destination, id }) => {
                         <Typography variant="h6" sx={{ mb: 0.5 }}>
                             {primary?.full_name || 'A Local Specialist'}
                         </Typography>
-                        {(primary?.location || destination?.full_location) && (
-                            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
-                                <LocationIcon fontSize="small" />
-                                <Typography variant="body2">
-                                    {primary?.location || destination?.full_location}
-                                </Typography>
-                            </Box>
-                        )}
+                        {(() => {
+                            // Format location as "Region, Country"
+                            let locationText = '';
+                            
+                            if (destination?.state_province || destination?.country) {
+                                const parts = [];
+                                if (destination.state_province) {
+                                    parts.push(destination.state_province);
+                                }
+                                if (destination.country?.name || destination.country) {
+                                    parts.push(destination.country?.name || destination.country);
+                                }
+                                locationText = parts.join(', ');
+                            } else if (primary?.location) {
+                                // For specialist, try to extract region and country from location
+                                // Location format is typically "City, Region, Country"
+                                const locationParts = primary.location.split(',').map(s => s.trim());
+                                // Get last two parts (region and country) if available
+                                if (locationParts.length >= 2) {
+                                    locationText = locationParts.slice(-2).join(', ');
+                                } else {
+                                    locationText = primary.location;
+                                }
+                            }
+                            
+                            return locationText && (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
+                                    <LocationIcon fontSize="small" />
+                                    <Typography variant="body2">
+                                        {locationText}
+                                    </Typography>
+                                </Box>
+                            );
+                        })()}
                     </Box>
                     <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 560 }}>
                         {primary?.bio || 'Tell us what you want to experience and we will craft a tailored trip with the best timings, activities and stays.'}
                     </Typography>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        sx={{ mt: 1 }}
-                        onClick={handleSchedulePlanning}
-                    >
-                        {`Schedule planning with ${primary?.full_name || 'a specialist'}`}
-                    </Button>
+                    {primary?.id && (
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            sx={{ mt: 1 }}
+                            onClick={handleSchedulePlanning}
+                        >
+                            {`Schedule planning with ${primary?.full_name || 'a specialist'}`}
+                        </Button>
+                    )}
                 </CardContent>
             </Card>
         </Box>
