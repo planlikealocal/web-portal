@@ -17,27 +17,29 @@ const theme = createTheme({
 
 createInertiaApp({
   resolve: name => {
-    const pages = import.meta.glob('./Pages/**/*.jsx', { eager: true })
+    // Use lazy loading instead of eager loading for better code splitting
+    const pages = import.meta.glob('./Pages/**/*.jsx', { eager: false })
     
     // Try exact path first
-    let page = pages[`./Pages/${name}.jsx`]
+    let pagePath = `./Pages/${name}.jsx`
     
     // If not found and name doesn't contain '/', try in Web folder
-    if (!page && !name.includes('/')) {
-      page = pages[`./Pages/Web/${name}.jsx`]
+    if (!pages[pagePath] && !name.includes('/')) {
+      pagePath = `./Pages/Web/${name}.jsx`
     }
     
     // If still not found, try to find it in subdirectories
-    if (!page) {
-      const pagePath = Object.keys(pages).find(path => 
+    if (!pages[pagePath]) {
+      const foundPath = Object.keys(pages).find(path => 
         path.includes(name) && path.endsWith('.jsx')
       )
-      if (pagePath) {
-        page = pages[pagePath]
+      if (foundPath) {
+        pagePath = foundPath
       }
     }
     
-    return page
+    // Return dynamic import function
+    return pages[pagePath] || (() => import(`./Pages/${name}.jsx`))
   },
   setup({ el, App, props }) {
     const root = createRoot(el)

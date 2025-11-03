@@ -12,4 +12,25 @@ export default defineConfig({
         react(),
         tailwindcss(),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    // Core React and Inertia
+                    'react-vendor': ['react', 'react-dom'],
+                    'inertia': ['@inertiajs/react'],
+                    
+                    // Material-UI core
+                    'mui-core': ['@mui/material', '@emotion/react', '@emotion/styled'],
+                    
+                    // Material-UI icons (often large)
+                    'mui-icons': ['@mui/icons-material'],
+                    
+                    // Material-UI Data Grid (if used)
+                    'mui-data-grid': ['@mui/x-data-grid'],
+                },
+            },
+        },
+        chunkSizeWarningLimit: 600, // Increase limit slightly, but chunks should be smaller now
+    },
 });
