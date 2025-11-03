@@ -76,21 +76,35 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
       const currentActivity = filters.activity || '';
       const newActivity = initialFilters.activity || '';
       
+      // Convert region name to region ID for state management
+      let newRegionId = '';
+      if (newRegion) {
+        const regionObj = regions.find(r => r.name === newRegion);
+        newRegionId = regionObj ? regionObj.id : '';
+      }
+      
+      // Convert activity name to activity ID for state management
+      let newActivityId = '';
+      if (newActivity) {
+        const activityObj = activities.find(a => a.name === newActivity);
+        newActivityId = activityObj ? activityObj.id : '';
+      }
+      
       // Only reset if filters changed
       if (currentCountryId !== newCountryId || 
-          currentRegion !== newRegion || 
-          currentActivity !== newActivity) {
+          currentRegion !== newRegionId || 
+          currentActivity !== newActivityId) {
         setDestinations(initialDestinations || []);
         setPagination(initialPagination || {});
         setFilters({
           country_id: newCountryId,
-          region: newRegion,
-          activity: newActivity
+          region: newRegionId,
+          activity: newActivityId
         });
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialFilters.country_id, initialFilters.region, initialFilters.activity]);
+  }, [initialFilters.country_id, initialFilters.region, initialFilters.activity, regions, activities]);
 
   const handleFilterChange = (filterType, value) => {
     // If "all" is selected, set to empty string to clear the filter
