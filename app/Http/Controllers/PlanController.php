@@ -57,16 +57,26 @@ class PlanController extends Controller
             }
         }
 
-        // Get destination data if loaded
+        // Get destination data with specialists if loaded
         $destinationData = null;
         if ($plan->relationLoaded('destination') && $plan->getRelation('destination')) {
             $destination = $plan->getRelation('destination');
-            $destinationData = [
-                'id' => $destination->id,
-                'name' => $destination->name,
-                'activities' => $activities, // Include activities in destination object as well
-            ];
+            $destinationResource = new \App\Http\Resources\DestinationResource($destination);
+            $destinationData = $destinationResource->toArray(request());
+            $destinationData['activities'] = $activities; // Include activities in destination object as well
         }
+
+        // Get all active destinations for autocomplete
+        $allDestinations = Destination::active()
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(function ($destination) {
+                return [
+                    'id' => $destination->id,
+                    'name' => $destination->name,
+                ];
+            })
+            ->toArray();
 
         return Inertia::render('Web/Plan/PlanStepper', [
             'plan' => [
@@ -78,7 +88,7 @@ class PlanController extends Controller
                 'email' => $plan->email,
                 'phone' => $plan->phone,
                 'destination' => $plan->destination, // This is the string field (destination name)
-                'destination_data' => $destinationData, // This is the destination object with activities
+                'destination_data' => $destinationData, // This is the destination object with activities and specialists
                 'travel_dates' => $plan->travel_dates,
                 'travelers' => $plan->travelers,
                 'interests' => $plan->interests ?? [],
@@ -92,6 +102,7 @@ class PlanController extends Controller
                 ] : null,
                 'activities' => $activities,
             ],
+            'destinations' => $allDestinations,
         ]);
     }
 
@@ -108,6 +119,7 @@ class PlanController extends Controller
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:255',
             'destination' => 'nullable|string|max:255',
+            'destination_id' => 'nullable|exists:destinations,id',
             'travel_dates' => 'nullable|string|max:255',
             'travelers' => 'nullable|string|max:255',
             'interests' => 'nullable|array',

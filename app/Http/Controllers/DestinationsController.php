@@ -144,7 +144,7 @@ class DestinationsController extends Controller
         return Inertia::render('Web/Destination/Destinations', ['regions' => $regions->toArray()]);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         // Find destination by ID - use findOrFail to get 404 if not found
         $destination = Destination::findOrFail($id);
@@ -156,6 +156,15 @@ class DestinationsController extends Controller
 
         $destination->load(['country', 'images', 'seasons', 'activities', 'itineraries']);
 
+        // Check if this is NOT an Inertia request and expects JSON - return JSON
+        $isInertiaRequest = $request->header('X-Inertia');
+        if (!$isInertiaRequest && $request->expectsJson()) {
+            return response()->json([
+                'data' => new DestinationResource($destination),
+            ]);
+        }
+
+        // Default to Inertia response (for Inertia requests or regular page visits)
         return Inertia::render('Web/Destination/DestinationShow', [
             'destination' => new DestinationResource($destination),
         ]);

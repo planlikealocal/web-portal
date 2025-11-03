@@ -2,21 +2,18 @@ import React, { useState } from "react";
 import { useForm } from "@inertiajs/react";
 import { Box, Container, Stepper, Step, StepLabel, Paper } from "@mui/material";
 import WebsiteLayout from "../../../Layouts/WebsiteLayout.jsx";
+import PlanATripGuide from "./components/PlanATripGuide.jsx";
 import PlanStepperHeader from "./components/PlanStepperHeader.jsx";
 import PlanStepperNavigation from "./components/PlanStepperNavigation.jsx";
 import Step1PersonalInfo from "./components/Step1PersonalInfo.jsx";
-import Step2Destination from "./components/Step2Destination.jsx";
-import Step3Travelers from "./components/Step3Travelers.jsx";
-import Step4Interests from "./components/Step4Interests.jsx";
+import Step2TripDetails from "./components/Step2TripDetails.jsx";
 
 const steps = [
     "Tell us a bit about you",
-    "Where do you want to go?",
-    "Who will be your traveling?",
-    "What are your interests?",
+    "Trip Details",
 ];
 
-const PlanStepper = ({ plan }) => {
+const PlanStepper = ({ plan, destinations = [] }) => {
     const [activeStep, setActiveStep] = useState(0);
     // Get activities from multiple possible locations
     const activities = plan.activities || 
@@ -86,28 +83,15 @@ const PlanStepper = ({ plan }) => {
                 );
             case 1:
                 return (
-                    <Step2Destination
-                        data={data}
-                        setData={setData}
-                        errors={errors}
-                    />
-                );
-            case 2:
-                return (
-                    <Step3Travelers
-                        data={data}
-                        setData={setData}
-                        errors={errors}
-                    />
-                );
-            case 3:
-                return (
-                    <Step4Interests
+                    <Step2TripDetails
                         data={data}
                         setData={setData}
                         errors={errors}
                         onInterestChange={handleInterestChange}
                         activities={activities}
+                        destinations={destinations || []}
+                        destinationData={plan.destination_data}
+                        planId={plan.id}
                     />
                 );
             default:
@@ -117,8 +101,12 @@ const PlanStepper = ({ plan }) => {
 
     return (
         <WebsiteLayout>
+            {/* Plan a Trip Guide Section */}
+            <PlanATripGuide />
+
             <Box
                 sx={{
+                    mt: 10,
                     minHeight: "100vh",
                     bgcolor: "background.default",
                     py: 4,
