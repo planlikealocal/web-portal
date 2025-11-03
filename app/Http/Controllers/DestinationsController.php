@@ -18,6 +18,10 @@ class DestinationsController extends Controller
     public function index(Request $request)
     {
         $filters = $request->only(['status', 'search', 'country_id', 'region', 'activity', 'page']);
+        // Enforce only active destinations by default
+        if (empty($filters['status'])) {
+            $filters['status'] = 'active';
+        }
         $page = $filters['page'] ?? 1;
         // Remove page from filters for the action
         $actionFilters = $filters;
@@ -90,6 +94,10 @@ class DestinationsController extends Controller
     public function loadMore(Request $request)
     {
         $filters = $request->only(['status', 'search', 'country_id']);
+        // Enforce only active destinations when loading more
+        if (empty($filters['status'])) {
+            $filters['status'] = 'active';
+        }
         $page = $request->get('page', 1);
 
         $destinations = $this->getDestinationsAction->executePaginated($filters, 6, $page);
