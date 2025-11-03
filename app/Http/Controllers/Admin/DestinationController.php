@@ -174,11 +174,8 @@ class DestinationController extends Controller
     {
         $destination->load(['images', 'seasons', 'activities', 'itineraries', 'country']);
 
-        // Load specialists filtered by destination's country if available
+        // Load all active specialists (client-side filtering will handle country filtering)
         $filters = ['status' => 'active'];
-        if ($destination->country_id) {
-            $filters['country_id'] = $destination->country_id;
-        }
         $specialists = $this->getSpecialistsAction->execute($filters);
         
         // Load all countries for the select box

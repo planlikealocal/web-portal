@@ -115,8 +115,8 @@ const List = (props) => {
         {field: 'last_name', headerName: 'Last Name', flex:1, width: 130},
         {field: 'email', headerName: 'Email', flex: 1},
         {field: 'contact_no', headerName: 'Contact No', flex: 1},
-        {field: 'country', headerName: 'Country', width: 120, flex: 1},
         {field: 'city', headerName: 'City', width: 120, flex: 1},
+        {field: 'country', headerName: 'Country', width: 120, flex: 1},
         {
             field: 'status',
             headerName: 'Status',

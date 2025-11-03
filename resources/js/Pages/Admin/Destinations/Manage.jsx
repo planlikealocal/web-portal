@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useMemo} from 'react';
 import {
     Box,
     Typography,
@@ -58,23 +58,17 @@ const Manage = (props) => {
     });
     const [basicInfoErrors, setBasicInfoErrors] = useState({});
     const [savingBasicInfo, setSavingBasicInfo] = useState(false);
-    const [filteredSpecialists, setFilteredSpecialists] = useState(specialists);
 
-    // Initialize filtered specialists
-    useEffect(() => {
-        setFilteredSpecialists(specialists);
-    }, [specialists]);
-
-    // Function to fetch specialists by country
-    const fetchSpecialistsByCountry = async (countryId) => {
-        try {
-            const response = await fetch(`/admin/destinations/specialists-by-country?country_id=${countryId || ''}`);
-            const data = await response.json();
-            setFilteredSpecialists(data.specialists);
-        } catch (error) {
-            console.error('Error fetching specialists:', error);
+    // Client-side filtering of specialists by country
+    const filteredSpecialists = useMemo(() => {
+        if (!basicInfo.country_id) {
+            // If no country selected, show all specialists
+            return specialists;
         }
-    };
+        // Filter specialists by selected country (convert both to numbers for comparison)
+        const selectedCountryId = Number(basicInfo.country_id);
+        return specialists.filter(specialist => Number(specialist.country_id) === selectedCountryId);
+    }, [specialists, basicInfo.country_id]);
 
     // Dialog states
     const [imageDialogOpen, setImageDialogOpen] = useState(false);
@@ -101,8 +95,6 @@ const Manage = (props) => {
                 [field]: value,
                 specialist_ids: [] // Clear specialists when country changes
             }));
-            // Fetch specialists for the new country
-            fetchSpecialistsByCountry(value);
         } else {
             setBasicInfo(prev => ({
                 ...prev,
