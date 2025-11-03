@@ -38,8 +38,22 @@ createInertiaApp({
       }
     }
     
-    // Return dynamic import function
-    return pages[pagePath] || (() => import(`./Pages/${name}.jsx`))
+    // Get the import function for the found path
+    const importFn = pages[pagePath]
+    
+    // Return a promise that resolves to the component
+    // This ensures proper async handling for Inertia
+    if (importFn) {
+      return importFn().then(module => {
+        // Ensure we return the default export (the component)
+        return module.default || module
+      })
+    }
+    
+    // Fallback: try direct import
+    return import(`./Pages/${name}.jsx`).then(module => {
+      return module.default || module
+    })
   },
   setup({ el, App, props }) {
     const root = createRoot(el)
