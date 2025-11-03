@@ -75,7 +75,7 @@ class DestinationRepository implements DestinationRepositoryInterface
             // Filter by activity name from destination_activities table
             $query->whereHas('activities', function ($q) use ($filters) {
                 $q->where('name', $filters['activity'])
-                  ->where('status', 'active');
+                  ->where('status', true);
             });
         }
 

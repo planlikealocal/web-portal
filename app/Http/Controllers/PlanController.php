@@ -43,8 +43,8 @@ class PlanController extends Controller
         if ($plan->relationLoaded('destination') && $plan->getRelation('destination')) {
             $destination = $plan->getRelation('destination');
             if ($destination && $destination->relationLoaded('activities') && $destination->activities) {
-                $activities = $destination->activities
-                    ->where('status', 'active')
+                    $activities = $destination->activities
+                    ->where('status', true)
                     ->map(function ($activity) {
                         return [
                             'id' => $activity->id,

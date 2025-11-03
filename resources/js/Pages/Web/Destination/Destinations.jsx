@@ -40,6 +40,9 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
     if (filters.country_id && filters.country_id !== 'all') {
       // Clear filters when country changes
       setFilters(prev => ({ ...prev, region: '', activity: '' }));
+      // Clear regions and activities - they will be repopulated when backend responds
+      setRegions([]);
+      setActivities([]);
     } else {
       setRegions([]);
       setActivities([]);

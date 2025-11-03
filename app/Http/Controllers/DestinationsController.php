@@ -68,7 +68,7 @@ class DestinationsController extends Controller
             $activities = \App\Models\DestinationActivity::whereHas('destination', function ($query) use ($filters) {
                 $query->where('country_id', $filters['country_id']);
             })
-                ->where('status', 'active')
+                ->where('status', true)
                 ->distinct()
                 ->pluck('name')
                 ->map(function ($activity) {
