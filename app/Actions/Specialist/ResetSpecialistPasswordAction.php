@@ -13,15 +13,38 @@ class ResetSpecialistPasswordAction
     public function execute(Specialist $specialist): array
     {
         // Find the user account associated with this specialist
+        // First try by email (current specialist email)
         $user = User::where('email', $specialist->email)
                    ->where('role', 'specialist')
                    ->first();
 
+        // If not found by email, try to find by name (fallback for legacy cases where email was changed but user wasn't synced)
+        $foundByEmail = true;
+        if (!$user) {
+            $foundByEmail = false;
+            $specialistFullName = $specialist->first_name . ' ' . $specialist->last_name;
+            $user = User::where('name', $specialistFullName)
+                       ->where('role', 'specialist')
+                       ->first();
+        }
+
         if (!$user) {
             return [
                 'success' => false,
-                'message' => 'No user account found for this specialist.',
+                'message' => 'No user account found for this specialist. The user account may need to be synced with the specialist record. Please update the specialist to sync the email address.',
             ];
+        }
+
+        // If user was found by name but email doesn't match, sync the email
+        if (!$foundByEmail && $user->email !== $specialist->email) {
+            $oldUserEmail = $user->email;
+            $user->update(['email' => $specialist->email]);
+            \Log::info('Synced user email during password reset', [
+                'user_id' => $user->id,
+                'specialist_id' => $specialist->id,
+                'old_email' => $oldUserEmail,
+                'new_email' => $specialist->email,
+            ]);
         }
 
         // Generate a new random password

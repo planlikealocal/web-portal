@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Specialist extends Model
 {
@@ -67,5 +68,13 @@ class Specialist extends Model
     public function scopeInactive($query)
     {
         return $query->where('status', 'inactive');
+    }
+
+    /**
+     * Get the working hours for the specialist.
+     */
+    public function workingHours(): HasMany
+    {
+        return $this->hasMany(WorkingHour::class);
     }
 }

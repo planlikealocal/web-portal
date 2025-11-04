@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Specialist\AuthController as SpecialistAuthController;
 use App\Http\Controllers\Specialist\DashboardController as SpecialistDashboardController;
 use App\Http\Controllers\Specialist\AppointmentController;
+use App\Http\Controllers\Specialist\ProfileController;
 use App\Http\Controllers\GoogleController;
 use App\Http\Controllers\AppointmentBookingController;
 use App\Http\Controllers\DestinationsController;
@@ -122,9 +123,14 @@ Route::prefix('specialist')->name('specialist.')->group(function () {
         Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
         
         // Add any other specialist routes here - they will all require Google Calendar
-        // Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
         // Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         // Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
+    });
+
+    // Specialist profile routes (don't require Google Calendar)
+    Route::middleware(['specialist'])->group(function () {
+        Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+        Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     });
 
     // Specialist routes that DON'T require Google Calendar (exceptions)
