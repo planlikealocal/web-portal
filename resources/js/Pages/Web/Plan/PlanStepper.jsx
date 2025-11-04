@@ -1,16 +1,18 @@
 import React, { useState } from "react";
 import { useForm } from "@inertiajs/react";
-import { Box, Container, Stepper, Step, StepLabel, Paper } from "@mui/material";
+import { Box, Container, Stepper, Step, StepLabel, Paper, Alert, Typography } from "@mui/material";
 import WebsiteLayout from "../../../Layouts/WebsiteLayout.jsx";
 import PlanATripGuide from "./components/PlanATripGuide.jsx";
 import PlanStepperHeader from "./components/PlanStepperHeader.jsx";
 import PlanStepperNavigation from "./components/PlanStepperNavigation.jsx";
 import Step1PersonalInfo from "./components/Step1PersonalInfo.jsx";
 import Step2TripDetails from "./components/Step2TripDetails.jsx";
+import Step3SelectPlan from "./components/Step3SelectPlan.jsx";
 
 const steps = [
     "Tell us a bit about you",
     "Trip Details",
+    "Select a Plan",
 ];
 
 const PlanStepper = ({ plan, destinations = [] }) => {
@@ -30,22 +32,40 @@ const PlanStepper = ({ plan, destinations = [] }) => {
         email: plan.email || "",
         phone: plan.phone || "",
         destination: plan.destination || "",
+        destination_id: plan.destination_id || null,
         travel_dates: plan.travel_dates || "",
         travelers: plan.travelers || "",
         interests: plan.interests || [],
         other_interests: plan.other_interests || "",
+        plan_type: plan.plan_type || plan.selected_plan || "",
+        selected_plan: plan.selected_plan || plan.plan_type || "",
     });
 
     const handleNext = () => {
+        console.log('handleNext called, activeStep:', activeStep);
+        console.log('Current form data:', data);
+        console.log('Current errors:', errors);
+        
         // Save current step data before moving to next step
         put(`/plans/${plan.id}`, {
             preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
-                if (activeStep < steps.length - 1) {
-                    setActiveStep(activeStep + 1);
-                } else {
-                    // Final step - mark as completed
+            preserveState: true, // Keep state preserved to maintain activeStep
+            onSuccess: (page) => {
+                console.log('Update successful, moving to next step');
+                console.log('Received page data:', page);
+                
+                // Check if we're on the final step before updating
+                const isFinalStep = activeStep === steps.length - 1;
+                
+                // Use functional update to ensure we have the latest activeStep value
+                setActiveStep((currentStep) => {
+                    const nextStep = currentStep < steps.length - 1 ? currentStep + 1 : currentStep;
+                    console.log('Updating step from', currentStep, 'to', nextStep);
+                    return nextStep;
+                });
+                
+                // If this is the final step, mark as completed
+                if (isFinalStep) {
                     setData("status", "completed");
                     put(`/plans/${plan.id}`, {
                         preserveScroll: true,
@@ -54,8 +74,19 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                             // Plan completed - could redirect to a success page or show confirmation
                             alert("Plan created successfully!");
                         },
+                        onError: (errors) => {
+                            console.error('Error completing plan:', errors);
+                        },
                     });
                 }
+            },
+            onError: (errors) => {
+                console.error('Error updating plan:', errors);
+                console.error('Form errors:', errors);
+                // Errors are automatically displayed via the errors prop from useForm
+            },
+            onFinish: () => {
+                console.log('Request finished');
             },
         });
     };
@@ -94,6 +125,14 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                         planId={plan.id}
                     />
                 );
+            case 2:
+                return (
+                    <Step3SelectPlan
+                        data={data}
+                        setData={setData}
+                        errors={errors}
+                    />
+                );
             default:
                 return null;
         }
@@ -118,6 +157,22 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                             activeStep={activeStep}
                             totalSteps={steps.length}
                         />
+
+                        {/* Display Errors */}
+                        {Object.keys(errors).length > 0 && (
+                            <Alert severity="error" sx={{ mb: 3 }}>
+                                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                                    Please fix the following errors:
+                                </Typography>
+                                <ul style={{ margin: 0, paddingLeft: 20 }}>
+                                    {Object.entries(errors).map(([key, value]) => (
+                                        <li key={key}>
+                                            <strong>{key}:</strong> {Array.isArray(value) ? value.join(', ') : value}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </Alert>
+                        )}
 
                         {/* Stepper */}
                         <Stepper activeStep={activeStep} sx={{ mb: 4 }}>

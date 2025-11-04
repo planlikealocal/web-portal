@@ -20,11 +20,15 @@ const PlanStepperNavigation = ({
             </Button>
             <Button
                 variant="contained"
-                onClick={onNext}
+                onClick={(e) => {
+                    e.preventDefault();
+                    console.log('Continue button clicked, activeStep:', activeStep);
+                    onNext();
+                }}
                 disabled={processing}
                 sx={{ minWidth: 150, bgcolor: '#424242', '&:hover': { bgcolor: '#212121' } }}
             >
-                {processing ? 'Saving...' : activeStep === totalSteps - 1 ? 'Create Plan' : 'Continue →'}
+                {processing ? 'Saving...' : activeStep === totalSteps - 1 ? 'Pay & Continue' : 'Continue →'}
             </Button>
         </Box>
     );

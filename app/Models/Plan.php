@@ -19,6 +19,8 @@ class Plan extends Model
         'travelers',
         'interests',
         'other_interests',
+        'plan_type',
+        'selected_plan',
         'status',
     ];
 

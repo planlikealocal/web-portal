@@ -8,6 +8,7 @@ use App\Models\Destination;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Schema;
 
 class PlanController extends Controller
 {
@@ -93,6 +94,8 @@ class PlanController extends Controller
                 'travelers' => $plan->travelers,
                 'interests' => $plan->interests ?? [],
                 'other_interests' => $plan->other_interests,
+                'plan_type' => $plan->plan_type ?? null,
+                'selected_plan' => $plan->selected_plan ?? $plan->plan_type ?? null,
                 'status' => $plan->status,
                 'specialist' => $plan->specialist ? [
                     'id' => $plan->specialist->id,
@@ -111,36 +114,78 @@ class PlanController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $plan = Plan::findOrFail($id);
+        try {
+            $plan = Plan::findOrFail($id);
 
-        $validated = $request->validate([
-            'first_name' => 'nullable|string|max:255',
-            'last_name' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:255',
-            'destination' => 'nullable|string|max:255',
-            'destination_id' => 'nullable|exists:destinations,id',
-            'travel_dates' => 'nullable|string|max:255',
-            'travelers' => 'nullable|string|max:255',
-            'interests' => 'nullable|array',
-            'other_interests' => 'nullable|string',
-            'status' => 'nullable|in:draft,in_progress,completed',
-        ]);
+            $validated = $request->validate([
+                'first_name' => 'nullable|string|max:255',
+                'last_name' => 'nullable|string|max:255',
+                'email' => 'nullable|email|max:255',
+                'phone' => 'nullable|string|max:255',
+                'destination' => 'nullable|string|max:255',
+                'destination_id' => 'nullable|exists:destinations,id',
+                'travel_dates' => 'nullable|string|max:255',
+                'travelers' => 'nullable|string|max:255',
+                'interests' => 'nullable|array',
+                'other_interests' => 'nullable|string',
+                'plan_type' => 'nullable|string|max:255',
+                'selected_plan' => 'nullable|string|max:255',
+                'status' => 'nullable|in:draft,in_progress,completed',
+            ]);
 
-        $plan->update($validated);
+            // Filter out plan_type and selected_plan if they're empty to avoid errors if columns don't exist yet
+            $updateData = [];
+            foreach ($validated as $key => $value) {
+                // Skip plan_type and selected_plan if they're empty or if columns don't exist
+                if (in_array($key, ['plan_type', 'selected_plan'])) {
+                    // Only include if not empty AND if the column exists in the database
+                    if (!empty($value)) {
+                        try {
+                            // Check if column exists by trying to access it
+                            $columnExists = Schema::hasColumn('plans', $key);
+                            if ($columnExists) {
+                                $updateData[$key] = $value;
+                            }
+                        } catch (\Exception $e) {
+                            // If we can't check, skip it to be safe
+                            \Log::info("Skipping column {$key} - column check failed: " . $e->getMessage());
+                            continue;
+                        }
+                    }
+                } else {
+                    $updateData[$key] = $value;
+                }
+            }
 
-        // If Inertia request, return back with success
-        if ($request->header('X-Inertia')) {
-            return back()->with('success', 'Plan updated successfully');
+            \Log::info('Updating plan', ['plan_id' => $plan->id, 'data' => $updateData]);
+            $plan->update($updateData);
+            \Log::info('Plan updated successfully', ['plan_id' => $plan->id]);
+
+            // If Inertia request, return back with success
+            if ($request->header('X-Inertia')) {
+                return back()->with('success', 'Plan updated successfully');
+            }
+
+            // Otherwise return JSON for API calls
+            return response()->json([
+                'success' => true,
+                'plan' => [
+                    'id' => $plan->id,
+                    'status' => $plan->status,
+                ],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation error updating plan', ['errors' => $e->errors()]);
+            if ($request->header('X-Inertia')) {
+                return back()->withErrors($e->errors());
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            \Log::error('Error updating plan', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            if ($request->header('X-Inertia')) {
+                return back()->withErrors(['error' => 'An error occurred while updating the plan.']);
+            }
+            throw $e;
         }
-
-        // Otherwise return JSON for API calls
-        return response()->json([
-            'success' => true,
-            'plan' => [
-                'id' => $plan->id,
-                'status' => $plan->status,
-            ],
-        ]);
     }
 }
