@@ -7,6 +7,7 @@ const Step1PersonalInfo = ({ data, setData, errors }) => {
             <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                     fullWidth
+                    required
                     label="First Name"
                     value={data.first_name}
                     onChange={(e) => setData('first_name', e.target.value)}
@@ -17,6 +18,7 @@ const Step1PersonalInfo = ({ data, setData, errors }) => {
             <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                     fullWidth
+                    required
                     label="Last Name"
                     value={data.last_name}
                     onChange={(e) => setData('last_name', e.target.value)}
@@ -27,6 +29,7 @@ const Step1PersonalInfo = ({ data, setData, errors }) => {
             <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                     fullWidth
+                    required
                     label="Email"
                     type="email"
                     value={data.email}
@@ -38,6 +41,7 @@ const Step1PersonalInfo = ({ data, setData, errors }) => {
             <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                     fullWidth
+                    required
                     label="Phone"
                     value={data.phone}
                     onChange={(e) => setData('phone', e.target.value)}

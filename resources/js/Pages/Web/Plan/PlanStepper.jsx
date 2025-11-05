@@ -102,6 +102,16 @@ const PlanStepper = ({ plan, destinations = [] }) => {
         setData("interests", newInterests);
     };
 
+    // Check if step 1 (first step) fields are all filled
+    const isStep1Valid = () => {
+        return (
+            data.first_name?.trim() &&
+            data.last_name?.trim() &&
+            data.email?.trim() &&
+            data.phone?.trim()
+        );
+    };
+
     const renderStepContent = (step) => {
         switch (step) {
             case 0:
@@ -195,6 +205,7 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                             onBack={handleBack}
                             onNext={handleNext}
                             processing={processing}
+                            isNextDisabled={activeStep === 0 && !isStep1Valid()}
                         />
                     </Paper>
                 </Container>

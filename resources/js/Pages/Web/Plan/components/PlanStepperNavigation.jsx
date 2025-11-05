@@ -7,6 +7,7 @@ const PlanStepperNavigation = ({
     onBack,
     onNext,
     processing,
+    isNextDisabled = false,
 }) => {
     return (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
@@ -25,7 +26,7 @@ const PlanStepperNavigation = ({
                     console.log('Continue button clicked, activeStep:', activeStep);
                     onNext();
                 }}
-                disabled={processing}
+                disabled={processing || isNextDisabled}
                 sx={{ minWidth: 150, bgcolor: '#424242', '&:hover': { bgcolor: '#212121' } }}
             >
                 {processing ? 'Saving...' : activeStep === totalSteps - 1 ? 'Pay & Continue' : 'Continue →'}
