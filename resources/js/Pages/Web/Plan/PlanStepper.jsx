@@ -112,6 +112,11 @@ const PlanStepper = ({ plan, destinations = [] }) => {
         );
     };
 
+    // Check if step 2 (trip details) has destination selected
+    const isStep2Valid = () => {
+        return data.destination_id && data.destination_id !== null && data.destination_id !== '';
+    };
+
     const renderStepContent = (step) => {
         switch (step) {
             case 0:
@@ -205,7 +210,10 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                             onBack={handleBack}
                             onNext={handleNext}
                             processing={processing}
-                            isNextDisabled={activeStep === 0 && !isStep1Valid()}
+                            isNextDisabled={
+                                (activeStep === 0 && !isStep1Valid()) ||
+                                (activeStep === 1 && !isStep2Valid())
+                            }
                         />
                     </Paper>
                 </Container>
