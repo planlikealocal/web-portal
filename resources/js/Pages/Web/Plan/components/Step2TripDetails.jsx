@@ -70,7 +70,7 @@ const Step2TripDetails = ({ data, setData, errors, onInterestChange, activities 
     const handleDestinationChange = (event, newValue) => {
         isUserChange.current = true;
         setSelectedDestination(newValue);
-        
+        console.log('handleDestinationChange', newValue);
         if (newValue) {
             // Update destination name and ID
             setData('destination', newValue.name);
@@ -112,8 +112,10 @@ const Step2TripDetails = ({ data, setData, errors, onInterestChange, activities 
                     console.error('Error fetching destination:', error);
                 });
         } else {
+            console.log('Clearing destination data because no new value', data);
             setData('destination', '');
             setData('destination_id', '');
+            setData('interests', []); // Clear interests when destination is cleared
             setSpecialists([]);
             setDestinationActivities([]);
         }
@@ -223,7 +225,7 @@ const Step2TripDetails = ({ data, setData, errors, onInterestChange, activities 
                 <Typography variant="body1" sx={{ mb: 2 }}>
                     What are your interests?
                 </Typography>
-                {hasDisplayActivities ? (
+                {hasDisplayActivities && data.destination_id ? (
                     <Grid container spacing={2}>
                         {displayActivities.map((activity) => {
                             const activityId = activity.id || activity;
