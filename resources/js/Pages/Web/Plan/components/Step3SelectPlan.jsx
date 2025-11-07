@@ -13,6 +13,7 @@ const plans = [
             'AI-generated notes summarizing your session',
         ],
         price: '$',
+        time: "30 minutes",
     },
     {
         icon: '/images/plans/pathfinder.png',
@@ -26,6 +27,7 @@ const plans = [
         ],
         price: '$$',
         recommended: true,
+        time: "40 minutes",
     },
     {
         id: 'premium',
@@ -39,6 +41,7 @@ const plans = [
             'Priority support and extended consultation time',
         ],
         price: '$$$',
+        time: "60 minutes",
     },
 ];
 

@@ -5,13 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\Plan;
 use App\Models\Specialist;
 use App\Models\Destination;
+use App\Models\User;
+use App\Services\GoogleCalendarService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 
 class PlanController extends Controller
 {
+    protected $googleCalendarService;
+
+    public function __construct(GoogleCalendarService $googleCalendarService)
+    {
+        $this->googleCalendarService = $googleCalendarService;
+    }
     /**
      * Create a new empty plan with specialist
      */
@@ -186,6 +195,84 @@ class PlanController extends Controller
                 return back()->withErrors(['error' => 'An error occurred while updating the plan.']);
             }
             throw $e;
+        }
+    }
+
+    /**
+     * Get availability for a plan
+     */
+    public function getAvailability($id)
+    {
+        try {
+            $plan = Plan::with(['specialist.workingHours'])->findOrFail($id);
+
+            if (!$plan->specialist_id) {
+                return response()->json(['error' => 'Plan does not have a specialist'], 400);
+            }
+
+            $specialist = $plan->specialist;
+            if (!$specialist) {
+                return response()->json(['error' => 'Specialist not found'], 404);
+            }
+
+            // Get User model for the specialist (linked by email)
+            $user = User::where('email', $specialist->email)->first();
+            if (!$user) {
+                return response()->json(['error' => 'User not found for specialist'], 404);
+            }
+
+            if (!$user->google_access_token) {
+                return response()->json(['error' => 'Specialist Google Calendar not connected'], 400);
+            }
+
+            // Get plan duration based on selected plan
+            $planType = $plan->selected_plan ?? $plan->plan_type ?? 'pathfinder';
+            $durationMap = [
+                'explore' => 60,
+                'pathfinder' => 80,
+                'premium' => 105,
+            ];
+            $durationMinutes = $durationMap[$planType] ?? 80;
+
+            // Get working hours
+            $workingHours = $specialist->workingHours->map(function ($wh) {
+                return [
+                    'start_time' => substr($wh->start_time, 0, 5), // Format as HH:MM
+                    'end_time' => substr($wh->end_time, 0, 5), // Format as HH:MM
+                ];
+            })->toArray();
+
+            if (empty($workingHours)) {
+                return response()->json(['error' => 'Specialist has no working hours configured'], 400);
+            }
+
+            // Get specialist timezone (default to UTC for now, can be enhanced later)
+            $timezone = 'UTC'; // TODO: Get from specialist's country or profile
+
+            // Set user for Google Calendar service
+            $this->googleCalendarService->setUser($user);
+
+            // Calculate availability
+            $availability = $this->googleCalendarService->calculateAvailability(
+                $workingHours,
+                $durationMinutes,
+                $timezone
+            );
+
+            return response()->json([
+                'success' => true,
+                'plan_id' => $plan->id,
+                'specialist_id' => $specialist->id,
+                'plan_type' => $planType,
+                'duration_minutes' => $durationMinutes,
+                'working_hours' => $workingHours,
+                'timezone' => $timezone,
+                'availability' => $availability,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Get plan availability error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to get availability'], 500);
         }
     }
 }

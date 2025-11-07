@@ -335,4 +335,166 @@ class GoogleCalendarService
                $this->user->google_access_token && 
                $this->calendarService !== null;
     }
+
+    /**
+     * Get calendar events for a date range (used for availability calculation)
+     */
+    public function getCalendarEvents(string $startDate, string $endDate, string $timezone = 'UTC'): array
+    {
+        try {
+            if (!$this->calendarService) {
+                return [];
+            }
+
+            $calendarId = $this->user->google_calendar_id ?: $this->getPrimaryCalendarId();
+            
+            if (!$calendarId) {
+                return [];
+            }
+
+            $startDateTime = Carbon::parse($startDate)->setTimezone($timezone)->startOfDay();
+            $endDateTime = Carbon::parse($endDate)->setTimezone($timezone)->endOfDay();
+
+            // Create free/busy request
+            $freeBusyRequest = new FreeBusyRequest();
+            $freeBusyRequest->setTimeMin($startDateTime->toRfc3339String());
+            $freeBusyRequest->setTimeMax($endDateTime->toRfc3339String());
+            
+            $freeBusyRequestItem = new FreeBusyRequestItem();
+            $freeBusyRequestItem->setId($calendarId);
+            $freeBusyRequest->setItems([$freeBusyRequestItem]);
+
+            $freeBusyResponse = $this->calendarService->freebusy->query($freeBusyRequest);
+            $busyTimes = $freeBusyResponse->getCalendars()[$calendarId]->getBusy() ?? [];
+
+            // Convert busy times to array format
+            $events = [];
+            foreach ($busyTimes as $busyTime) {
+                $events[] = [
+                    'start' => Carbon::parse($busyTime->getStart())->setTimezone($timezone),
+                    'end' => Carbon::parse($busyTime->getEnd())->setTimezone($timezone),
+                ];
+            }
+
+            return $events;
+
+        } catch (\Exception $e) {
+            Log::error('Get calendar events error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Calculate available time slots based on working hours, calendar, and duration
+     * 
+     * @param array $workingHours Array of ['start_time' => 'HH:MM', 'end_time' => 'HH:MM']
+     * @param int $durationMinutes Duration in minutes (60, 80, or 105)
+     * @param string $timezone Timezone for the specialist
+     * @return array Array of available time slots
+     */
+    public function calculateAvailability(array $workingHours, int $durationMinutes, string $timezone = 'UTC'): array
+    {
+        try {
+            // Get today in specialist's timezone
+            $today = Carbon::now($timezone)->startOfDay();
+            $tomorrow = $today->copy()->addDay();
+            $dayAfterTomorrow = $tomorrow->copy()->addDay();
+            $endDate = $today->copy()->addDays(14); // t + 14 days
+
+            // Get calendar events for t + 14 days
+            $calendarEvents = $this->getCalendarEvents($today->toDateString(), $endDate->toDateString(), $timezone);
+
+            // Filter out events that are today or tomorrow (t + 48 hours)
+            // Keep only events that start on or after day after tomorrow
+            $validCalendarEvents = [];
+            foreach ($calendarEvents as $event) {
+                $eventStart = $event['start']->setTimezone($timezone);
+                // Only include events that start on or after day after tomorrow
+                if ($eventStart->gte($dayAfterTomorrow->startOfDay())) {
+                    $validCalendarEvents[] = $event;
+                }
+            }
+
+            $availabilityArray = [];
+
+            // Process each day from day after tomorrow to t + 14 days
+            $currentDate = $dayAfterTomorrow->copy();
+            while ($currentDate->lte($endDate)) {
+                // Get working hours for this day (assuming same hours every day, could be enhanced later)
+                foreach ($workingHours as $wh) {
+                    // Parse working hours - handle both 'H:i:s' and 'H:i' formats
+                    $startTimeStr = $wh['start_time'];
+                    $endTimeStr = $wh['end_time'];
+                    
+                    // Ensure format is H:i:s
+                    if (strlen($startTimeStr) === 5) {
+                        $startTimeStr .= ':00';
+                    }
+                    if (strlen($endTimeStr) === 5) {
+                        $endTimeStr .= ':00';
+                    }
+
+                    $startTime = Carbon::createFromFormat('H:i:s', $startTimeStr, $timezone)
+                        ->setDate($currentDate->year, $currentDate->month, $currentDate->day);
+                    $endTime = Carbon::createFromFormat('H:i:s', $endTimeStr, $timezone)
+                        ->setDate($currentDate->year, $currentDate->month, $currentDate->day);
+
+                    // If end_time is earlier than start_time, it means it spans midnight - adjust
+                    if ($endTime->lt($startTime)) {
+                        $endTime->addDay();
+                    }
+
+                    // Generate slots starting at the top of every hour within working hours
+                    // Start from the first hour that's >= startTime
+                    $slotStart = $startTime->copy()->startOfHour();
+                    if ($slotStart->lt($startTime)) {
+                        $slotStart->addHour();
+                    }
+                    
+                    // Continue until we can't fit a full duration slot
+                    while ($slotStart->copy()->addMinutes($durationMinutes)->lte($endTime)) {
+                        $slotEnd = $slotStart->copy()->addMinutes($durationMinutes);
+
+                        // Check if slot fits within working hours
+                        if ($slotStart->gte($startTime) && $slotEnd->lte($endTime)) {
+                            // Check if slot is available on calendar
+                            $isAvailable = true;
+                            foreach ($validCalendarEvents as $event) {
+                                $eventStart = $event['start']->setTimezone($timezone);
+                                $eventEnd = $event['end']->setTimezone($timezone);
+                                
+                                // Check for overlap
+                                if ($slotStart->lt($eventEnd) && $slotEnd->gt($eventStart)) {
+                                    $isAvailable = false;
+                                    break;
+                                }
+                            }
+
+                            if ($isAvailable) {
+                                $availabilityArray[] = [
+                                    'start' => $slotStart->toISOString(),
+                                    'end' => $slotEnd->toISOString(),
+                                    'date' => $slotStart->toDateString(),
+                                    'time' => $slotStart->format('H:i'),
+                                    'time_end' => $slotEnd->format('H:i'),
+                                    'duration_minutes' => $durationMinutes,
+                                ];
+                            }
+                        }
+
+                        // Move to next hour
+                        $slotStart->addHour();
+                    }
+                }
+
+                $currentDate->addDay();
+            }
+
+            return $availabilityArray;
+
+        } catch (\Exception $e) {
+            Log::error('Calculate availability error: ' . $e->getMessage());
+            return [];
+        }
+    }
 }

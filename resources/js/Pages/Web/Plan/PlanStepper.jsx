@@ -8,11 +8,13 @@ import PlanStepperNavigation from "./components/PlanStepperNavigation.jsx";
 import Step1PersonalInfo from "./components/Step1PersonalInfo.jsx";
 import Step2TripDetails from "./components/Step2TripDetails.jsx";
 import Step3SelectPlan from "./components/Step3SelectPlan.jsx";
+import Step4SelectTime from "./components/Step4SelectTime.jsx";
 
 const steps = [
     "Tell us a bit about you",
     "Trip Details",
     "Select a Plan",
+    "Select Time",
 ];
 
 const PlanStepper = ({ plan, destinations = [] }) => {
@@ -117,6 +119,16 @@ const PlanStepper = ({ plan, destinations = [] }) => {
         return data.destination_id && data.destination_id !== null && data.destination_id !== '';
     };
 
+    // Check if step 3 (plan selection) has plan selected
+    const isStep3Valid = () => {
+        return data.selected_plan || data.plan_type;
+    };
+
+    // Check if step 4 (time selection) has time slot selected
+    const isStep4Valid = () => {
+        return data.selected_time_slot || (data.appointment_start && data.appointment_end);
+    };
+
     const renderStepContent = (step) => {
         switch (step) {
             case 0:
@@ -146,6 +158,15 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                         data={data}
                         setData={setData}
                         errors={errors}
+                    />
+                );
+            case 3:
+                return (
+                    <Step4SelectTime
+                        data={data}
+                        setData={setData}
+                        errors={errors}
+                        planId={plan.id}
                     />
                 );
             default:
@@ -212,7 +233,9 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                             processing={processing}
                             isNextDisabled={
                                 (activeStep === 0 && !isStep1Valid()) ||
-                                (activeStep === 1 && !isStep2Valid())
+                                (activeStep === 1 && !isStep2Valid()) ||
+                                (activeStep === 2 && !isStep3Valid()) ||
+                                (activeStep === 3 && !isStep4Valid())
                             }
                         />
                     </Paper>
