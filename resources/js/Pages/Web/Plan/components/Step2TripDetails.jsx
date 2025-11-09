@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { router } from '@inertiajs/react';
-import { Grid, TextField, Typography, Checkbox, FormControlLabel, Autocomplete, Box, Avatar, Card, CardContent } from '@mui/material';
+import { Grid, TextField, Typography, Checkbox, FormControlLabel, Autocomplete, Box } from '@mui/material';
+import SpecialistInfo from './SpecialistInfo';
 
 const Step2TripDetails = ({ data, setData, errors, onInterestChange, activities = [], destinations = [], destinationData = null, planId }) => {
     const hasActivities = Array.isArray(activities) && activities.length > 0;
@@ -160,36 +161,10 @@ const Step2TripDetails = ({ data, setData, errors, onInterestChange, activities 
             {/* Specialists Section */}
             {specialists.length > 0 && (
                 <Grid size={{ xs: 12, sm: 6 }}>
-
                     <Grid container spacing={2}>
                         {specialists.map((specialist) => (
                             <Grid size={{ xs: 12}} key={specialist.id}>
-                                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                                    <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <Avatar
-                                            src={specialist.avatar_url}
-                                            alt={specialist.full_name}
-                                            sx={{ width: 60, height: 60 }}
-                                        >
-                                            {specialist.full_name?.charAt(0) || 'S'}  
-                                        </Avatar>
-                                        <Box sx={{ flex: 1 }}>
-                                            <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                                                {specialist.full_name} 
-                                            </Typography>
-                                            {/* {specialist.bio && (
-                                                <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 0.5 }}>
-                                                    {specialist.bio.substring(0, 60) + '...'}
-                                                </Typography>
-                                            )} */}
-                                            {specialist.location && (
-                                                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                                                    {specialist.location}
-                                                </Typography>
-                                            )}
-                                        </Box>
-                                    </CardContent>
-                                </Card>
+                                <SpecialistInfo specialist={specialist} />
                             </Grid>
                         ))}
                     </Grid>

@@ -20,11 +20,11 @@ const steps = [
 const PlanStepper = ({ plan, destinations = [] }) => {
     const [activeStep, setActiveStep] = useState(0);
     // Get activities from multiple possible locations
-    const activities = plan.activities || 
-                      plan.destination_data?.activities || 
-                      plan.destination?.activities || 
+    const activities = plan.activities ||
+                      plan.destination_data?.activities ||
+                      plan.destination?.activities ||
                       [];
-    
+
     // Debug: Log to see what we have
     console.log('PlanStepper - Plan:', plan);
     console.log('PlanStepper - Activities:', activities);
@@ -47,7 +47,7 @@ const PlanStepper = ({ plan, destinations = [] }) => {
         console.log('handleNext called, activeStep:', activeStep);
         console.log('Current form data:', data);
         console.log('Current errors:', errors);
-        
+
         // Save current step data before moving to next step
         put(`/plans/${plan.id}`, {
             preserveScroll: true,
@@ -55,17 +55,17 @@ const PlanStepper = ({ plan, destinations = [] }) => {
             onSuccess: (page) => {
                 console.log('Update successful, moving to next step');
                 console.log('Received page data:', page);
-                
+
                 // Check if we're on the final step before updating
                 const isFinalStep = activeStep === steps.length - 1;
-                
+
                 // Use functional update to ensure we have the latest activeStep value
                 setActiveStep((currentStep) => {
                     const nextStep = currentStep < steps.length - 1 ? currentStep + 1 : currentStep;
                     console.log('Updating step from', currentStep, 'to', nextStep);
                     return nextStep;
                 });
-                
+
                 // If this is the final step, mark as completed
                 if (isFinalStep) {
                     setData("status", "completed");
@@ -167,6 +167,7 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                         setData={setData}
                         errors={errors}
                         planId={plan.id}
+                        specialist={plan.specialist}
                     />
                 );
             default:
@@ -187,7 +188,7 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                     py: 4,
                 }}
             >
-                <Container maxWidth="md">
+                <Container sx={{ mb: 10, mt: 10, px: 4, py: 4, bgcolor: "background.default" }}>
                     <Paper elevation={3} sx={{ p: 4 }}>
                         <PlanStepperHeader
                             activeStep={activeStep}

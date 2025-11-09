@@ -1,26 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, Typography, Box, Card, CardContent, Button, CircularProgress, Alert } from '@mui/material';
+import { Grid, Typography, Box, Card, CardContent, CircularProgress, Alert } from '@mui/material';
 import { AccessTime, CalendarToday } from '@mui/icons-material';
+import { StaticDatePicker } from '@mui/x-date-pickers/StaticDatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
+import SpecialistInfo from './SpecialistInfo';
 
-const Step4SelectTime = ({ data, setData, errors, planId }) => {
+const Step4SelectTime = ({ data, setData, errors, planId, specialist }) => {
     const [availability, setAvailability] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [selectedSlot, setSelectedSlot] = useState(null);
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedDateValue, setSelectedDateValue] = useState(null);
 
-    useEffect(() => {
-        // Only fetch availability if plan is selected
-        if (planId && (data.selected_plan || data.plan_type)) {
-            fetchAvailability();
+    const fetchAvailability = async (date) => {
+        if (!planId || !date) {
+            return;
         }
-    }, [planId, data.selected_plan, data.plan_type]);
 
-    const fetchAvailability = async () => {
         setLoading(true);
         setError(null);
-        
+        setAvailability([]);
+        setSelectedSlot(null); // Clear selected slot when fetching new availability
+
         try {
-            const response = await fetch(`/plans/${planId}/availability`, {
+            const dateString = dayjs(date).format('YYYY-MM-DD');
+            const response = await fetch(`/plans/${planId}/availability?date=${dateString}`, {
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
@@ -38,6 +45,7 @@ const Step4SelectTime = ({ data, setData, errors, planId }) => {
         } catch (err) {
             console.error('Error fetching availability:', err);
             setError(err.message || 'Failed to load available time slots');
+            setAvailability([]);
         } finally {
             setLoading(false);
         }
@@ -50,15 +58,8 @@ const Step4SelectTime = ({ data, setData, errors, planId }) => {
         setData('appointment_end', slot.end);
     };
 
-    // Group availability by date
-    const groupedByDate = availability.reduce((acc, slot) => {
-        const date = slot.date;
-        if (!acc[date]) {
-            acc[date] = [];
-        }
-        acc[date].push(slot);
-        return acc;
-    }, {});
+    // Get slots for selected date (availability is already filtered by date from backend)
+    const slotsForSelectedDate = availability;
 
     // Format date for display
     const formatDate = (dateString) => {
@@ -66,19 +67,41 @@ const Step4SelectTime = ({ data, setData, errors, planId }) => {
         const today = new Date();
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        
+
         if (date.toDateString() === today.toDateString()) {
             return 'Today';
         } else if (date.toDateString() === tomorrow.toDateString()) {
             return 'Tomorrow';
         } else {
-            return date.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+            return date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
             });
         }
+    };
+
+    // Handle date selection from StaticDatePicker
+    const handleDateChange = (newDate) => {
+        if (newDate) {
+            const dateString = newDate.format('YYYY-MM-DD');
+            setSelectedDate(dateString);
+            setSelectedDateValue(newDate);
+            // Fetch availability for the selected date
+            fetchAvailability(newDate);
+        }
+    };
+
+    // Check if a date should be disabled (only disable past dates and today/tomorrow)
+    const shouldDisableDate = (date) => {
+        const today = dayjs().startOf('day');
+        const tomorrow = today.add(1, 'day');
+        const dayAfterTomorrow = today.add(2, 'day');
+        const dateToCheck = date.startOf('day');
+
+        // Disable dates before day after tomorrow
+        return dateToCheck.isBefore(dayAfterTomorrow);
     };
 
     // Format time for display
@@ -92,47 +115,43 @@ const Step4SelectTime = ({ data, setData, errors, planId }) => {
 
     return (
         <Box>
-            <Typography variant="h5" sx={{ mb: 4, textAlign: 'center' }}>
-                Select a Time Slot
-            </Typography>
-
-            {errors.selected_time_slot && (
-                <Typography variant="body2" color="error" sx={{ mb: 2, textAlign: 'center' }}>
-                    {errors.selected_time_slot}
-                </Typography>
-            )}
-
-            {loading && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
-                    <CircularProgress />
-                    <Typography variant="body2" sx={{ ml: 2 }}>
-                        Loading available time slots...
+            <Grid container spacing={2}>
+                <Grid size={{xs:6}}>
+                    {/* Specialist Info Section */}
+                    {specialist && (
+                        <Box sx={{ mb: 4 }}>
+                            <SpecialistInfo specialist={specialist} />
+                        </Box>
+                    )}
+                    <Typography variant="h5" sx={{ mb: 4, textAlign: 'center' }}>
+                        Select a Time Slot
                     </Typography>
-                </Box>
-            )}
+                    {loading && (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+                        <CircularProgress />
+                        <Typography variant="body2" sx={{ ml: 2 }}>
+                            Loading available time slots...
+                        </Typography>
+                    </Box>
+                )}
 
-            {error && (
-                <Alert severity="error" sx={{ mb: 3 }}>
-                    {error}
-                </Alert>
-            )}
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 3 }}>
+                            {error}
+                        </Alert>
+                    )}
 
-            {!loading && !error && availability.length === 0 && (
-                <Alert severity="info" sx={{ mb: 3 }}>
-                    No available time slots found. Please try again later or contact the specialist.
-                </Alert>
-            )}
+                    {/* Calendar View with StaticDatePicker */}
 
-            {!loading && !error && availability.length > 0 && (
-                <Box>
-                    {Object.entries(groupedByDate).map(([date, slots]) => (
-                        <Box key={date} sx={{ mb: 4 }}>
+                    {/* Time Slots for Selected Date */}
+                    {selectedDate && !loading && !error && slotsForSelectedDate.length > 0 && (
+                        <Box>
                             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <CalendarToday fontSize="small" />
-                                {formatDate(date)}
+                                <AccessTime fontSize="small" />
+                                Available Time Slots for {formatDate(selectedDate)}
                             </Typography>
                             <Grid container spacing={2}>
-                                {slots.map((slot, index) => {
+                                {slotsForSelectedDate.map((slot, index) => {
                                     const isSelected = selectedSlot && selectedSlot.start === slot.start;
                                     return (
                                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
@@ -151,15 +170,11 @@ const Step4SelectTime = ({ data, setData, errors, planId }) => {
                                                 onClick={() => handleSlotSelect(slot)}
                                             >
                                                 <CardContent>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                                        <AccessTime fontSize="small" />
-                                                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                        <Typography variant="caption">
                                                             {formatTime(slot.time)} - {formatTime(slot.time_end)}
                                                         </Typography>
                                                     </Box>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        Duration: {slot.duration_minutes} minutes
-                                                    </Typography>
                                                 </CardContent>
                                             </Card>
                                         </Grid>
@@ -167,9 +182,59 @@ const Step4SelectTime = ({ data, setData, errors, planId }) => {
                                 })}
                             </Grid>
                         </Box>
-                    ))}
-                </Box>
-            )}
+                    )}
+
+                    {selectedDate && !loading && !error && slotsForSelectedDate.length === 0 && (
+                        <Alert severity="info" sx={{ mb: 3 }}>
+                            No available time slots for {formatDate(selectedDate)}. Please select another date.
+                        </Alert>
+                    )}
+
+                    {!selectedDate && !loading && !error && (
+                        <Alert severity="info" sx={{ mb: 3 }}>
+                            Please select a date to view available time slots.
+                        </Alert>
+                    )}
+
+                </Grid>
+
+                <Grid size={{xs:6}}>
+                    {errors.selected_time_slot && (
+                        <Typography variant="body2" color="error" sx={{ mb: 2, textAlign: 'center' }}>
+                            {errors.selected_time_slot}
+                        </Typography>
+                    )}
+                    <Box sx={{ mb: 4 }}>
+                        <Typography variant="h5" sx={{ mb: 4, textAlign: 'center' }}>
+                            <CalendarToday fontSize="small" />
+                            Select a Date
+                        </Typography>
+
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                            <Box sx={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                '& .MuiPickersCalendarHeader-root': {
+                                    marginTop: 0,
+                                },
+                            }}>
+                                <StaticDatePicker
+                                    displayStaticWrapperAs="desktop"
+                                    value={selectedDateValue}
+                                    onChange={handleDateChange}
+                                    shouldDisableDate={shouldDisableDate}
+                                    minDate={dayjs().add(3, 'day')} // Day after tomorrow
+                                    slotProps={{
+                                        actionBar: {
+                                            actions: [],
+                                        },
+                                    }}
+                                />
+                            </Box>
+                        </LocalizationProvider>
+                    </Box>
+                </Grid>
+            </Grid>
         </Box>
     );
 };

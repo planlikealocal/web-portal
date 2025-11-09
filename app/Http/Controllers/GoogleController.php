@@ -22,6 +22,7 @@ class GoogleController extends Controller
 
     /**
      * Redirect to Google OAuth
+     * This ensures we always get a refresh token for permanent connection
      */
     public function redirect()
     {
@@ -33,10 +34,18 @@ class GoogleController extends Controller
             'https://www.googleapis.com/auth/calendar',
             'https://www.googleapis.com/auth/calendar.events'
         ]);
+        
+        // Set access type to 'offline' to get a refresh token
+        // This allows the connection to persist forever
         $client->setAccessType('offline');
+        
+        // Force consent screen to always get a refresh token
+        // This ensures we get a refresh token even if the user has previously authorized
         $client->setPrompt('consent');
 
         $authUrl = $client->createAuthUrl();
+        
+        Log::info('Redirecting to Google OAuth for user: ' . Auth::id());
         
         return redirect($authUrl);
     }
@@ -67,11 +76,25 @@ class GoogleController extends Controller
 
             // Store tokens in database
             $user = Auth::user();
+            
+            // Preserve existing refresh token if Google doesn't return a new one
+            // (This can happen if the user has already granted access)
+            $refreshToken = $accessToken['refresh_token'] ?? $user->google_refresh_token;
+            
+            // If no refresh token is available, we need to force re-authentication
+            if (!$refreshToken) {
+                Log::warning('No refresh token received for user: ' . $user->id . '. User may need to reconnect.');
+                return redirect('/specialist/google-calendar-settings')
+                    ->with('error', 'Failed to get refresh token. Please try connecting again and make sure to grant all permissions.');
+            }
+            
             $user->update([
                 'google_access_token' => $accessToken['access_token'],
-                'google_refresh_token' => $accessToken['refresh_token'] ?? null,
-                'google_token_expires' => Carbon::now()->addSeconds($accessToken['expires_in']),
+                'google_refresh_token' => $refreshToken,
+                'google_token_expires' => Carbon::now()->addSeconds($accessToken['expires_in'] ?? 3600),
             ]);
+            
+            Log::info('Google Calendar connected successfully for user: ' . $user->id . ' with refresh token');
 
             // Get user's primary calendar ID
             $this->googleCalendarService->setUser($user);

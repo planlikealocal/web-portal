@@ -79,6 +79,15 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if Google Calendar connection is permanent (has refresh token)
+     * A permanent connection means the token can be refreshed automatically
+     */
+    public function hasPermanentGoogleCalendarConnection(): bool
+    {
+        return !empty($this->google_access_token) && !empty($this->google_refresh_token);
+    }
+
+    /**
      * Check if Google access token is expired
      */
     public function isGoogleTokenExpired(): bool

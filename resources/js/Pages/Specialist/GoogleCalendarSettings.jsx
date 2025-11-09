@@ -146,6 +146,11 @@ export default function GoogleCalendarSettings({ user }) {
                                     </Typography>
                                     <Typography variant="body2">
                                         Your Google Calendar is connected and ready for automatic appointment booking.
+                                        {user.hasPermanentGoogleCalendarConnection ? (
+                                            <span> Your connection is permanent and will automatically refresh.</span>
+                                        ) : (
+                                            <span style={{ color: 'warning.main' }}> Please reconnect to ensure permanent access.</span>
+                                        )}
                                     </Typography>
                                 </Alert>
 
@@ -167,13 +172,20 @@ export default function GoogleCalendarSettings({ user }) {
                                             <Typography variant="body2" color="text.secondary">
                                                 Token Status
                                             </Typography>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                                                 <Chip
                                                     label={user.isGoogleTokenExpired ? 'Expired' : 'Valid'}
                                                     color={user.isGoogleTokenExpired ? 'error' : 'success'}
                                                     size="small"
                                                 />
-                                                {user.isGoogleTokenExpired && (
+                                                {user.hasPermanentGoogleCalendarConnection && (
+                                                    <Chip
+                                                        label="Permanent"
+                                                        color="success"
+                                                        size="small"
+                                                    />
+                                                )}
+                                                {user.isGoogleTokenExpired && user.hasPermanentGoogleCalendarConnection && (
                                                     <Button
                                                         size="small"
                                                         variant="outlined"

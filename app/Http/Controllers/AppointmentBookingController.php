@@ -36,6 +36,7 @@ class AppointmentBookingController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'hasGoogleCalendarConnected' => $user->hasGoogleCalendarConnected(),
+                'hasPermanentGoogleCalendarConnection' => $user->hasPermanentGoogleCalendarConnection(),
                 'isGoogleTokenExpired' => $user->isGoogleTokenExpired(),
                 'google_calendar_id' => $user->google_calendar_id,
                 'google_token_expires' => $user->google_token_expires,

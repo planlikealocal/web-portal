@@ -12,6 +12,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class PlanController extends Controller
 {
@@ -45,7 +46,7 @@ class PlanController extends Controller
      */
     public function show($id)
     {
-        $plan = Plan::with(['specialist', 'destination.activities'])->findOrFail($id);
+        $plan = Plan::with(['specialist.country', 'destination.activities'])->findOrFail($id);
 
         // Get active activities from the destination
         // Note: We access the relationship via getRelation() because there's also a 'destination' attribute
@@ -110,7 +111,16 @@ class PlanController extends Controller
                     'id' => $plan->specialist->id,
                     'full_name' => $plan->specialist->full_name,
                     'avatar_url' => $plan->specialist->profile_pic ? asset('storage/' . $plan->specialist->profile_pic) : null,
+                    'profile_pic_url' => $plan->specialist->profile_pic ? asset('storage/' . $plan->specialist->profile_pic) : null,
                     'bio' => $plan->specialist->bio,
+                    'country' => $plan->specialist->country ? $plan->specialist->country->name : null,
+                    'state_province' => $plan->specialist->state_province,
+                    'city' => $plan->specialist->city,
+                    'location' => trim(implode(', ', array_filter([
+                        $plan->specialist->city,
+                        $plan->specialist->state_province,
+                        $plan->specialist->country ? $plan->specialist->country->name : null
+                    ]))),
                 ] : null,
                 'activities' => $activities,
             ],
@@ -201,10 +211,13 @@ class PlanController extends Controller
     /**
      * Get availability for a plan
      */
-    public function getAvailability($id)
+    public function getAvailability(Request $request, $id)
     {
         try {
             $plan = Plan::with(['specialist.workingHours'])->findOrFail($id);
+
+            // Get optional date parameter from request
+            $selectedDate = $request->get('date');
 
             if (!$plan->specialist_id) {
                 return response()->json(['error' => 'Plan does not have a specialist'], 400);
@@ -217,12 +230,9 @@ class PlanController extends Controller
 
             // Get User model for the specialist (linked by email)
             $user = User::where('email', $specialist->email)->first();
+
             if (!$user) {
                 return response()->json(['error' => 'User not found for specialist'], 404);
-            }
-
-            if (!$user->google_access_token) {
-                return response()->json(['error' => 'Specialist Google Calendar not connected'], 400);
             }
 
             // Get plan duration based on selected plan
@@ -249,15 +259,36 @@ class PlanController extends Controller
             // Get specialist timezone (default to UTC for now, can be enhanced later)
             $timezone = 'UTC'; // TODO: Get from specialist's country or profile
 
-            // Set user for Google Calendar service
-            $this->googleCalendarService->setUser($user);
+            // Calculate availability using Google Calendar (excludes allocated times)
+            $availability = [];
 
-            // Calculate availability
-            $availability = $this->googleCalendarService->calculateAvailability(
-                $workingHours,
-                $durationMinutes,
-                $timezone
-            );
+            if ($user->hasGoogleCalendarConnected()) {
+                Log::info('Google Calendar connected for specialist', [
+                    'user_id' => $user->id,
+                    'selected_date' => $selectedDate
+                ]);
+                // Use Google Calendar to get availability (excludes Google Calendar events)
+                // Pass selected date to only check that specific date for better performance
+                $this->googleCalendarService->setUser($user);
+                $availability = $this->googleCalendarService->calculateAvailability(
+                    $workingHours,
+                    $durationMinutes,
+                    $timezone,
+                    $selectedDate // Only check the selected date
+                );
+                Log::info('Google Calendar availability', [
+                    'availability_count' => count($availability),
+                    'selected_date' => $selectedDate
+                ]);
+            } else {
+                // Fallback to local calculation if Google Calendar is not connected
+                $availability = $this->calculateLocalAvailability(
+                    $workingHours,
+                    $durationMinutes,
+                    $timezone,
+                    $selectedDate
+                );
+            }
 
             return response()->json([
                 'success' => true,
@@ -267,12 +298,125 @@ class PlanController extends Controller
                 'duration_minutes' => $durationMinutes,
                 'working_hours' => $workingHours,
                 'timezone' => $timezone,
+                'selected_date' => $selectedDate,
                 'availability' => $availability,
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Get plan availability error: ' . $e->getMessage());
+            Log::error('Get plan availability error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'plan_id' => $id
+            ]);
             return response()->json(['error' => 'Failed to get availability'], 500);
+        }
+    }
+
+    /**
+     * Calculate availability locally based on working hours only (for testing without Google Calendar)
+     *
+     * @param array $workingHours Array of ['start_time' => 'HH:MM', 'end_time' => 'HH:MM']
+     * @param int $durationMinutes Duration in minutes (60, 80, or 105)
+     * @param string $timezone Timezone for the specialist
+     * @param string|null $selectedDate Optional date filter (YYYY-MM-DD format)
+     * @return array Array of available time slots
+     */
+    private function calculateLocalAvailability(array $workingHours, int $durationMinutes, string $timezone = 'UTC', ?string $selectedDate = null): array
+    {
+        try {
+            // Get today in specialist's timezone
+            $today = Carbon::now($timezone)->startOfDay();
+            $tomorrow = $today->copy()->addDay();
+            $dayAfterTomorrow = $tomorrow->copy()->addDay();
+
+            $availabilityArray = [];
+
+            // If a specific date is provided, only calculate for that date
+            if ($selectedDate) {
+                try {
+                    $targetDate = Carbon::createFromFormat('Y-m-d', $selectedDate, $timezone)->startOfDay();
+                    // Ensure the date is at least day after tomorrow
+                    if ($targetDate->lt($dayAfterTomorrow)) {
+                        return []; // Date is too soon
+                    }
+                    $datesToProcess = [$targetDate];
+                } catch (\Exception $e) {
+                    Log::error('Invalid date format provided: ' . $selectedDate);
+                    return [];
+                }
+            } else {
+                // Default: Process each day from day after tomorrow to t + 14 days
+                $endDate = $today->copy()->addDays(14);
+                $datesToProcess = [];
+                $currentDate = $dayAfterTomorrow->copy();
+                while ($currentDate->lte($endDate)) {
+                    $datesToProcess[] = $currentDate->copy();
+                    $currentDate->addDay();
+                }
+            }
+
+            // Process each date
+            foreach ($datesToProcess as $currentDate) {
+                // Get working hours for this day (assuming same hours every day, could be enhanced later)
+                foreach ($workingHours as $wh) {
+                    // Parse working hours - handle both 'H:i:s' and 'H:i' formats
+                    $startTimeStr = $wh['start_time'];
+                    $endTimeStr = $wh['end_time'];
+
+                    // Ensure format is H:i:s
+                    if (strlen($startTimeStr) === 5) {
+                        $startTimeStr .= ':00';
+                    }
+                    if (strlen($endTimeStr) === 5) {
+                        $endTimeStr .= ':00';
+                    }
+
+                    $startTime = Carbon::createFromFormat('H:i:s', $startTimeStr, $timezone)
+                        ->setDate($currentDate->year, $currentDate->month, $currentDate->day);
+                    $endTime = Carbon::createFromFormat('H:i:s', $endTimeStr, $timezone)
+                        ->setDate($currentDate->year, $currentDate->month, $currentDate->day);
+
+                    // If end_time is earlier than start_time, it means it spans midnight - adjust
+                    if ($endTime->lt($startTime)) {
+                        $endTime->addDay();
+                    }
+
+                    // Generate slots starting at the top of every hour within working hours
+                    // Start from the first hour that's >= startTime
+                    $slotStart = $startTime->copy()->startOfHour();
+                    if ($slotStart->lt($startTime)) {
+                        $slotStart->addHour();
+                    }
+
+                    // Continue until we can't fit a full duration slot
+                    while ($slotStart->copy()->addMinutes($durationMinutes)->lte($endTime)) {
+                        $slotEnd = $slotStart->copy()->addMinutes($durationMinutes);
+
+                        // Check if slot fits within working hours
+                        if ($slotStart->gte($startTime) && $slotEnd->lte($endTime)) {
+                            // For local testing, all slots within working hours are available
+                            // (no Google Calendar conflict checking)
+                            $availabilityArray[] = [
+                                'start' => $slotStart->toISOString(),
+                                'end' => $slotEnd->toISOString(),
+                                'date' => $slotStart->toDateString(),
+                                'time' => $slotStart->format('H:i'),
+                                'time_end' => $slotEnd->format('H:i'),
+                                'duration_minutes' => $durationMinutes,
+                            ];
+                        }
+
+                        // Move to next hour
+                        $slotStart->addHour();
+                    }
+                }
+            }
+
+            return $availabilityArray;
+        } catch (\Exception $e) {
+            Log::error('Local availability calculation error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return [];
         }
     }
 }

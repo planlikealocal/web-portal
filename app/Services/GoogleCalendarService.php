@@ -37,11 +37,24 @@ class GoogleCalendarService
         $this->user = $user;
         
         if ($user->google_access_token) {
+            // Set redirect URI if configured
+            if (config('services.google.redirect')) {
+                $this->client->setRedirectUri(config('services.google.redirect'));
+            }
+            
             $this->client->setAccessToken($user->google_access_token);
             
             // Check if token is expired and refresh if needed
             if ($this->isTokenExpired()) {
-                $this->refreshToken();
+                // Only refresh if we have a refresh token
+                if ($user->google_refresh_token) {
+                    $refreshed = $this->refreshToken();
+                    if (!$refreshed) {
+                        Log::warning('Failed to refresh token for user: ' . $user->id . '. Token may need to be re-authenticated.');
+                    }
+                } else {
+                    Log::warning('Token expired but no refresh token available for user: ' . $user->id);
+                }
             }
             
             $this->calendarService = new Calendar($this->client);
@@ -80,31 +93,56 @@ class GoogleCalendarService
                 return false;
             }
 
-            $this->client->setRefreshToken($targetUser->google_refresh_token);
+            // Set redirect URI if configured (required for token refresh)
+            if (config('services.google.redirect')) {
+                $this->client->setRedirectUri(config('services.google.redirect'));
+            }
+
+            // Create a token array with the refresh token
+            // The Google Client library expects the refresh token to be part of the access token array
+            $tokenArray = [
+                'access_token' => $targetUser->google_access_token,
+                'refresh_token' => $targetUser->google_refresh_token,
+                'expires_in' => $targetUser->google_token_expires ? 
+                    Carbon::now()->diffInSeconds($targetUser->google_token_expires) : 0,
+            ];
+            
+            // Set the token array on the client
+            $this->client->setAccessToken($tokenArray);
+            
+            // Fetch new access token using the refresh token
             $accessToken = $this->client->fetchAccessTokenWithRefreshToken();
 
             if (isset($accessToken['error'])) {
-                Log::error('Token refresh failed: ' . $accessToken['error']);
+                Log::error('Token refresh failed: ' . json_encode($accessToken));
                 return false;
             }
+
+            // Preserve refresh token if Google doesn't return a new one
+            $refreshToken = $accessToken['refresh_token'] ?? $targetUser->google_refresh_token;
 
             // Update user with new tokens
             $targetUser->update([
                 'google_access_token' => $accessToken['access_token'],
-                'google_token_expires' => Carbon::now()->addSeconds($accessToken['expires_in']),
+                'google_refresh_token' => $refreshToken,
+                'google_token_expires' => Carbon::now()->addSeconds($accessToken['expires_in'] ?? 3600),
             ]);
 
             // Update the service's user reference if it's the same user
             if ($this->user && $this->user->id === $targetUser->id) {
                 $this->user = $targetUser->fresh();
-                $this->client->setAccessToken($accessToken['access_token']);
+                // Set the full token array (the client already has it from fetchAccessTokenWithRefreshToken, but set it again for consistency)
+                $this->client->setAccessToken($accessToken);
                 $this->calendarService = new Calendar($this->client);
             }
 
+            Log::info('Token refreshed successfully for user: ' . $targetUser->id);
             return true;
 
         } catch (\Exception $e) {
-            Log::error('Token refresh error: ' . $e->getMessage());
+            Log::error('Token refresh error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
             return false;
         }
     }
@@ -390,19 +428,37 @@ class GoogleCalendarService
      * @param array $workingHours Array of ['start_time' => 'HH:MM', 'end_time' => 'HH:MM']
      * @param int $durationMinutes Duration in minutes (60, 80, or 105)
      * @param string $timezone Timezone for the specialist
+     * @param string|null $selectedDate Optional specific date to check (YYYY-MM-DD format). If provided, only checks this date
      * @return array Array of available time slots
      */
-    public function calculateAvailability(array $workingHours, int $durationMinutes, string $timezone = 'UTC'): array
+    public function calculateAvailability(array $workingHours, int $durationMinutes, string $timezone = 'UTC', ?string $selectedDate = null): array
     {
         try {
             // Get today in specialist's timezone
             $today = Carbon::now($timezone)->startOfDay();
             $tomorrow = $today->copy()->addDay();
             $dayAfterTomorrow = $tomorrow->copy()->addDay();
-            $endDate = $today->copy()->addDays(14); // t + 14 days
+            
+            // If a specific date is provided, only check that date
+            if ($selectedDate) {
+                $targetDate = Carbon::parse($selectedDate, $timezone)->startOfDay();
+                
+                // Validate that the date is at least day after tomorrow
+                if ($targetDate->lt($dayAfterTomorrow)) {
+                    Log::warning('Selected date is before day after tomorrow', ['date' => $selectedDate]);
+                    return [];
+                }
+                
+                $startDate = $targetDate;
+                $endDate = $targetDate->copy()->endOfDay();
+            } else {
+                // Default: check from day after tomorrow to t + 14 days
+                $startDate = $dayAfterTomorrow->copy();
+                $endDate = $today->copy()->addDays(14); // t + 14 days
+            }
 
-            // Get calendar events for t + 14 days
-            $calendarEvents = $this->getCalendarEvents($today->toDateString(), $endDate->toDateString(), $timezone);
+            // Get calendar events for the date range (only for the selected date if provided)
+            $calendarEvents = $this->getCalendarEvents($startDate->toDateString(), $endDate->toDateString(), $timezone);
 
             // Filter out events that are today or tomorrow (t + 48 hours)
             // Keep only events that start on or after day after tomorrow
@@ -411,15 +467,25 @@ class GoogleCalendarService
                 $eventStart = $event['start']->setTimezone($timezone);
                 // Only include events that start on or after day after tomorrow
                 if ($eventStart->gte($dayAfterTomorrow->startOfDay())) {
-                    $validCalendarEvents[] = $event;
+                    // If a specific date is provided, only include events for that date
+                    if ($selectedDate) {
+                        // Compare dates (not times) to ensure we only get events for the selected date
+                        if ($eventStart->toDateString() === Carbon::parse($selectedDate)->toDateString()) {
+                            $validCalendarEvents[] = $event;
+                        }
+                    } else {
+                        $validCalendarEvents[] = $event;
+                    }
                 }
             }
 
             $availabilityArray = [];
 
-            // Process each day from day after tomorrow to t + 14 days
-            $currentDate = $dayAfterTomorrow->copy();
-            while ($currentDate->lte($endDate)) {
+            // Process each day (or just the selected date)
+            $currentDate = $startDate->copy();
+            $endDateForLoop = $selectedDate ? $startDate->copy() : $endDate;
+            
+            while ($currentDate->lte($endDateForLoop)) {
                 // Get working hours for this day (assuming same hours every day, could be enhanced later)
                 foreach ($workingHours as $wh) {
                     // Parse working hours - handle both 'H:i:s' and 'H:i' formats
