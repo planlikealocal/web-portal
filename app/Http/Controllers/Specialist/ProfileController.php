@@ -54,6 +54,7 @@ class ProfileController extends Controller
                 'city' => $specialist->city,
                 'address' => $specialist->address,
                 'postal_code' => $specialist->postal_code,
+                'timezone' => $specialist->timezone,
                 'status' => $specialist->status,
                 'working_hours' => $workingHours,
             ] : null,

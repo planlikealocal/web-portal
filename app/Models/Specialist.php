@@ -23,6 +23,7 @@ class Specialist extends Model
         'city',
         'address',
         'postal_code',
+        'timezone',
         'status',
         'no_of_trips',
     ];

@@ -40,6 +40,10 @@ class SpecialistValidationService implements ValidationServiceInterface
             $validated['profile_pic'] = $data['profile_pic'];
         }
 
+        if (array_key_exists('timezone', $data)) {
+            $validated['timezone'] = $data['timezone'];
+        }
+
         return $validated;
     }
 

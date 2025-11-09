@@ -257,7 +257,25 @@ class PlanController extends Controller
             }
 
             // Get specialist timezone (default to UTC for now, can be enhanced later)
-            $timezone = 'UTC'; // TODO: Get from specialist's country or profile
+            $timezone = $specialist->timezone; // TODO: Get from specialist's country or profile
+            if (!$timezone) {
+                return response()->json(['error' => 'Specialist has no timezone configured'], 400);
+            }
+            if (!$selectedDate) {
+                return response()->json(['error' => 'No date selected'], 400);
+            }
+            if (!$workingHours) {
+                return response()->json(['error' => 'Specialist has no working hours configured'], 400);
+            }
+            if (!$durationMinutes) {
+                return response()->json(['error' => 'No duration selected'], 400);
+            }
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+            if (!$user->hasGoogleCalendarConnected()) {
+                return response()->json(['error' => 'Google Calendar not connected'], 400);
+            }
 
             // Calculate availability using Google Calendar (excludes allocated times)
             $availability = [];
@@ -265,7 +283,8 @@ class PlanController extends Controller
             if ($user->hasGoogleCalendarConnected()) {
                 Log::info('Google Calendar connected for specialist', [
                     'user_id' => $user->id,
-                    'selected_date' => $selectedDate
+                    'selected_date' => $selectedDate,
+                    'working_hours' => $workingHours,
                 ]);
                 // Use Google Calendar to get availability (excludes Google Calendar events)
                 // Pass selected date to only check that specific date for better performance

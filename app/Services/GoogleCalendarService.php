@@ -459,25 +459,51 @@ class GoogleCalendarService
 
             // Get calendar events for the date range (only for the selected date if provided)
             $calendarEvents = $this->getCalendarEvents($startDate->toDateString(), $endDate->toDateString(), $timezone);
+            
+            Log::info('Calendar events fetched', [
+                'count' => count($calendarEvents),
+                'selected_date' => $selectedDate,
+                'date_range' => [
+                    'start' => $startDate->toDateString(),
+                    'end' => $endDate->toDateString(),
+                ]
+            ]);
 
             // Filter out events that are today or tomorrow (t + 48 hours)
             // Keep only events that start on or after day after tomorrow
             $validCalendarEvents = [];
             foreach ($calendarEvents as $event) {
                 $eventStart = $event['start']->setTimezone($timezone);
+                $eventEnd = $event['end']->setTimezone($timezone);
+                
                 // Only include events that start on or after day after tomorrow
                 if ($eventStart->gte($dayAfterTomorrow->startOfDay())) {
                     // If a specific date is provided, only include events for that date
                     if ($selectedDate) {
                         // Compare dates (not times) to ensure we only get events for the selected date
-                        if ($eventStart->toDateString() === Carbon::parse($selectedDate)->toDateString()) {
+                        // Also check if event spans into the selected date (for midnight-spanning events)
+                        $eventStartDate = $eventStart->toDateString();
+                        $eventEndDate = $eventEnd->toDateString();
+                        $selectedDateStr = Carbon::parse($selectedDate)->toDateString();
+                        
+                        if ($eventStartDate === $selectedDateStr || $eventEndDate === $selectedDateStr) {
                             $validCalendarEvents[] = $event;
+                            Log::debug('Event included for selected date', [
+                                'event_start' => $eventStart->toDateTimeString(),
+                                'event_end' => $eventEnd->toDateTimeString(),
+                                'selected_date' => $selectedDateStr,
+                            ]);
                         }
                     } else {
                         $validCalendarEvents[] = $event;
                     }
                 }
             }
+            
+            Log::info('Valid calendar events after filtering', [
+                'count' => count($validCalendarEvents),
+                'selected_date' => $selectedDate,
+            ]);
 
             $availabilityArray = [];
 
@@ -506,8 +532,11 @@ class GoogleCalendarService
                         ->setDate($currentDate->year, $currentDate->month, $currentDate->day);
 
                     // If end_time is earlier than start_time, it means it spans midnight - adjust
+                    // For midnight-spanning hours (e.g., 00:00-03:00), we need to handle it differently
+                    $spansMidnight = false;
                     if ($endTime->lt($startTime)) {
                         $endTime->addDay();
+                        $spansMidnight = true;
                     }
 
                     // Generate slots starting at the top of every hour within working hours
@@ -517,12 +546,34 @@ class GoogleCalendarService
                         $slotStart->addHour();
                     }
                     
+                    // For midnight-spanning hours, we need to ensure slots are on the correct date
+                    // If the working hours span midnight (00:00-03:00), slots should be on the selected date
+                    if ($spansMidnight && $selectedDate) {
+                        // Ensure slotStart is on the selected date
+                        $selectedDateCarbon = Carbon::parse($selectedDate, $timezone)->startOfDay();
+                        if ($slotStart->toDateString() !== $selectedDate) {
+                            // If slotStart is on the next day, adjust it to the selected date
+                            $slotStart->setDate($selectedDateCarbon->year, $selectedDateCarbon->month, $selectedDateCarbon->day);
+                        }
+                    }
+                    
                     // Continue until we can't fit a full duration slot
                     while ($slotStart->copy()->addMinutes($durationMinutes)->lte($endTime)) {
                         $slotEnd = $slotStart->copy()->addMinutes($durationMinutes);
 
                         // Check if slot fits within working hours
                         if ($slotStart->gte($startTime) && $slotEnd->lte($endTime)) {
+                            // For midnight-spanning hours, ensure the slot is on the selected date
+                            if ($spansMidnight && $selectedDate) {
+                                $selectedDateCarbon = Carbon::parse($selectedDate, $timezone)->startOfDay();
+                                // Only include slots that are on the selected date
+                                if ($slotStart->toDateString() !== $selectedDate) {
+                                    // Move to next hour and continue
+                                    $slotStart->addHour();
+                                    continue;
+                                }
+                            }
+                            
                             // Check if slot is available on calendar
                             $isAvailable = true;
                             foreach ($validCalendarEvents as $event) {
@@ -532,6 +583,12 @@ class GoogleCalendarService
                                 // Check for overlap
                                 if ($slotStart->lt($eventEnd) && $slotEnd->gt($eventStart)) {
                                     $isAvailable = false;
+                                    Log::debug('Slot blocked by calendar event', [
+                                        'slot_start' => $slotStart->toDateTimeString(),
+                                        'slot_end' => $slotEnd->toDateTimeString(),
+                                        'event_start' => $eventStart->toDateTimeString(),
+                                        'event_end' => $eventEnd->toDateTimeString(),
+                                    ]);
                                     break;
                                 }
                             }
@@ -545,6 +602,11 @@ class GoogleCalendarService
                                     'time_end' => $slotEnd->format('H:i'),
                                     'duration_minutes' => $durationMinutes,
                                 ];
+                                Log::debug('Available slot added', [
+                                    'slot_start' => $slotStart->toDateTimeString(),
+                                    'slot_end' => $slotEnd->toDateTimeString(),
+                                    'date' => $slotStart->toDateString(),
+                                ]);
                             }
                         }
 
@@ -555,6 +617,18 @@ class GoogleCalendarService
 
                 $currentDate->addDay();
             }
+            
+            Log::info('Final availability calculated', [
+                'count' => count($availabilityArray),
+                'selected_date' => $selectedDate,
+                'slots' => array_map(function($slot) {
+                    return [
+                        'date' => $slot['date'],
+                        'time' => $slot['time'],
+                        'time_end' => $slot['time_end'],
+                    ];
+                }, $availabilityArray),
+            ]);
 
             return $availabilityArray;
 

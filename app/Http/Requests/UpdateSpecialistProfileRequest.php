@@ -42,6 +42,7 @@ class UpdateSpecialistProfileRequest extends FormRequest
             'city' => 'required|string|max:255',
             'address' => 'required|string',
             'postal_code' => 'required|string|max:255',
+            'timezone' => 'nullable|string|max:255',
             'working_hours' => 'nullable',
         ];
     }

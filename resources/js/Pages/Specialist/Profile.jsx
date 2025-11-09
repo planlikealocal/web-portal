@@ -45,6 +45,7 @@ const Profile = ({ specialist, countries }) => {
         city: specialist?.city || "",
         address: specialist?.address || "",
         postal_code: specialist?.postal_code || "",
+        timezone: specialist?.timezone || "",
         working_hours: specialist?.working_hours || [],
     };
 
@@ -66,6 +67,7 @@ const Profile = ({ specialist, countries }) => {
                 city: specialist.city || "",
                 address: specialist.address || "",
                 postal_code: specialist.postal_code || "",
+                timezone: specialist.timezone || "",
                 working_hours: specialist.working_hours || [],
             });
             setExistingProfilePicPath(specialist.profile_pic_url || null);
@@ -85,6 +87,9 @@ const Profile = ({ specialist, countries }) => {
             } else if (key === "working_hours") {
                 // Convert working hours array to JSON string
                 formData.append(key, JSON.stringify(value));
+            } else if (key === "timezone") {
+                // Always include timezone, even if empty string
+                formData.append(key, value || "");
             } else if (value !== null && value !== undefined) {
                 formData.append(key, value);
             }
@@ -473,6 +478,76 @@ const Profile = ({ specialist, countries }) => {
                                                 helperText={errors.postal_code}
                                                 required
                                             />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <FormControl
+                                                fullWidth
+                                                error={!!errors.timezone}
+                                            >
+                                                <InputLabel>Timezone</InputLabel>
+                                                <Select
+                                                    value={data.timezone || ""}
+                                                    label="Timezone"
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            "timezone",
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                >
+                                                    <MenuItem value="">
+                                                        <em>Select timezone</em>
+                                                    </MenuItem>
+                                                    <MenuItem value="America/New_York">Eastern Time (ET)</MenuItem>
+                                                    <MenuItem value="America/Chicago">Central Time (CT)</MenuItem>
+                                                    <MenuItem value="America/Denver">Mountain Time (MT)</MenuItem>
+                                                    <MenuItem value="America/Los_Angeles">Pacific Time (PT)</MenuItem>
+                                                    <MenuItem value="America/Anchorage">Alaska Time (AKT)</MenuItem>
+                                                    <MenuItem value="Pacific/Honolulu">Hawaii Time (HST)</MenuItem>
+                                                    <MenuItem value="America/Toronto">Toronto (ET)</MenuItem>
+                                                    <MenuItem value="America/Vancouver">Vancouver (PT)</MenuItem>
+                                                    <MenuItem value="America/Mexico_City">Mexico City (CST)</MenuItem>
+                                                    <MenuItem value="America/Sao_Paulo">São Paulo (BRT)</MenuItem>
+                                                    <MenuItem value="America/Buenos_Aires">Buenos Aires (ART)</MenuItem>
+                                                    <MenuItem value="Europe/London">London (GMT/BST)</MenuItem>
+                                                    <MenuItem value="Europe/Paris">Paris (CET/CEST)</MenuItem>
+                                                    <MenuItem value="Europe/Berlin">Berlin (CET/CEST)</MenuItem>
+                                                    <MenuItem value="Europe/Rome">Rome (CET/CEST)</MenuItem>
+                                                    <MenuItem value="Europe/Madrid">Madrid (CET/CEST)</MenuItem>
+                                                    <MenuItem value="Europe/Amsterdam">Amsterdam (CET/CEST)</MenuItem>
+                                                    <MenuItem value="Europe/Athens">Athens (EET/EEST)</MenuItem>
+                                                    <MenuItem value="Europe/Moscow">Moscow (MSK)</MenuItem>
+                                                    <MenuItem value="Asia/Dubai">Dubai (GST)</MenuItem>
+                                                    <MenuItem value="Asia/Karachi">Karachi (PKT)</MenuItem>
+                                                    <MenuItem value="Asia/Kolkata">Kolkata (IST)</MenuItem>
+                                                    <MenuItem value="Asia/Dhaka">Dhaka (BST)</MenuItem>
+                                                    <MenuItem value="Asia/Bangkok">Bangkok (ICT)</MenuItem>
+                                                    <MenuItem value="Asia/Singapore">Singapore (SGT)</MenuItem>
+                                                    <MenuItem value="Asia/Hong_Kong">Hong Kong (HKT)</MenuItem>
+                                                    <MenuItem value="Asia/Shanghai">Shanghai (CST)</MenuItem>
+                                                    <MenuItem value="Asia/Tokyo">Tokyo (JST)</MenuItem>
+                                                    <MenuItem value="Asia/Seoul">Seoul (KST)</MenuItem>
+                                                    <MenuItem value="Australia/Sydney">Sydney (AEDT/AEST)</MenuItem>
+                                                    <MenuItem value="Australia/Melbourne">Melbourne (AEDT/AEST)</MenuItem>
+                                                    <MenuItem value="Australia/Brisbane">Brisbane (AEST)</MenuItem>
+                                                    <MenuItem value="Pacific/Auckland">Auckland (NZDT/NZST)</MenuItem>
+                                                    <MenuItem value="Africa/Cairo">Cairo (EET)</MenuItem>
+                                                    <MenuItem value="Africa/Johannesburg">Johannesburg (SAST)</MenuItem>
+                                                    <MenuItem value="Africa/Lagos">Lagos (WAT)</MenuItem>
+                                                </Select>
+                                                {errors.timezone && (
+                                                    <Typography
+                                                        variant="caption"
+                                                        color="error"
+                                                        sx={{
+                                                            mt: 0.5,
+                                                            ml: 1.5,
+                                                        }}
+                                                    >
+                                                        {errors.timezone}
+                                                    </Typography>
+                                                )}
+                                            </FormControl>
                                         </Grid>
                                     </Grid>
                                 </CardContent>
