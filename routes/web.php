@@ -35,6 +35,8 @@ Route::post('/plans', [PlanController::class, 'store'])->name('plans.store');
 Route::get('/plans/{plan}', [PlanController::class, 'show'])->name('plans.show');
 Route::put('/plans/{plan}', [PlanController::class, 'update'])->name('plans.update');
 Route::get('/plans/{plan}/availability', [PlanController::class, 'getAvailability'])->name('plans.availability');
+Route::post('/plans/{plan}/create-checkout-session', [PlanController::class, 'createCheckoutSession'])->name('plans.checkout');
+Route::post('/stripe/webhook', [PlanController::class, 'handleStripeWebhook'])->name('stripe.webhook');
 
 // Admin authentication routes
 Route::prefix('admin')->name('admin.')->group(function () {

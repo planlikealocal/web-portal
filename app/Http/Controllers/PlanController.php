@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Stripe\Stripe;
+use Stripe\Checkout\Session as StripeSession;
 
 class PlanController extends Controller
 {
@@ -44,9 +46,24 @@ class PlanController extends Controller
     /**
      * Show the plan creation stepper
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $plan = Plan::with(['specialist.country', 'destination.activities'])->findOrFail($id);
+        
+        // Check for payment success/cancel query parameters
+        $paymentStatus = $request->get('payment');
+        if ($paymentStatus === 'success') {
+            // Refresh plan to get latest payment status
+            $plan->refresh();
+            if ($plan->payment_status === 'paid') {
+                // Payment was successful
+                session()->flash('payment_success', 'Payment completed successfully!');
+            }
+        } elseif ($paymentStatus === 'cancelled') {
+            // Cancel appointment and delete Google Calendar event
+            $this->cancelAppointment($plan);
+            session()->flash('payment_cancelled', 'Payment was cancelled. Appointment has been cancelled.');
+        }
 
         // Get active activities from the destination
         // Note: We access the relationship via getRelation() because there's also a 'destination' attribute
@@ -107,6 +124,10 @@ class PlanController extends Controller
                 'plan_type' => $plan->plan_type ?? null,
                 'selected_plan' => $plan->selected_plan ?? $plan->plan_type ?? null,
                 'status' => $plan->status,
+                'payment_status' => $plan->payment_status ?? 'pending',
+                'appointment_start' => $plan->appointment_start,
+                'appointment_end' => $plan->appointment_end,
+                'plan_prices' => config('plans.prices'),
                 'specialist' => $plan->specialist ? [
                     'id' => $plan->specialist->id,
                     'full_name' => $plan->specialist->full_name,
@@ -150,6 +171,9 @@ class PlanController extends Controller
                 'plan_type' => 'nullable|string|max:255',
                 'selected_plan' => 'nullable|string|max:255',
                 'status' => 'nullable|in:draft,in_progress,completed',
+                'selected_time_slot' => 'nullable',
+                'appointment_start' => 'nullable|date',
+                'appointment_end' => 'nullable|date',
             ]);
 
             // Filter out plan_type and selected_plan if they're empty to avoid errors if columns don't exist yet
@@ -179,6 +203,39 @@ class PlanController extends Controller
             \Log::info('Updating plan', ['plan_id' => $plan->id, 'data' => $updateData]);
             $plan->update($updateData);
             \Log::info('Plan updated successfully', ['plan_id' => $plan->id]);
+
+            // If status is being set to 'completed' and appointment details are provided, create Google Calendar event
+            if (isset($updateData['status']) && $updateData['status'] === 'completed') {
+                // Handle selected_time_slot if it's a JSON string (from frontend)
+                if (isset($updateData['selected_time_slot']) && is_string($updateData['selected_time_slot'])) {
+                    $slotData = json_decode($updateData['selected_time_slot'], true);
+                    if ($slotData && isset($slotData['start']) && isset($slotData['end'])) {
+                        $updateData['appointment_start'] = $slotData['start'];
+                        $updateData['appointment_end'] = $slotData['end'];
+                    }
+                }
+                
+                // Check if appointment details are available
+                if (!empty($updateData['appointment_start']) && !empty($updateData['appointment_end'])) {
+                    try {
+                        // Refresh plan to get latest data
+                        $plan->refresh();
+                        $this->confirmAppointment($plan);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to create Google Calendar event', [
+                            'plan_id' => $plan->id,
+                            'error' => $e->getMessage()
+                        ]);
+                        // Don't fail the request if Google Calendar event creation fails
+                        // The plan is still saved, just without the calendar event
+                    }
+                } else {
+                    Log::warning('Plan marked as completed but no appointment details provided', [
+                        'plan_id' => $plan->id,
+                        'update_data' => $updateData
+                    ]);
+                }
+            }
 
             // If Inertia request, return back with success
             if ($request->header('X-Inertia')) {
@@ -436,6 +493,328 @@ class PlanController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             return [];
+        }
+    }
+
+    /**
+     * Confirm appointment and create Google Calendar event
+     */
+    private function confirmAppointment(Plan $plan)
+    {
+        try {
+            // Get specialist
+            $specialist = $plan->specialist;
+            if (!$specialist) {
+                throw new \Exception('Specialist not found for plan');
+            }
+
+            // Get User model for the specialist
+            $user = User::where('email', $specialist->email)->first();
+            if (!$user) {
+                throw new \Exception('User not found for specialist');
+            }
+
+            // Check if Google Calendar is connected
+            if (!$user->hasGoogleCalendarConnected()) {
+                throw new \Exception('Specialist Google Calendar not connected');
+            }
+
+            // Check if appointment details are available
+            if (!$plan->appointment_start || !$plan->appointment_end) {
+                throw new \Exception('Appointment start and end times are required');
+            }
+
+            // Calculate duration in minutes
+            $startTime = Carbon::parse($plan->appointment_start);
+            $endTime = Carbon::parse($plan->appointment_end);
+            $durationMinutes = $startTime->diffInMinutes($endTime);
+
+            // Prepare event data
+            $eventData = [
+                'start_time' => $plan->appointment_start,
+                'duration' => $durationMinutes,
+                'client_name' => trim(($plan->first_name ?? '') . ' ' . ($plan->last_name ?? '')),
+                'client_email' => $plan->email ?? '',
+                'client_phone' => $plan->phone ?? '',
+                'notes' => $this->buildAppointmentNotes($plan),
+            ];
+
+            // Create Google Calendar event
+            $this->googleCalendarService->setUser($user);
+            $event = $this->googleCalendarService->createEvent($eventData);
+
+            // Update plan with Google Calendar event ID
+            $plan->update([
+                'google_calendar_event_id' => $event['id'],
+            ]);
+
+            Log::info('Appointment confirmed and Google Calendar event created', [
+                'plan_id' => $plan->id,
+                'event_id' => $event['id'],
+                'specialist_id' => $specialist->id,
+            ]);
+
+            return $event;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to confirm appointment', [
+                'plan_id' => $plan->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Build appointment notes from plan data
+     */
+    private function buildAppointmentNotes(Plan $plan): string
+    {
+        $notes = [];
+
+        if ($plan->destination) {
+            $notes[] = "Destination: {$plan->destination}";
+        }
+
+        if ($plan->travel_dates) {
+            $notes[] = "Travel Dates: {$plan->travel_dates}";
+        }
+
+        if ($plan->travelers) {
+            $notes[] = "Travelers: {$plan->travelers}";
+        }
+
+        if ($plan->interests && is_array($plan->interests) && count($plan->interests) > 0) {
+            $notes[] = "Interests: " . implode(', ', $plan->interests);
+        }
+
+        if ($plan->other_interests) {
+            $notes[] = "Other Interests: {$plan->other_interests}";
+        }
+
+        if ($plan->selected_plan || $plan->plan_type) {
+            $planType = $plan->selected_plan ?? $plan->plan_type;
+            $notes[] = "Plan Type: " . ucfirst($planType);
+        }
+
+        return implode("\n", $notes);
+    }
+
+    /**
+     * Cancel appointment and delete Google Calendar event
+     */
+    private function cancelAppointment(Plan $plan)
+    {
+        try {
+            // Check if appointment is confirmed
+            if ($plan->status !== 'completed') {
+                Log::info('Appointment not confirmed, skipping cancellation', [
+                    'plan_id' => $plan->id,
+                    'status' => $plan->status,
+                ]);
+                return;
+            }
+
+            // Delete Google Calendar event if it exists
+            if ($plan->google_calendar_event_id) {
+                try {
+                    // Get specialist
+                    $specialist = $plan->specialist;
+                    if ($specialist) {
+                        // Get User model for the specialist
+                        $user = User::where('email', $specialist->email)->first();
+                        if ($user && $user->hasGoogleCalendarConnected()) {
+                            // Delete Google Calendar event
+                            $this->googleCalendarService->setUser($user);
+                            $this->googleCalendarService->deleteEvent($plan->google_calendar_event_id);
+
+                            Log::info('Google Calendar event deleted on appointment cancellation', [
+                                'plan_id' => $plan->id,
+                                'event_id' => $plan->google_calendar_event_id,
+                            ]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Failed to delete Google Calendar event on cancellation', [
+                        'plan_id' => $plan->id,
+                        'event_id' => $plan->google_calendar_event_id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    // Continue with cancellation even if event deletion fails
+                }
+            }
+
+            // Update plan status back to draft
+            $plan->update([
+                'status' => 'draft',
+                'google_calendar_event_id' => null,
+                'payment_status' => 'pending',
+                'stripe_session_id' => null,
+                'stripe_payment_intent_id' => null,
+            ]);
+
+            Log::info('Appointment cancelled successfully', [
+                'plan_id' => $plan->id,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to cancel appointment', [
+                'plan_id' => $plan->id,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Create Stripe checkout session
+     */
+    public function createCheckoutSession(Request $request, $id)
+    {
+        try {
+            $plan = Plan::findOrFail($id);
+
+            // Check if plan is completed
+            if ($plan->status !== 'completed') {
+                return response()->json(['error' => 'Appointment must be confirmed before payment'], 400);
+            }
+
+            // Check if already paid
+            if ($plan->payment_status === 'paid') {
+                return response()->json(['error' => 'Payment already completed'], 400);
+            }
+
+            // Calculate plan price
+            $planType = $plan->selected_plan ?? $plan->plan_type ?? config('plans.default');
+            $prices = config('plans.prices');
+            $price = $prices[$planType] ?? $prices[config('plans.default')];
+            $total = $price * 100; // Convert to cents
+
+            // Initialize Stripe
+            Stripe::setApiKey(config('services.stripe.secret'));
+
+            // Create checkout session
+            $session = StripeSession::create([
+                'payment_method_types' => ['card'],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => 'usd',
+                        'product_data' => [
+                            'name' => ucfirst($planType) . ' Plan Appointment',
+                            'description' => 'Appointment with ' . ($plan->first_name . ' ' . $plan->last_name),
+                        ],
+                        'unit_amount' => $total,
+                    ],
+                    'quantity' => 1,
+                ]],
+                'mode' => 'payment',
+                'success_url' => url("/plans/{$plan->id}?payment=success"),
+                'cancel_url' => url("/plans/{$plan->id}?payment=cancelled"),
+                'metadata' => [
+                    'plan_id' => $plan->id,
+                ],
+            ]);
+
+            // Save session ID to plan
+            $plan->update([
+                'stripe_session_id' => $session->id,
+                'amount' => $price,
+            ]);
+
+            Log::info('Stripe checkout session created', [
+                'plan_id' => $plan->id,
+                'session_id' => $session->id,
+            ]);
+
+            return response()->json([
+                'sessionId' => $session->id,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to create Stripe checkout session', [
+                'plan_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['error' => 'Failed to create checkout session'], 500);
+        }
+    }
+
+    /**
+     * Handle Stripe webhook
+     */
+    public function handleStripeWebhook(Request $request)
+    {
+        try {
+            $payload = $request->getContent();
+            $sigHeader = $request->header('Stripe-Signature');
+            $endpointSecret = config('services.stripe.webhook_secret');
+
+            Stripe::setApiKey(config('services.stripe.secret'));
+            
+            $event = \Stripe\Webhook::constructEvent(
+                $payload,
+                $sigHeader,
+                $endpointSecret
+            );
+
+            // Handle the event
+            switch ($event->type) {
+                case 'checkout.session.completed':
+                    $session = $event->data->object;
+                    $this->handlePaymentSuccess($session);
+                    break;
+                case 'payment_intent.succeeded':
+                    $paymentIntent = $event->data->object;
+                    Log::info('Payment intent succeeded', ['payment_intent_id' => $paymentIntent->id]);
+                    break;
+                default:
+                    Log::info('Unhandled event type', ['type' => $event->type]);
+            }
+
+            return response()->json(['received' => true]);
+
+        } catch (\Exception $e) {
+            Log::error('Stripe webhook error', [
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['error' => 'Webhook handling failed'], 400);
+        }
+    }
+
+    /**
+     * Handle successful payment
+     */
+    private function handlePaymentSuccess($session)
+    {
+        try {
+            $planId = $session->metadata->plan_id ?? null;
+            if (!$planId) {
+                Log::warning('Payment session missing plan_id', ['session_id' => $session->id]);
+                return;
+            }
+
+            $plan = Plan::find($planId);
+            if (!$plan) {
+                Log::warning('Plan not found for payment', ['plan_id' => $planId]);
+                return;
+            }
+
+            $plan->update([
+                'payment_status' => 'paid',
+                'stripe_payment_intent_id' => $session->payment_intent ?? null,
+                'paid_at' => now(),
+            ]);
+
+            Log::info('Payment completed successfully', [
+                'plan_id' => $plan->id,
+                'session_id' => $session->id,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to handle payment success', [
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }

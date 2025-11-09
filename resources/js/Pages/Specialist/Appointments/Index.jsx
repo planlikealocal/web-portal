@@ -1,52 +1,17 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
     Box,
     Typography,
     Card,
     CardContent,
-    Button,
-    Grid,
     Chip,
-    Paper,
+    Alert,
+    Link as MuiLink,
 } from '@mui/material';
-import {
-    Add as AddIcon,
-    CalendarToday as CalendarIcon,
-    AccessTime as TimeIcon,
-    Person as PersonIcon,
-} from '@mui/icons-material';
-import {Link} from '@inertiajs/react';
+import { DataGrid } from '@mui/x-data-grid';
 import SpecialistLayout from '../../../Layouts/SpecialistLayout';
 
-const AppointmentsIndex = ({appointments}) => {
-    // Mock data for demonstration
-    const mockAppointments = [
-        {
-            id: 1,
-            clientName: 'John Doe',
-            date: '2024-01-15',
-            time: '10:00 AM',
-            status: 'confirmed',
-            service: 'Travel Consultation',
-        },
-        {
-            id: 2,
-            clientName: 'Jane Smith',
-            date: '2024-01-16',
-            time: '2:00 PM',
-            status: 'pending',
-            service: 'Trip Planning',
-        },
-        {
-            id: 3,
-            clientName: 'Mike Johnson',
-            date: '2024-01-17',
-            time: '11:30 AM',
-            status: 'completed',
-            service: 'Destination Review',
-        },
-    ];
-
+const AppointmentsIndex = ({ appointments = [], hasGoogleCalendar = false }) => {
     const getStatusColor = (status) => {
         switch (status) {
             case 'confirmed':
@@ -62,6 +27,127 @@ const AppointmentsIndex = ({appointments}) => {
         }
     };
 
+    const formatDateTime = (dateStr, timeStr) => {
+        if (!dateStr || !timeStr) return '';
+        try {
+            const date = new Date(dateStr);
+            const formattedDate = date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+            return `${formattedDate} ${timeStr}`;
+        } catch (e) {
+            return `${dateStr} ${timeStr}`;
+        }
+    };
+
+    const columns = [
+        {
+            field: 'id',
+            headerName: 'ID',
+            width: 80,
+            renderCell: (params) => (
+                <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                    {params.value?.substring(0, 8) || '-'}
+                </Typography>
+            ),
+        },
+        {
+            field: 'client_name',
+            headerName: 'Client Name',
+            width: 180,
+            flex: 1,
+        },
+        {
+            field: 'client_email',
+            headerName: 'Email',
+            width: 200,
+            flex: 1,
+            renderCell: (params) => (
+                <MuiLink href={`mailto:${params.value}`} target="_blank" rel="noopener">
+                    {params.value || '-'}
+                </MuiLink>
+            ),
+        },
+        {
+            field: 'client_phone',
+            headerName: 'Phone',
+            width: 150,
+            renderCell: (params) => (
+                params.value ? (
+                    <MuiLink href={`tel:${params.value}`}>
+                        {params.value}
+                    </MuiLink>
+                ) : '-'
+            ),
+        },
+        {
+            field: 'summary',
+            headerName: 'Title',
+            width: 200,
+            flex: 1,
+        },
+        {
+            field: 'start_date',
+            headerName: 'Date & Time',
+            width: 200,
+            renderCell: (params) => {
+                const row = params.row;
+                return formatDateTime(row.start_date, row.start_time);
+            },
+        },
+        {
+            field: 'start_time',
+            headerName: 'Time',
+            width: 100,
+            renderCell: (params) => {
+                const row = params.row;
+                if (row.start_time && row.end_time) {
+                    return `${row.start_time} - ${row.end_time}`;
+                }
+                return row.start_time || '-';
+            },
+        },
+        {
+            field: 'status',
+            headerName: 'Status',
+            width: 130,
+            renderCell: (params) => (
+                <Chip
+                    label={params.value || 'pending'}
+                    color={getStatusColor(params.value)}
+                    size="small"
+                />
+            ),
+        },
+        {
+            field: 'html_link',
+            headerName: 'Actions',
+            width: 120,
+            sortable: false,
+            renderCell: (params) => (
+                params.value ? (
+                    <MuiLink
+                        href={params.value}
+                        target="_blank"
+                        rel="noopener"
+                        sx={{ textDecoration: 'none' }}
+                    >
+                        View
+                    </MuiLink>
+                ) : '-'
+            ),
+        },
+    ];
+
+    const rows = useMemo(() => {
+        return appointments.map((appointment, index) => ({
+            id: appointment.id || `temp-${index}`,
+            ...appointment,
+        }));
+    }, [appointments]);
+
     return (
         <SpecialistLayout>
             <Box>
@@ -71,111 +157,42 @@ const AppointmentsIndex = ({appointments}) => {
                     </Typography>
                 </Box>
 
-                <Grid container spacing={3}>
-                    {/* Upcoming Appointments */}
-                    <Grid item xs={12}>
-                        <Card>
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>
-                                    Upcoming Appointments
-                                </Typography>
-                                {mockAppointments.length > 0 ? (
-                                    <Grid container spacing={2}>
-                                        {mockAppointments.map((appointment) => (
-                                            <Grid item xs={12} sm={6} md={4} key={appointment.id}>
-                                                <Paper sx={{p: 2, border: '1px solid', borderColor: 'grey.300'}}>
-                                                    <Box display="flex" alignItems="center" mb={1}>
-                                                        <PersonIcon sx={{mr: 1, fontSize: 20}}/>
-                                                        <Typography variant="subtitle2">
-                                                            {appointment.clientName}
-                                                        </Typography>
-                                                    </Box>
-                                                    <Box display="flex" alignItems="center" mb={1}>
-                                                        <CalendarIcon sx={{mr: 1, fontSize: 16}}/>
-                                                        <Typography variant="body2">
-                                                            {appointment.date}
-                                                        </Typography>
-                                                    </Box>
-                                                    <Box display="flex" alignItems="center" mb={1}>
-                                                        <TimeIcon sx={{mr: 1, fontSize: 16}}/>
-                                                        <Typography variant="body2">
-                                                            {appointment.time}
-                                                        </Typography>
-                                                    </Box>
-                                                    <Typography variant="body2" color="text.secondary" mb={1}>
-                                                        {appointment.service}
-                                                    </Typography>
-                                                    <Chip
-                                                        label={appointment.status}
-                                                        color={getStatusColor(appointment.status)}
-                                                        size="small"
-                                                    />
-                                                </Paper>
-                                            </Grid>
-                                        ))}
-                                    </Grid>
-                                ) : (
-                                    <Typography variant="body2" color="text.secondary">
-                                        No upcoming appointments scheduled.
-                                    </Typography>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </Grid>
+                {!hasGoogleCalendar && (
+                    <Alert severity="warning" sx={{ mb: 3 }}>
+                        Google Calendar is not connected. Please connect your Google Calendar to view appointments.
+                    </Alert>
+                )}
 
-                    {/* Quick Stats */}
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Card>
-                            <CardContent>
-                                <Typography variant="h6" color="primary">
-                                    Total Appointments
-                                </Typography>
-                                <Typography variant="h4">
-                                    {mockAppointments.length}
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                    </Grid>
+                {hasGoogleCalendar && appointments.length === 0 && (
+                    <Alert severity="info" sx={{ mb: 3 }}>
+                        No appointments found. Appointments will appear here once they are booked.
+                    </Alert>
+                )}
 
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Card>
-                            <CardContent>
-                                <Typography variant="h6" color="success.main">
-                                    Confirmed
-                                </Typography>
-                                <Typography variant="h4">
-                                    {mockAppointments.filter(a => a.status === 'confirmed').length}
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Card>
-                            <CardContent>
-                                <Typography variant="h6" color="warning.main">
-                                    Pending
-                                </Typography>
-                                <Typography variant="h4">
-                                    {mockAppointments.filter(a => a.status === 'pending').length}
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Card>
-                            <CardContent>
-                                <Typography variant="h6" color="info.main">
-                                    Completed
-                                </Typography>
-                                <Typography variant="h4">
-                                    {mockAppointments.filter(a => a.status === 'completed').length}
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
+                <Card>
+                    <CardContent>
+                        <Box sx={{ height: 600, width: '100%' }}>
+                            <DataGrid
+                                rows={rows}
+                                columns={columns}
+                                pageSize={10}
+                                rowsPerPageOptions={[10, 25, 50]}
+                                disableSelectionOnClick
+                                autoHeight={false}
+                                sx={{
+                                    '& .MuiDataGrid-cell': {
+                                        fontSize: '0.875rem',
+                                    },
+                                    '& .MuiDataGrid-columnHeaders': {
+                                        backgroundColor: 'grey.100',
+                                        fontSize: '0.875rem',
+                                        fontWeight: 600,
+                                    },
+                                }}
+                            />
+                        </Box>
+                    </CardContent>
+                </Card>
             </Box>
         </SpecialistLayout>
     );

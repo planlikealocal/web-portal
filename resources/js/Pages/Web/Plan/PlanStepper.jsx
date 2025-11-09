@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useForm } from "@inertiajs/react";
+import { useForm, usePage } from "@inertiajs/react";
 import { Box, Container, Stepper, Step, StepLabel, Paper, Alert, Typography } from "@mui/material";
 import WebsiteLayout from "../../../Layouts/WebsiteLayout.jsx";
 import PlanATripGuide from "./components/PlanATripGuide.jsx";
@@ -18,7 +18,14 @@ const steps = [
 ];
 
 const PlanStepper = ({ plan, destinations = [] }) => {
-    const [activeStep, setActiveStep] = useState(0);
+    const { flash } = usePage().props;
+    
+    // If plan is completed, start at step 3 (Select Time), otherwise start at step 0
+    const initialStep = plan.status === 'completed' ? 3 : 0;
+    const [activeStep, setActiveStep] = useState(initialStep);
+    
+    // Lock steps 1-3 if appointment is completed
+    const isAppointmentCompleted = plan.status === 'completed';
     // Get activities from multiple possible locations
     const activities = plan.activities ||
                       plan.destination_data?.activities ||
@@ -48,49 +55,40 @@ const PlanStepper = ({ plan, destinations = [] }) => {
         console.log('Current form data:', data);
         console.log('Current errors:', errors);
 
-        // Save current step data before moving to next step
-        put(`/plans/${plan.id}`, {
-            preserveScroll: true,
-            preserveState: true, // Keep state preserved to maintain activeStep
-            onSuccess: (page) => {
-                console.log('Update successful, moving to next step');
-                console.log('Received page data:', page);
+        // Check if we're on step 3 (Select Time - final step)
+        const isAppointmentStep = activeStep === 3;
 
-                // Check if we're on the final step before updating
-                const isFinalStep = activeStep === steps.length - 1;
+        // If this is step 3 (Select Time), the confirmation and payment redirect
+        // will be handled by Step4SelectTime component
+        if (isAppointmentStep) {
+            // Don't proceed automatically - let Step4SelectTime handle confirmation
+            return;
+        } else {
+            // Save current step data before moving to next step
+            put(`/plans/${plan.id}`, {
+                preserveScroll: true,
+                preserveState: true, // Keep state preserved to maintain activeStep
+                onSuccess: (page) => {
+                    console.log('Update successful, moving to next step');
+                    console.log('Received page data:', page);
 
-                // Use functional update to ensure we have the latest activeStep value
-                setActiveStep((currentStep) => {
-                    const nextStep = currentStep < steps.length - 1 ? currentStep + 1 : currentStep;
-                    console.log('Updating step from', currentStep, 'to', nextStep);
-                    return nextStep;
-                });
-
-                // If this is the final step, mark as completed
-                if (isFinalStep) {
-                    setData("status", "completed");
-                    put(`/plans/${plan.id}`, {
-                        preserveScroll: true,
-                        preserveState: true,
-                        onSuccess: () => {
-                            // Plan completed - could redirect to a success page or show confirmation
-                            alert("Plan created successfully!");
-                        },
-                        onError: (errors) => {
-                            console.error('Error completing plan:', errors);
-                        },
+                    // Use functional update to ensure we have the latest activeStep value
+                    setActiveStep((currentStep) => {
+                        const nextStep = currentStep < steps.length - 1 ? currentStep + 1 : currentStep;
+                        console.log('Updating step from', currentStep, 'to', nextStep);
+                        return nextStep;
                     });
-                }
-            },
-            onError: (errors) => {
-                console.error('Error updating plan:', errors);
-                console.error('Form errors:', errors);
-                // Errors are automatically displayed via the errors prop from useForm
-            },
-            onFinish: () => {
-                console.log('Request finished');
-            },
-        });
+                },
+                onError: (errors) => {
+                    console.error('Error updating plan:', errors);
+                    console.error('Form errors:', errors);
+                    // Errors are automatically displayed via the errors prop from useForm
+                },
+                onFinish: () => {
+                    console.log('Request finished');
+                },
+            });
+        }
     };
 
     const handleBack = () => {
@@ -168,6 +166,47 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                         errors={errors}
                         planId={plan.id}
                         specialist={plan.specialist}
+                        disabled={isAppointmentCompleted}
+                        plan={plan}
+                        onConfirm={async () => {
+                            // Validate that appointment details are selected
+                            // Check both data and selectedSlot from Step4
+                            const hasAppointmentData = data.selected_time_slot || 
+                                                       (data.appointment_start && data.appointment_end);
+                            
+                            if (!hasAppointmentData) {
+                                throw new Error('Please select a time slot before confirming the appointment.');
+                            }
+
+                            // Ensure appointment data is set
+                            if (data.selected_time_slot && typeof data.selected_time_slot === 'object') {
+                                if (!data.appointment_start) {
+                                    setData('appointment_start', data.selected_time_slot.start);
+                                }
+                                if (!data.appointment_end) {
+                                    setData('appointment_end', data.selected_time_slot.end);
+                                }
+                            }
+
+                            // Set status to completed
+                            setData("status", "completed");
+                            
+                            // Save plan with completed status and create Google Calendar event
+                            return new Promise((resolve, reject) => {
+                                put(`/plans/${plan.id}`, {
+                                    preserveScroll: true,
+                                    preserveState: true,
+                                    onSuccess: () => {
+                                        resolve();
+                                    },
+                                    onError: (errors) => {
+                                        console.error('Error completing plan:', errors);
+                                        const errorMessage = errors.error || 'Failed to complete appointment. Please try again.';
+                                        reject(new Error(errorMessage));
+                                    },
+                                });
+                            });
+                        }}
                     />
                 );
             default:
@@ -195,7 +234,17 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                             totalSteps={steps.length}
                         />
 
-                        {/* Display Errors */}
+                        {/* Display Success/Error Messages */}
+                        {flash?.payment_success && (
+                            <Alert severity="success" sx={{ mb: 3 }}>
+                                {flash.payment_success}
+                            </Alert>
+                        )}
+                        {flash?.payment_cancelled && (
+                            <Alert severity="warning" sx={{ mb: 3 }}>
+                                {flash.payment_cancelled}
+                            </Alert>
+                        )}
                         {Object.keys(errors).length > 0 && (
                             <Alert severity="error" sx={{ mb: 3 }}>
                                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
@@ -213,9 +262,16 @@ const PlanStepper = ({ plan, destinations = [] }) => {
 
                         {/* Stepper */}
                         <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-                            {steps.map((label) => (
-                                <Step key={label}>
-                                    <StepLabel>{label}</StepLabel>
+                            {steps.map((label, index) => (
+                                <Step 
+                                    key={label}
+                                    disabled={isAppointmentCompleted && index < 3}
+                                >
+                                    <StepLabel 
+                                        error={isAppointmentCompleted && index < 3}
+                                    >
+                                        {label}
+                                    </StepLabel>
                                 </Step>
                             ))}
                         </Stepper>
@@ -225,20 +281,22 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                             {renderStepContent(activeStep)}
                         </Box>
 
-                        {/* Navigation Buttons */}
-                        <PlanStepperNavigation
-                            activeStep={activeStep}
-                            totalSteps={steps.length}
-                            onBack={handleBack}
-                            onNext={handleNext}
-                            processing={processing}
-                            isNextDisabled={
-                                (activeStep === 0 && !isStep1Valid()) ||
-                                (activeStep === 1 && !isStep2Valid()) ||
-                                (activeStep === 2 && !isStep3Valid()) ||
-                                (activeStep === 3 && !isStep4Valid())
-                            }
-                        />
+                        {/* Navigation Buttons - Hide on final step (payment handled in Step4) */}
+                        {activeStep < steps.length - 1 && (
+                            <PlanStepperNavigation
+                                activeStep={activeStep}
+                                totalSteps={steps.length}
+                                onBack={handleBack}
+                                onNext={handleNext}
+                                processing={processing}
+                                isNextDisabled={
+                                    isAppointmentCompleted ||
+                                    (activeStep === 0 && !isStep1Valid()) ||
+                                    (activeStep === 1 && !isStep2Valid()) ||
+                                    (activeStep === 2 && !isStep3Valid())
+                                }
+                            />
+                        )}
                     </Paper>
                 </Container>
             </Box>

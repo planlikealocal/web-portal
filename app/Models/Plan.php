@@ -22,6 +22,15 @@ class Plan extends Model
         'plan_type',
         'selected_plan',
         'status',
+        'selected_time_slot',
+        'appointment_start',
+        'appointment_end',
+        'google_calendar_event_id',
+        'payment_status',
+        'stripe_payment_intent_id',
+        'stripe_session_id',
+        'amount',
+        'paid_at',
     ];
 
     protected function casts(): array
@@ -29,6 +38,10 @@ class Plan extends Model
         return [
             'interests' => 'array',
             'status' => 'string',
+            'appointment_start' => 'datetime',
+            'appointment_end' => 'datetime',
+            'amount' => 'decimal:2',
+            'paid_at' => 'datetime',
         ];
     }
 

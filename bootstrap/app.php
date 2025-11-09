@@ -18,6 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'specialist.google.calendar' => \App\Http\Middleware\RequireGoogleCalendarForSpecialists::class,
         ]);
         
+        // Exclude Stripe webhook from CSRF protection
+        $middleware->validateCsrfTokens(except: [
+            'stripe/webhook',
+        ]);
+        
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);

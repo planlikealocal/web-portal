@@ -312,7 +312,8 @@ class GoogleCalendarService
             $event = new Event();
             $event->setSummary('Appointment with ' . $eventData['client_name']);
             
-            $description = "Client: {$eventData['client_name']}\n";
+            $description = "Booked via Web Portal\n";
+            $description .= "Client: {$eventData['client_name']}\n";
             $description .= "Email: {$eventData['client_email']}\n";
             if (!empty($eventData['client_phone'])) {
                 $description .= "Phone: {$eventData['client_phone']}\n";
@@ -360,6 +361,42 @@ class GoogleCalendarService
 
         } catch (\Exception $e) {
             Log::error('Create event error: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Delete a Google Calendar event
+     */
+    public function deleteEvent(string $eventId): bool
+    {
+        try {
+            if (!$this->calendarService) {
+                throw new \Exception('Calendar service not initialized');
+            }
+
+            $calendarId = $this->user->google_calendar_id ?: $this->getPrimaryCalendarId();
+            
+            if (!$calendarId) {
+                throw new \Exception('No calendar ID available');
+            }
+
+            // Delete the event
+            $this->calendarService->events->delete($calendarId, $eventId);
+
+            Log::info('Google Calendar event deleted', [
+                'user_id' => $this->user->id,
+                'event_id' => $eventId,
+                'calendar_id' => $calendarId,
+            ]);
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Delete event error: ' . $e->getMessage(), [
+                'user_id' => $this->user->id ?? null,
+                'event_id' => $eventId,
+            ]);
             throw $e;
         }
     }
@@ -418,6 +455,116 @@ class GoogleCalendarService
 
         } catch (\Exception $e) {
             Log::error('Get calendar events error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * List calendar events with full details
+     */
+    public function listEvents(string $startDate = null, string $endDate = null, string $timezone = 'UTC'): array
+    {
+        try {
+            if (!$this->calendarService) {
+                return [];
+            }
+
+            $calendarId = $this->user->google_calendar_id ?: $this->getPrimaryCalendarId();
+            
+            if (!$calendarId) {
+                return [];
+            }
+
+            // Default to current date and 30 days ahead
+            $startDateTime = $startDate 
+                ? Carbon::parse($startDate)->setTimezone($timezone)->startOfDay()
+                : Carbon::now($timezone)->startOfDay();
+            
+            $endDateTime = $endDate 
+                ? Carbon::parse($endDate)->setTimezone($timezone)->endOfDay()
+                : Carbon::now($timezone)->addDays(30)->endOfDay();
+
+            // List events from Google Calendar
+            $optParams = [
+                'timeMin' => $startDateTime->toRfc3339String(),
+                'timeMax' => $endDateTime->toRfc3339String(),
+                'orderBy' => 'startTime',
+                'singleEvents' => true,
+            ];
+
+            $events = $this->calendarService->events->listEvents($calendarId, $optParams);
+            $items = $events->getItems();
+
+            $formattedEvents = [];
+            foreach ($items as $event) {
+                $start = $event->getStart();
+                $end = $event->getEnd();
+                
+                $startTime = $start->getDateTime() ? Carbon::parse($start->getDateTime())->setTimezone($timezone) : null;
+                $endTime = $end->getDateTime() ? Carbon::parse($end->getDateTime())->setTimezone($timezone) : null;
+
+                // Extract client info from description or attendees
+                $description = $event->getDescription() ?? '';
+                
+                // Only show appointments created through the web application
+                // Check if description contains "Booked via Web Portal" or starts with "Client:"
+                $isWebAppointment = strpos($description, 'Booked via Web Portal') !== false 
+                    || preg_match('/^Client:\s*/i', $description);
+                
+                if (!$isWebAppointment) {
+                    continue; // Skip appointments not created through the web application
+                }
+                
+                $attendees = $event->getAttendees() ?? [];
+                
+                // Try to extract client name and email from description
+                $clientName = '';
+                $clientEmail = '';
+                $clientPhone = '';
+                
+                if (preg_match('/Client:\s*(.+)/i', $description, $matches)) {
+                    $clientName = trim($matches[1]);
+                }
+                if (preg_match('/Email:\s*(.+)/i', $description, $matches)) {
+                    $clientEmail = trim($matches[1]);
+                }
+                if (preg_match('/Phone:\s*(.+)/i', $description, $matches)) {
+                    $clientPhone = trim($matches[1]);
+                }
+                
+                // If not found in description, try attendees
+                if (empty($clientEmail) && !empty($attendees)) {
+                    foreach ($attendees as $attendee) {
+                        if ($attendee->getEmail() !== $this->user->email) {
+                            $clientEmail = $attendee->getEmail();
+                            $clientName = $attendee->getDisplayName() ?? $clientEmail;
+                            break;
+                        }
+                    }
+                }
+
+                $formattedEvents[] = [
+                    'id' => $event->getId(),
+                    'summary' => $event->getSummary() ?? 'Appointment',
+                    'description' => $description,
+                    'client_name' => $clientName,
+                    'client_email' => $clientEmail,
+                    'client_phone' => $clientPhone,
+                    'start' => $startTime ? $startTime->toDateTimeString() : null,
+                    'end' => $endTime ? $endTime->toDateTimeString() : null,
+                    'start_date' => $startTime ? $startTime->toDateString() : null,
+                    'start_time' => $startTime ? $startTime->format('H:i') : null,
+                    'end_time' => $endTime ? $endTime->format('H:i') : null,
+                    'html_link' => $event->getHtmlLink(),
+                    'status' => $event->getStatus() === 'confirmed' ? 'confirmed' : 'pending',
+                    'location' => $event->getLocation(),
+                ];
+            }
+
+            return $formattedEvents;
+
+        } catch (\Exception $e) {
+            Log::error('List events error: ' . $e->getMessage());
             return [];
         }
     }
