@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useForm, usePage } from "@inertiajs/react";
+import { useForm, usePage, router } from "@inertiajs/react";
 import { Box, Container, Stepper, Step, StepLabel, Paper, Alert, Typography } from "@mui/material";
 import WebsiteLayout from "../../../Layouts/WebsiteLayout.jsx";
 import PlanATripGuide from "./components/PlanATripGuide.jsx";
@@ -48,6 +48,10 @@ const PlanStepper = ({ plan, destinations = [] }) => {
         other_interests: plan.other_interests || "",
         plan_type: plan.plan_type || plan.selected_plan || "",
         selected_plan: plan.selected_plan || plan.plan_type || "",
+        status: plan.status || "",
+        appointment_start: plan.appointment_start || "",
+        appointment_end: plan.appointment_end || "",
+        selected_time_slot: plan.selected_time_slot || null,
     });
 
     const handleNext = () => {
@@ -188,12 +192,21 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                                 }
                             }
 
-                            // Set status to completed
+                            // Update form state for UI consistency (optional, but good for form state)
                             setData("status", "completed");
                             
                             // Save plan with completed status and create Google Calendar event
                             return new Promise((resolve, reject) => {
-                                put(`/plans/${plan.id}`, {
+                                // Explicitly set status to 'completed' in the request data
+                                // This ensures the status is always 'completed' regardless of form state
+                                // Note: We override status here, so we don't need to wait for setData to update
+                                const requestData = {
+                                    ...data,
+                                    status: 'completed', // Force status to 'completed' - this overrides any value in data
+                                };
+                                
+                                // Use router.put directly to have full control over the data
+                                router.put(`/plans/${plan.id}`, requestData, {
                                     preserveScroll: true,
                                     preserveState: true,
                                     onSuccess: () => {

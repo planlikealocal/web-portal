@@ -257,15 +257,27 @@ const Step4SelectTime = ({ data, setData, errors, planId, specialist, disabled =
         setError(null);
 
         try {
-            // Ensure selected slot data is saved to form data before confirming
-            if (selectedSlot && (!data.appointment_start || !data.appointment_end)) {
+            // Ensure all appointment data is saved to form data before confirming
+            // This ensures the PUT request includes all necessary fields
+            if (selectedSlot) {
                 setData('selected_time_slot', selectedSlot);
                 setData('appointment_start', selectedSlot.start);
                 setData('appointment_end', selectedSlot.end);
-                
-                // Wait a bit for data to be set
-                await new Promise(resolve => setTimeout(resolve, 100));
+            } else if (data.appointment_start && data.appointment_end) {
+                // If we have appointment data but no selectedSlot, ensure it's set
+                if (!data.selected_time_slot) {
+                    setData('selected_time_slot', {
+                        start: data.appointment_start,
+                        end: data.appointment_end,
+                    });
+                }
             }
+            
+            // Also ensure status is set in form data before calling onConfirm
+            setData('status', 'completed');
+            
+            // Wait a bit for data to be set in the form
+            await new Promise(resolve => setTimeout(resolve, 100));
 
             // First, confirm the appointment (set status to completed and create Google Calendar event)
             if (onConfirm) {
@@ -295,26 +307,42 @@ const Step4SelectTime = ({ data, setData, errors, planId, specialist, disabled =
                 }
             }
 
-            // Wait a bit for the appointment to be confirmed
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Wait a moment for the database update to be committed
+            await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Create Stripe checkout session
+            // Create Stripe checkout session with retry logic
+            setConfirming(false);
             setRedirecting(true);
-            const response = await fetch(`/plans/${planId}/create-checkout-session`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                },
-                credentials: 'same-origin',
-            });
+            
+            const createCheckoutSession = async (retryCount = 0) => {
+                const maxRetries = 3;
+                const retryDelay = 500; // 500ms delay between retries
 
-            const result = await response.json();
+                const response = await fetch(`/plans/${planId}/create-checkout-session`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    },
+                    credentials: 'same-origin',
+                });
 
-            if (!response.ok) {
-                throw new Error(result.error || 'Failed to create checkout session');
-            }
+                const result = await response.json();
+
+                if (!response.ok) {
+                    // If we get the "must be confirmed" error and haven't exceeded retries, retry
+                    if (result.error && result.error.includes('Appointment must be confirmed') && retryCount < maxRetries) {
+                        await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)));
+                        return createCheckoutSession(retryCount + 1);
+                    }
+                    throw new Error(result.error || 'Failed to create checkout session');
+                }
+
+                return result;
+            };
+
+            const result = await createCheckoutSession();
 
             // Redirect to Stripe Checkout
             const checkoutResult = await stripe.redirectToCheckout({

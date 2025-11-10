@@ -13,6 +13,7 @@ export default defineConfig({
         tailwindcss(),
     ],
     build: {
+        target: 'es2015', // Target ES2015 for better compatibility
         rollupOptions: {
             output: {
                 manualChunks: {
@@ -32,5 +33,8 @@ export default defineConfig({
             },
         },
         chunkSizeWarningLimit: 600, // Increase limit slightly, but chunks should be smaller now
+    },
+    esbuild: {
+        target: 'es2015', // Ensure esbuild targets ES2015
     },
 });
