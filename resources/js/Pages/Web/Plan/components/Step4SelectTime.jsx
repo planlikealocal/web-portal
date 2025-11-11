@@ -5,7 +5,6 @@ import { StaticDatePicker } from '@mui/x-date-pickers/StaticDatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import { loadStripe } from '@stripe/stripe-js';
 import SpecialistInfo from './SpecialistInfo';
 
 const Step4SelectTime = ({ data, setData, errors, planId, specialist, disabled = false, onConfirm, plan }) => {
@@ -16,73 +15,6 @@ const Step4SelectTime = ({ data, setData, errors, planId, specialist, disabled =
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedDateValue, setSelectedDateValue] = useState(null);
     const [confirming, setConfirming] = useState(false);
-    const [stripe, setStripe] = useState(null);
-    const [redirecting, setRedirecting] = useState(false);
-
-    // Initialize Stripe
-    useEffect(() => {
-        const initStripe = async () => {
-            try {
-                const stripeKey = document.querySelector('meta[name="stripe-key"]')?.getAttribute('content');
-                if (stripeKey) {
-                    const stripeInstance = await loadStripe(stripeKey);
-                    setStripe(stripeInstance);
-                }
-            } catch (err) {
-                console.error('Failed to load Stripe:', err);
-            }
-        };
-        initStripe();
-    }, []);
-
-    // Auto-redirect to payment if appointment is confirmed but not paid
-    useEffect(() => {
-        const autoRedirectToPayment = async () => {
-            // Check if appointment is confirmed but payment is not paid
-            const isAppointmentConfirmed = data.status === 'completed' || plan?.status === 'completed';
-            const isPaymentPaid = data.payment_status === 'paid' || plan?.payment_status === 'paid';
-            
-            if (isAppointmentConfirmed && !isPaymentPaid && stripe) {
-                try {
-                    setRedirecting(true);
-                    
-                    // Create Stripe checkout session
-                    const response = await fetch(`/plans/${planId}/create-checkout-session`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        },
-                        credentials: 'same-origin',
-                    });
-
-                    const result = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(result.error || 'Failed to create checkout session');
-                    }
-
-                    // Redirect to Stripe Checkout
-                    const checkoutResult = await stripe.redirectToCheckout({
-                        sessionId: result.sessionId,
-                    });
-
-                    if (checkoutResult.error) {
-                        throw new Error(checkoutResult.error.message);
-                    }
-                } catch (err) {
-                    console.error('Error redirecting to payment:', err);
-                    setError(err.message || 'Failed to load payment page. Please try again.');
-                    setRedirecting(false);
-                }
-            }
-        };
-
-        if (stripe && planId) {
-            autoRedirectToPayment();
-        }
-    }, [stripe, planId, data.status, data.payment_status, plan?.status, plan?.payment_status]);
 
     // Initialize selected slot from data if available
     useEffect(() => {
@@ -240,16 +172,11 @@ const Step4SelectTime = ({ data, setData, errors, planId, specialist, disabled =
     // Disable appointment selection if confirmed
     const isDisabled = disabled || isAppointmentConfirmed;
 
-    // Handle confirm appointment and redirect to payment
+    // Handle confirm appointment - moves to step 5 (Payment)
     const handleConfirmAppointment = async () => {
         // Validate that appointment details are selected
         if (!selectedSlot && !(data.appointment_start && data.appointment_end)) {
             setError('Please select a time slot before confirming the appointment.');
-            return;
-        }
-
-        if (!stripe) {
-            setError('Payment system not ready. Please refresh the page.');
             return;
         }
 
@@ -279,7 +206,8 @@ const Step4SelectTime = ({ data, setData, errors, planId, specialist, disabled =
             // Wait a bit for data to be set in the form
             await new Promise(resolve => setTimeout(resolve, 100));
 
-            // First, confirm the appointment (set status to completed and create Google Calendar event)
+            // Confirm the appointment (set status to completed and create Google Calendar event)
+            // onConfirm will handle moving to step 5 (Payment)
             if (onConfirm) {
                 await onConfirm();
             } else {
@@ -306,57 +234,10 @@ const Step4SelectTime = ({ data, setData, errors, planId, specialist, disabled =
                     throw new Error(result.error || 'Failed to confirm appointment');
                 }
             }
-
-            // Wait a moment for the database update to be committed
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Create Stripe checkout session with retry logic
-            setConfirming(false);
-            setRedirecting(true);
-            
-            const createCheckoutSession = async (retryCount = 0) => {
-                const maxRetries = 3;
-                const retryDelay = 500; // 500ms delay between retries
-
-                const response = await fetch(`/plans/${planId}/create-checkout-session`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    },
-                    credentials: 'same-origin',
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    // If we get the "must be confirmed" error and haven't exceeded retries, retry
-                    if (result.error && result.error.includes('Appointment must be confirmed') && retryCount < maxRetries) {
-                        await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)));
-                        return createCheckoutSession(retryCount + 1);
-                    }
-                    throw new Error(result.error || 'Failed to create checkout session');
-                }
-
-                return result;
-            };
-
-            const result = await createCheckoutSession();
-
-            // Redirect to Stripe Checkout
-            const checkoutResult = await stripe.redirectToCheckout({
-                sessionId: result.sessionId,
-            });
-
-            if (checkoutResult.error) {
-                throw new Error(checkoutResult.error.message);
-            }
         } catch (err) {
             console.error('Error confirming appointment:', err);
             setError(err.message || 'Failed to confirm appointment. Please try again.');
             setConfirming(false);
-            setRedirecting(false);
         }
     };
 
@@ -374,10 +255,10 @@ const Step4SelectTime = ({ data, setData, errors, planId, specialist, disabled =
                         Select a Time Slot
                     </Typography>
                     {isAppointmentConfirmed && (
-                        <Alert severity={isPaymentPaid ? "success" : "warning"} sx={{ mb: 3 }}>
+                        <Alert severity={isPaymentPaid ? "success" : "info"} sx={{ mb: 3 }}>
                             {isPaymentPaid 
                                 ? "Appointment confirmed and payment completed. Time slot cannot be changed."
-                                : "Appointment confirmed. Redirecting to payment page..."}
+                                : "Appointment confirmed. Please proceed to payment."}
                         </Alert>
                     )}
                     {loading && (
@@ -518,15 +399,13 @@ const Step4SelectTime = ({ data, setData, errors, planId, specialist, disabled =
                                         fullWidth
                                         size="large"
                                         onClick={handleConfirmAppointment}
-                                        disabled={confirming || redirecting || !stripe || !selectedAppointmentTime}
-                                        startIcon={confirming || redirecting ? <CircularProgress size={20} /> : <CheckCircle />}
+                                        disabled={confirming || !selectedAppointmentTime}
+                                        startIcon={confirming ? <CircularProgress size={20} /> : <CheckCircle />}
                                         sx={{ py: 1.5, mt: 2 }}
                                     >
-                                        {redirecting
-                                            ? 'Redirecting to Payment...'
-                                            : confirming
-                                                ? 'Confirming Appointment...'
-                                                : 'Confirm Appointment & Pay'}
+                                        {confirming
+                                            ? 'Confirming Appointment...'
+                                            : 'Confirm Appointment & Continue'}
                                     </Button>
                                 </>
                             )}
@@ -538,48 +417,6 @@ const Step4SelectTime = ({ data, setData, errors, planId, specialist, disabled =
                                 </Alert>
                             )}
 
-                            {isAppointmentConfirmed && !isPaymentPaid && !redirecting && (
-                                <Box sx={{ mt: 2, textAlign: 'center' }}>
-                                    <Button
-                                        variant="contained"
-                                        fullWidth
-                                        size="large"
-                                        onClick={async () => {
-                                            if (!stripe) return;
-                                            setRedirecting(true);
-                                            try {
-                                                const response = await fetch(`/plans/${planId}/create-checkout-session`, {
-                                                    method: 'POST',
-                                                    headers: {
-                                                        'Content-Type': 'application/json',
-                                                        'Accept': 'application/json',
-                                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                                                    },
-                                                    credentials: 'same-origin',
-                                                });
-                                                const result = await response.json();
-                                                if (!response.ok) throw new Error(result.error || 'Failed to create checkout session');
-                                                const checkoutResult = await stripe.redirectToCheckout({ sessionId: result.sessionId });
-                                                if (checkoutResult.error) throw new Error(checkoutResult.error.message);
-                                            } catch (err) {
-                                                setError(err.message || 'Failed to load payment page.');
-                                                setRedirecting(false);
-                                            }
-                                        }}
-                                        disabled={redirecting || !stripe}
-                                        startIcon={redirecting ? <CircularProgress size={20} /> : <Payment />}
-                                        sx={{ py: 1.5 }}
-                                    >
-                                        {redirecting ? 'Loading Payment...' : 'Pay Now'}
-                                    </Button>
-                                </Box>
-                            )}
-
-                            {redirecting && (
-                                <Alert severity="info" sx={{ mt: 2 }}>
-                                    Redirecting to secure payment page...
-                                </Alert>
-                            )}
 
                             {error && (
                                 <Alert severity="error" sx={{ mt: 2 }}>

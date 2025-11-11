@@ -9,21 +9,31 @@ import Step1PersonalInfo from "./components/Step1PersonalInfo.jsx";
 import Step2TripDetails from "./components/Step2TripDetails.jsx";
 import Step3SelectPlan from "./components/Step3SelectPlan.jsx";
 import Step4SelectTime from "./components/Step4SelectTime.jsx";
+import Step5Payment from "./components/Step5Payment.jsx";
+import PaymentSuccess from "./components/PaymentSuccess.jsx";
 
 const steps = [
     "Tell us a bit about you",
     "Trip Details",
     "Select a Plan",
     "Select Time",
+    "Payment",
 ];
 
-const PlanStepper = ({ plan, destinations = [] }) => {
+const PlanStepper = ({ plan, destinations = [], showSuccessPage = false }) => {
     const { flash } = usePage().props;
     
-    // If plan is completed, start at step 3 (Select Time), otherwise start at step 0
-    const initialStep = plan.status === 'completed' ? 3 : 0;
-    const [activeStep, setActiveStep] = useState(initialStep);
+    // If payment is successful, show success page
+    if (showSuccessPage && plan.payment_status === 'paid') {
+        return <PaymentSuccess plan={plan} />;
+    }
     
+    // If plan is completed and not paid, start at step 4 (Payment)
+    // If plan is completed and paid, start at step 4 (Payment) to show success
+    // Otherwise start at step 0
+    const initialStep = plan.status === 'completed' ? 4 : 0;
+    const [activeStep, setActiveStep] = useState(initialStep);
+
     // Lock steps 1-3 if appointment is completed
     const isAppointmentCompleted = plan.status === 'completed';
     // Get activities from multiple possible locations
@@ -175,9 +185,9 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                         onConfirm={async () => {
                             // Validate that appointment details are selected
                             // Check both data and selectedSlot from Step4
-                            const hasAppointmentData = data.selected_time_slot || 
+                            const hasAppointmentData = data.selected_time_slot ||
                                                        (data.appointment_start && data.appointment_end);
-                            
+
                             if (!hasAppointmentData) {
                                 throw new Error('Please select a time slot before confirming the appointment.');
                             }
@@ -194,7 +204,7 @@ const PlanStepper = ({ plan, destinations = [] }) => {
 
                             // Update form state for UI consistency (optional, but good for form state)
                             setData("status", "completed");
-                            
+
                             // Save plan with completed status and create Google Calendar event
                             return new Promise((resolve, reject) => {
                                 // Explicitly set status to 'completed' in the request data
@@ -204,12 +214,14 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                                     ...data,
                                     status: 'completed', // Force status to 'completed' - this overrides any value in data
                                 };
-                                
+
                                 // Use router.put directly to have full control over the data
                                 router.put(`/plans/${plan.id}`, requestData, {
                                     preserveScroll: true,
                                     preserveState: true,
                                     onSuccess: () => {
+                                        // Move to step 5 (Payment) after successful confirmation
+                                        setActiveStep(4);
                                         resolve();
                                     },
                                     onError: (errors) => {
@@ -219,6 +231,16 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                                     },
                                 });
                             });
+                        }}
+                    />
+                );
+            case 4:
+                return (
+                    <Step5Payment
+                        plan={plan}
+                        onPaymentSuccess={() => {
+                            // Optionally handle payment success
+                            console.log('Payment successful');
                         }}
                     />
                 );
@@ -276,12 +298,12 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                         {/* Stepper */}
                         <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
                             {steps.map((label, index) => (
-                                <Step 
+                                <Step
                                     key={label}
-                                    disabled={isAppointmentCompleted && index < 3}
+                                    disabled={isAppointmentCompleted && index < 4}
                                 >
-                                    <StepLabel 
-                                        error={isAppointmentCompleted && index < 3}
+                                    <StepLabel
+                                        error={isAppointmentCompleted && index < 4}
                                     >
                                         {label}
                                     </StepLabel>
@@ -294,8 +316,8 @@ const PlanStepper = ({ plan, destinations = [] }) => {
                             {renderStepContent(activeStep)}
                         </Box>
 
-                        {/* Navigation Buttons - Hide on final step (payment handled in Step4) */}
-                        {activeStep < steps.length - 1 && (
+                        {/* Navigation Buttons - Hide on final step (payment handled in Step5) */}
+                        {activeStep < steps.length - 1 && activeStep !== 3 && (
                             <PlanStepperNavigation
                                 activeStep={activeStep}
                                 totalSteps={steps.length}

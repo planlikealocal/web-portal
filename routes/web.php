@@ -36,6 +36,8 @@ Route::get('/plans/{plan}', [PlanController::class, 'show'])->name('plans.show')
 Route::put('/plans/{plan}', [PlanController::class, 'update'])->name('plans.update');
 Route::get('/plans/{plan}/availability', [PlanController::class, 'getAvailability'])->name('plans.availability');
 Route::post('/plans/{plan}/create-checkout-session', [PlanController::class, 'createCheckoutSession'])->name('plans.checkout');
+Route::get('/plans/{plan}/download-calendar', [PlanController::class, 'downloadCalendar'])->name('plans.download-calendar');
+Route::get('/plans/{plan}/download-invoice', [PlanController::class, 'downloadInvoice'])->name('plans.download-invoice');
 Route::post('/stripe/webhook', [PlanController::class, 'handleStripeWebhook'])->name('stripe.webhook');
 
 // Admin authentication routes
