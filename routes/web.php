@@ -125,6 +125,7 @@ Route::prefix('specialist')->name('specialist.')->group(function () {
         Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
         Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointments.create');
         Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
+        Route::get('/appointments/plan/{planId}', [AppointmentController::class, 'getPlanDetails'])->name('appointments.plan.details');
 
         // Add any other specialist routes here - they will all require Google Calendar
         // Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');

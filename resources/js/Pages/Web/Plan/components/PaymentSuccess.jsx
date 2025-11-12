@@ -175,10 +175,6 @@ const PaymentSuccess = ({ plan }) => {
                                 <Grid container spacing={2} justifyContent="center">
                                     {/* Calendar Download */}
                                     <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                                            <CalendarToday />
-                                            Add to Calendar
-                                        </Typography>
                                         <Button
                                             variant="contained"
                                             size="large"
@@ -193,10 +189,7 @@ const PaymentSuccess = ({ plan }) => {
 
                                     {/* Invoice Download */}
                                     <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                                            <Receipt />
-                                            Download Invoice
-                                        </Typography>
+
                                         <Button
                                             variant="outlined"
                                             size="large"

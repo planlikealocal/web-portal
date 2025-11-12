@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import {
     Box,
     Typography,
@@ -6,12 +6,138 @@ import {
     CardContent,
     Chip,
     Alert,
+    Button,
+    ButtonGroup,
+    Popper,
+    Grow,
+    Paper,
+    ClickAwayListener,
+    MenuList,
+    MenuItem,
     Link as MuiLink,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
+import { Info, ArrowDropDown, CalendarToday } from '@mui/icons-material';
 import SpecialistLayout from '../../../Layouts/SpecialistLayout';
+import PlanDetailsDialog from '../../../Components/PlanDetailsDialog';
+
+// Actions cell component with dropdown menu
+const ActionsCell = ({ row, onOpenPlanDetails }) => {
+    const [open, setOpen] = useState(false);
+    const anchorRef = useRef(null);
+
+    const handleToggle = () => {
+        setOpen((prevOpen) => !prevOpen);
+    };
+
+    const handleClose = (event) => {
+        if (anchorRef.current && anchorRef.current.contains(event.target)) {
+            return;
+        }
+        setOpen(false);
+    };
+
+    const handleMenuItemClick = (event, action) => {
+        if (action === 'plan-details') {
+            onOpenPlanDetails(row.plan_id);
+        } else if (action === 'view-calendar') {
+            window.open(row.html_link, '_blank', 'noopener,noreferrer');
+        }
+        setOpen(false);
+    };
+
+    // Build all available actions for dropdown menu
+    const menuOptions = [];
+    if (row.html_link) {
+        menuOptions.push({ label: 'View Calendar', action: 'view-calendar', icon: <CalendarToday fontSize="small" /> });
+    }
+    if (row.plan_id) {
+        menuOptions.push({ label: 'Plan Details', action: 'plan-details', icon: <Info fontSize="small" /> });
+    }
+
+    // If no actions available, return dash
+    if (menuOptions.length === 0) {
+        return <Typography variant="body2">-</Typography>;
+    }
+
+    // Show button group with dropdown containing all actions
+    return (
+        <>
+            <ButtonGroup
+                variant="contained"
+                ref={anchorRef}
+                aria-label="appointment actions"
+                size="small"
+            >
+                <Button
+                    size="small"
+                    aria-controls={open ? 'split-button-menu' : undefined}
+                    aria-expanded={open ? 'true' : undefined}
+                    aria-label="select action"
+                    aria-haspopup="menu"
+                    onClick={handleToggle}
+                >
+                    Actions
+                </Button>
+                <Button
+                    size="small"
+                    aria-controls={open ? 'split-button-menu' : undefined}
+                    aria-expanded={open ? 'true' : undefined}
+                    aria-label="more actions"
+                    aria-haspopup="menu"
+                    onClick={handleToggle}
+                >
+                    <ArrowDropDown />
+                </Button>
+            </ButtonGroup>
+            <Popper
+                sx={{ zIndex: 1 }}
+                open={open}
+                anchorEl={anchorRef.current}
+                role={undefined}
+                transition
+                disablePortal
+            >
+                {({ TransitionProps, placement }) => (
+                    <Grow
+                        {...TransitionProps}
+                        style={{
+                            transformOrigin:
+                                placement === 'bottom' ? 'center top' : 'center bottom',
+                        }}
+                    >
+                        <Paper>
+                            <ClickAwayListener onClickAway={handleClose}>
+                                <MenuList id="split-button-menu" autoFocusItem>
+                                    {menuOptions.map((option) => (
+                                        <MenuItem
+                                            key={option.action}
+                                            onClick={(event) => handleMenuItemClick(event, option.action)}
+                                        >
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                {option.icon}
+                                                {option.label}
+                                            </Box>
+                                        </MenuItem>
+                                    ))}
+                                </MenuList>
+                            </ClickAwayListener>
+                        </Paper>
+                    </Grow>
+                )}
+            </Popper>
+        </>
+    );
+};
 
 const AppointmentsIndex = ({ appointments = [], hasGoogleCalendar = false }) => {
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [selectedPlanId, setSelectedPlanId] = useState(null);
+
+    const handleOpenPlanDetails = (planId) => {
+        setSelectedPlanId(planId);
+        setDialogOpen(true);
+    };
     const getStatusColor = (status) => {
         switch (status) {
             case 'confirmed':
@@ -43,16 +169,16 @@ const AppointmentsIndex = ({ appointments = [], hasGoogleCalendar = false }) => 
     };
 
     const columns = [
-        {
-            field: 'id',
-            headerName: 'ID',
-            width: 80,
-            renderCell: (params) => (
-                <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                    {params.value?.substring(0, 8) || '-'}
-                </Typography>
-            ),
-        },
+        // {
+        //     field: 'id',
+        //     headerName: 'ID',
+        //     width: 80,
+        //     renderCell: (params) => (
+        //         <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+        //             {params.value?.substring(0, 8) || '-'}
+        //         </Typography>
+        //     ),
+        // },
         {
             field: 'client_name',
             headerName: 'Client Name',
@@ -122,21 +248,12 @@ const AppointmentsIndex = ({ appointments = [], hasGoogleCalendar = false }) => 
             ),
         },
         {
-            field: 'html_link',
+            field: 'actions',
             headerName: 'Actions',
-            width: 120,
+            width: 200,
             sortable: false,
             renderCell: (params) => (
-                params.value ? (
-                    <MuiLink
-                        href={params.value}
-                        target="_blank"
-                        rel="noopener"
-                        sx={{ textDecoration: 'none' }}
-                    >
-                        View
-                    </MuiLink>
-                ) : '-'
+                <ActionsCell row={params.row} onOpenPlanDetails={handleOpenPlanDetails} />
             ),
         },
     ];
@@ -194,6 +311,15 @@ const AppointmentsIndex = ({ appointments = [], hasGoogleCalendar = false }) => 
                     </CardContent>
                 </Card>
             </Box>
+
+            <PlanDetailsDialog
+                open={dialogOpen}
+                onClose={() => {
+                    setDialogOpen(false);
+                    setSelectedPlanId(null);
+                }}
+                planId={selectedPlanId}
+            />
         </SpecialistLayout>
     );
 };
