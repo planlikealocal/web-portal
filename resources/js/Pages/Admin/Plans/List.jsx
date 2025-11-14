@@ -112,17 +112,17 @@ const List = (props) => {
                 return `${row.first_name || ''} ${row.last_name || ''}`.trim() || 'N/A';
             },
         },
-        {
-            field: 'email',
-            headerName: 'Email',
-            flex: 1,
-            minWidth: 180,
-        },
-        {
-            field: 'phone',
-            headerName: 'Phone',
-            width: 130,
-        },
+        // {
+        //     field: 'email',
+        //     headerName: 'Email',
+        //     flex: 1,
+        //     minWidth: 180,
+        // },
+        // {
+        //     field: 'phone',
+        //     headerName: 'Phone',
+        //     width: 130,
+        // },
         {
             field: 'specialist',
             headerName: 'Specialist',
@@ -214,16 +214,6 @@ const List = (props) => {
             },
         },
         {
-            field: 'amount',
-            headerName: 'Amount',
-            width: 100,
-            renderCell: (params) => {
-                return params.value
-                    ? `$${parseFloat(params.value).toFixed(2)}`
-                    : 'N/A';
-            },
-        },
-        {
             field: 'appointment_start',
             headerName: 'Appointment Date',
             width: 180,
@@ -244,6 +234,7 @@ const List = (props) => {
             },
         },
         {
+
             field: 'actions',
             headerName: 'Actions',
             width: 100,

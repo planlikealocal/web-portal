@@ -34,6 +34,18 @@ class PlanResource extends JsonResource
                     'first_name' => $this->specialist->first_name,
                     'last_name' => $this->specialist->last_name,
                     'full_name' => $this->specialist->full_name,
+                    'email' => $this->specialist->email,
+                    'contact_no' => $this->specialist->contact_no,
+                    'bio' => $this->specialist->bio,
+                    'status' => $this->specialist->status,
+                    'profile_pic' => $this->specialist->profile_pic,
+                    'country' => $this->specialist->country ? [
+                        'id' => $this->specialist->country->id,
+                        'name' => $this->specialist->country->name,
+                    ] : null,
+                    'city' => $this->specialist->city,
+                    'state_province' => $this->specialist->state_province,
+                    'timezone' => $this->specialist->timezone,
                 ] : null
             ),
             'travel_dates' => $this->travel_dates,
