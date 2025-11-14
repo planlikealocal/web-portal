@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DestinationController;
+use App\Http\Controllers\Admin\PlanController as AdminPlanController;
 use App\Http\Controllers\Admin\SpecialistController;
 use App\Http\Controllers\AppointmentBookingController;
 use App\Http\Controllers\DestinationsController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\PlanController;
 use App\Http\Controllers\Specialist\AppointmentController;
 use App\Http\Controllers\Specialist\AuthController as SpecialistAuthController;
 use App\Http\Controllers\Specialist\DashboardController as SpecialistDashboardController;
+use App\Http\Controllers\Specialist\PlanController as SpecialistPlanController;
 use App\Http\Controllers\Specialist\ProfileController;
 use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
@@ -95,6 +97,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/countries', [CountryController::class, 'index'])->name('countries.index');
         Route::get('/countries/autocomplete', [CountryController::class, 'autocomplete'])->name('countries.autocomplete');
 
+        // Plans routes
+        Route::get('/plans', [AdminPlanController::class, 'index'])->name('plans.index');
+        Route::get('/plans/{plan}', [AdminPlanController::class, 'show'])->name('plans.show');
+
         // Test notification route (for development/demo purposes)
         Route::post('/test-notifications', function () {
             $type = request('type', 'info');
@@ -125,7 +131,11 @@ Route::prefix('specialist')->name('specialist.')->group(function () {
         Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
         Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointments.create');
         Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
-        Route::get('/appointments/plan/{planId}', [AppointmentController::class, 'getPlanDetails'])->name('appointments.plan.details');
+
+        // Plan routes
+        Route::get('/appointments/plan/{planId}', [SpecialistPlanController::class, 'show'])->name('appointments.plan.details');
+        Route::post('/appointments/plan/{planId}/cancel', [SpecialistPlanController::class, 'cancel'])->name('appointments.plan.cancel');
+        Route::post('/appointments/plan/{planId}/complete', [SpecialistPlanController::class, 'complete'])->name('appointments.plan.complete');
 
         // Add any other specialist routes here - they will all require Google Calendar
         // Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');

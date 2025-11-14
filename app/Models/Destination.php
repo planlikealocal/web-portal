@@ -38,7 +38,10 @@ class Destination extends Model
         'status' => 'draft',
     ];
 
-
+    public function Plan(): HasMany
+    {
+        return $this->hasMany(Plan::class);
+    }
     /**
      * Get the images for the destination.
      */
@@ -120,7 +123,7 @@ class Destination extends Model
         if (!$this->specialist_ids || !is_array($this->specialist_ids)) {
             return 0;
         }
-        
+
         return count($this->specialist_ids);
     }
 }

@@ -44,6 +44,7 @@ class SendPaymentSuccessEmailAction extends AbstractPlanAction
                 'planPrice' => $planPrice,
                 'calendarDownloadUrl' => $calendarDownloadUrl,
                 'invoiceDownloadUrl' => $invoiceDownloadUrl,
+                'meetingLink' => $plan->meeting_link,
             ], function ($message) use ($plan) {
                 $message->to($plan->email, $plan->first_name . ' ' . $plan->last_name)
                         ->subject('✅ Payment Successful - Your Appointment is Confirmed!');

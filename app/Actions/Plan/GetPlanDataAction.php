@@ -68,7 +68,7 @@ class GetPlanDataAction extends AbstractPlanAction
                 'last_name' => $plan->last_name,
                 'email' => $plan->email,
                 'phone' => $plan->phone,
-                'destination' => $plan->destination, // This is the string field (destination name)
+                'destination' => $plan->destination ? $plan->destination->name : null, // Use relationship
                 'destination_data' => $destinationData, // This is the destination object with activities and specialists
                 'travel_dates' => $plan->travel_dates,
                 'travelers' => $plan->travelers,
@@ -77,9 +77,11 @@ class GetPlanDataAction extends AbstractPlanAction
                 'plan_type' => $plan->plan_type ?? null,
                 'selected_plan' => $plan->selected_plan ?? $plan->plan_type ?? null,
                 'status' => $plan->status,
+                'appointment_status' => $plan->appointment_status ?? 'draft',
                 'payment_status' => $plan->payment_status ?? 'pending',
                 'appointment_start' => $plan->appointment_start,
                 'appointment_end' => $plan->appointment_end,
+                'meeting_link' => $plan->meeting_link,
                 'plan_prices' => config('plans.prices'),
                 'specialist' => $plan->specialist ? [
                     'id' => $plan->specialist->id,

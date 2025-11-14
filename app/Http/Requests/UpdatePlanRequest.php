@@ -26,7 +26,6 @@ class UpdatePlanRequest extends FormRequest
             'last_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:255',
-            'destination' => 'nullable|string|max:255',
             'destination_id' => 'nullable|exists:destinations,id',
             'travel_dates' => 'nullable|string|max:255',
             'travelers' => 'nullable|string|max:255',

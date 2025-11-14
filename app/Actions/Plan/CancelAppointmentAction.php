@@ -53,10 +53,18 @@ class CancelAppointmentAction extends AbstractPlanAction
         // Update plan status back to draft
         $plan->update([
             'status' => 'draft',
+            'appointment_status' => 'draft',
             'google_calendar_event_id' => null,
+            'meeting_link' => null,
             'payment_status' => 'pending',
             'stripe_session_id' => null,
             'stripe_payment_intent_id' => null,
+            'cancellation_comment' => null,
+            'canceled_by_type' => null,
+            'canceled_by_id' => null,
+            'canceled_at' => null,
+            'completion_comment' => null,
+            'completed_at' => null,
         ]);
 
         $this->logAction('appointment_cancelled', [

@@ -35,7 +35,7 @@ class DownloadCalendarAction extends AbstractPlanAction
             $description .= "Phone: " . $plan->phone . "\n";
         }
         if ($plan->destination) {
-            $description .= "Destination: " . $plan->destination . "\n";
+            $description .= "Destination: " . $plan->destination->name . "\n";
         }
         if ($plan->selected_plan || $plan->plan_type) {
             $description .= "Plan: " . ucfirst($plan->selected_plan ?? $plan->plan_type) . "\n";

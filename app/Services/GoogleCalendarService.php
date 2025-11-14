@@ -3,14 +3,18 @@
 namespace App\Services;
 
 use App\Models\User;
+use Carbon\Carbon;
 use Google\Client;
 use Google\Service\Calendar;
+use Google\Service\Calendar\ConferenceData;
+use Google\Service\Calendar\ConferenceSolutionKey;
+use Google\Service\Calendar\CreateConferenceRequest;
 use Google\Service\Calendar\Event;
 use Google\Service\Calendar\EventDateTime;
 use Google\Service\Calendar\FreeBusyRequest;
 use Google\Service\Calendar\FreeBusyRequestItem;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class GoogleCalendarService
 {
@@ -312,15 +316,33 @@ class GoogleCalendarService
             $event = new Event();
             $event->setSummary('Appointment with ' . $eventData['client_name']);
             
-            $description = "Booked via Web Portal\n";
-            $description .= "Client: {$eventData['client_name']}\n";
+            $description = "Booked via Web Portal\n\n";
+            
+            // Client details
+            $description .= "CLIENT DETAILS:\n";
+            $description .= "Name: {$eventData['client_name']}\n";
             $description .= "Email: {$eventData['client_email']}\n";
             if (!empty($eventData['client_phone'])) {
                 $description .= "Phone: {$eventData['client_phone']}\n";
             }
-            if (!empty($eventData['notes'])) {
-                $description .= "Notes: {$eventData['notes']}\n";
+            
+            // Specialist details
+            $description .= "\nSPECIALIST DETAILS:\n";
+            if (!empty($eventData['specialist_name'])) {
+                $description .= "Name: {$eventData['specialist_name']}\n";
             }
+            if (!empty($eventData['specialist_email'])) {
+                $description .= "Email: {$eventData['specialist_email']}\n";
+            }
+            if (!empty($eventData['specialist_phone'])) {
+                $description .= "Phone: {$eventData['specialist_phone']}\n";
+            }
+            
+            // Notes
+            if (!empty($eventData['notes'])) {
+                $description .= "\nNOTES:\n{$eventData['notes']}\n";
+            }
+            
             $event->setDescription($description);
 
             $start = new EventDateTime();
@@ -332,6 +354,18 @@ class GoogleCalendarService
             $end->setDateTime($endTime->toRfc3339String());
             $end->setTimeZone($endTime->timezone->getName());
             $event->setEnd($end);
+
+            // Enable Google Meet link creation
+            $conferenceData = new ConferenceData();
+            $conferenceSolutionKey = new ConferenceSolutionKey();
+            $conferenceSolutionKey->setType('hangoutsMeet');
+
+            $createConferenceRequest = new CreateConferenceRequest();
+            $createConferenceRequest->setRequestId('meet_' . Str::uuid()->toString());
+            $createConferenceRequest->setConferenceSolutionKey($conferenceSolutionKey);
+
+            $conferenceData->setCreateRequest($createConferenceRequest);
+            $event->setConferenceData($conferenceData);
 
             // Add attendees
             $attendees = [
@@ -349,7 +383,26 @@ class GoogleCalendarService
             // Set event as confirmed
             $event->setStatus('confirmed');
 
-            $createdEvent = $this->calendarService->events->insert($calendarId, $event);
+            $createdEvent = $this->calendarService->events->insert(
+                $calendarId,
+                $event,
+                ['conferenceDataVersion' => 1]
+            );
+
+            $meetingLink = $this->extractMeetingLink($createdEvent);
+
+            if ($meetingLink) {
+                $descriptionWithLink = trim($description . "\n\nMEETING LINK:\n" . $meetingLink);
+                $patchEvent = new Event();
+                $patchEvent->setDescription($descriptionWithLink);
+
+                $createdEvent = $this->calendarService->events->patch(
+                    $calendarId,
+                    $createdEvent->getId(),
+                    $patchEvent,
+                    ['conferenceDataVersion' => 1]
+                );
+            }
 
             return [
                 'id' => $createdEvent->getId(),
@@ -357,12 +410,31 @@ class GoogleCalendarService
                 'start' => $createdEvent->getStart()->getDateTime(),
                 'end' => $createdEvent->getEnd()->getDateTime(),
                 'htmlLink' => $createdEvent->getHtmlLink(),
+                'meeting_link' => $meetingLink,
             ];
 
         } catch (\Exception $e) {
             Log::error('Create event error: ' . $e->getMessage());
             throw $e;
         }
+    }
+
+    protected function extractMeetingLink(Event $event): ?string
+    {
+        if ($event->getHangoutLink()) {
+            return $event->getHangoutLink();
+        }
+
+        $conferenceData = $event->getConferenceData();
+        if ($conferenceData && $conferenceData->getEntryPoints()) {
+            foreach ($conferenceData->getEntryPoints() as $entryPoint) {
+                if ($entryPoint->getEntryPointType() === 'video' && $entryPoint->getUri()) {
+                    return $entryPoint->getUri();
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

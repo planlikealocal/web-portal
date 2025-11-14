@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Specialist;
 use App\Services\GoogleCalendarService;
 use Google\Client;
 use Google\Service\Calendar;
@@ -195,6 +196,9 @@ class GoogleController extends Controller
 
             $this->googleCalendarService->setUser($specialist);
             
+            // Get specialist model for additional details
+            $specialistModel = Specialist::where('email', $specialist->email)->first();
+            
             $eventData = [
                 'start_time' => $request->start_time,
                 'duration' => $request->duration,
@@ -202,6 +206,9 @@ class GoogleController extends Controller
                 'client_email' => $request->client_email,
                 'client_phone' => $request->client_phone,
                 'notes' => $request->notes,
+                'specialist_name' => $specialistModel ? ($specialistModel->full_name ?? trim(($specialistModel->first_name ?? '') . ' ' . ($specialistModel->last_name ?? ''))) : $specialist->name,
+                'specialist_email' => $specialist->email,
+                'specialist_phone' => $specialistModel ? ($specialistModel->contact_no ?? null) : null,
             ];
 
             $event = $this->googleCalendarService->createEvent($eventData);

@@ -15,9 +15,12 @@ import {
     MenuList,
     MenuItem,
     Link as MuiLink,
+    Stack,
+    TextField,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { Info, ArrowDropDown, CalendarToday } from '@mui/icons-material';
+import { router } from '@inertiajs/react';
 import SpecialistLayout from '../../../Layouts/SpecialistLayout';
 import PlanDetailsDialog from '../../../Components/PlanDetailsDialog';
 
@@ -130,24 +133,74 @@ const ActionsCell = ({ row, onOpenPlanDetails }) => {
     );
 };
 
-const AppointmentsIndex = ({ appointments = [], hasGoogleCalendar = false }) => {
+const statusOptions = [
+    { value: '', label: 'All statuses' },
+    { value: 'active', label: 'Active' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'cancelled', label: 'Cancelled' },
+];
+
+const AppointmentsIndex = ({ appointments = [], hasGoogleCalendar = false, filters: initialFilters = {} }) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedPlanId, setSelectedPlanId] = useState(null);
+
+    // Get today's date in YYYY-MM-DD format for default values
+    const getTodayDate = () => {
+        const today = new Date();
+        return today.toISOString().split('T')[0];
+    };
+
+    const [filters, setFilters] = useState({
+        appointment_status: initialFilters?.appointment_status || 'active',
+        start_date: initialFilters?.start_date || getTodayDate(),
+        end_date: initialFilters?.end_date || getTodayDate(),
+    });
 
     const handleOpenPlanDetails = (planId) => {
         setSelectedPlanId(planId);
         setDialogOpen(true);
     };
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'confirmed':
+
+    const handleFilterChange = (field, value) => {
+        setFilters((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+    };
+
+    const handleApplyFilters = () => {
+        router.get('/specialist/appointments', filters, {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+        });
+    };
+
+    const handleClearFilters = () => {
+        setFilters({
+            appointment_status: '',
+            start_date: '',
+            end_date: '',
+        });
+
+        router.get('/specialist/appointments', {}, {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+        });
+    };
+
+    const isFilterDirty = Boolean(filters.appointment_status || filters.start_date || filters.end_date);
+
+    const getAppointmentStatusColor = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'active':
                 return 'success';
-            case 'pending':
-                return 'warning';
             case 'completed':
                 return 'info';
             case 'cancelled':
                 return 'error';
+            case 'draft':
             default:
                 return 'default';
         }
@@ -236,14 +289,15 @@ const AppointmentsIndex = ({ appointments = [], hasGoogleCalendar = false }) => 
             },
         },
         {
-            field: 'status',
-            headerName: 'Status',
-            width: 130,
+            field: 'appointment_status',
+            headerName: 'Appointment Status',
+            width: 160,
             renderCell: (params) => (
                 <Chip
-                    label={params.value || 'pending'}
-                    color={getStatusColor(params.value)}
+                    label={params.value || 'draft'}
+                    color={getAppointmentStatusColor(params.value)}
                     size="small"
+                    sx={{ textTransform: 'capitalize' }}
                 />
             ),
         },
@@ -262,6 +316,7 @@ const AppointmentsIndex = ({ appointments = [], hasGoogleCalendar = false }) => 
         return appointments.map((appointment, index) => ({
             id: appointment.id || `temp-${index}`,
             ...appointment,
+            appointment_status: appointment.appointment_status || appointment.plan?.appointment_status || 'draft',
         }));
     }, [appointments]);
 
@@ -285,6 +340,57 @@ const AppointmentsIndex = ({ appointments = [], hasGoogleCalendar = false }) => 
                         No appointments found. Appointments will appear here once they are booked.
                     </Alert>
                 )}
+
+                <Card sx={{ mb: 3 }}>
+                    <CardContent>
+                        <Stack
+                            direction={{ xs: 'column', md: 'row' }}
+                            spacing={2}
+                            alignItems={{ xs: 'flex-start', md: 'center' }}
+                        >
+                            <TextField
+                                select
+                                label="Appointment Status"
+                                value={filters.appointment_status}
+                                onChange={(event) => handleFilterChange('appointment_status', event.target.value)}
+                                fullWidth
+                                sx={{ minWidth: { md: 220 } }}
+                            >
+                                {statusOptions.map((option) => (
+                                    <MenuItem key={option.value} value={option.value}>
+                                        {option.label}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                            <TextField
+                                type="date"
+                                label="Start Date"
+                                value={filters.start_date}
+                                onChange={(event) => handleFilterChange('start_date', event.target.value)}
+                                InputLabelProps={{ shrink: true }}
+                                fullWidth
+                                sx={{ minWidth: { md: 180 } }}
+                            />
+                            <TextField
+                                type="date"
+                                label="End Date"
+                                value={filters.end_date}
+                                onChange={(event) => handleFilterChange('end_date', event.target.value)}
+                                InputLabelProps={{ shrink: true }}
+                                fullWidth
+                                sx={{ minWidth: { md: 180 } }}
+                            />
+                            <Stack direction="row" spacing={1}>
+                                <Button variant="contained" onClick={handleApplyFilters} size="medium">
+                                    Apply
+                                </Button>
+                                <Button variant="outlined" onClick={handleClearFilters} disabled={!isFilterDirty}  size="medium">
+                                    Clear
+                                </Button>
+                            </Stack>
+                        </Stack>
+                    </CardContent>
+                </Card>
 
                 <Card>
                     <CardContent>

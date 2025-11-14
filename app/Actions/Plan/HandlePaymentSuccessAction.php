@@ -25,6 +25,7 @@ class HandlePaymentSuccessAction extends AbstractPlanAction
 
         $plan->update([
             'payment_status' => 'paid',
+            'appointment_status' => 'active',
             'stripe_payment_intent_id' => $session->payment_intent ?? null,
             'paid_at' => now(),
         ]);

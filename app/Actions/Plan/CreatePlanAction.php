@@ -18,6 +18,7 @@ class CreatePlanAction extends AbstractPlanAction
             'specialist_id' => $data['specialist_id'],
             'destination_id' => $data['destination_id'] ?? null,
             'status' => 'draft',
+            'appointment_status' => 'draft',
         ]);
 
         $this->logAction('plan_created', ['id' => $plan->id]);
