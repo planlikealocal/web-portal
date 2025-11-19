@@ -184,7 +184,7 @@
                 @if(!empty($meetingLink))
                 <li>Your Google Meet link is available below and inside your calendar invite</li>
                 @endif
-                <li>You can download your calendar file and invoice using the links below</li>
+                <li>You can download your calendar file and receipt using the links below</li>
             </ul>
         </div>
 
@@ -195,7 +195,7 @@
             </a>
             @endif
             <a href="{{ $calendarDownloadUrl }}" class="button">📅 Download Calendar File</a>
-            <a href="{{ $invoiceDownloadUrl }}" class="button button-secondary">🧾 Download Invoice</a>
+            <a href="{{ $receiptDownloadUrl }}" class="button button-secondary">🧾 Download Receipt</a>
         </div>
 
         <p><strong>Your specialist, {{ $plan->specialist->full_name }}, will be in touch with you soon</strong></p>

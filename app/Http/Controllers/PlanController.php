@@ -236,4 +236,26 @@ class PlanController extends Controller
         }
     }
 
+    /**
+     * Download Stripe payment receipt
+     */
+    public function downloadReceipt($id)
+    {
+        try {
+            $plan = Plan::findOrFail($id);
+
+            $receiptUrl = $this->downloadInvoiceAction->execute($plan, 'receipt');
+
+            return redirect($receiptUrl);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to download Stripe receipt', [
+                'plan_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+            $statusCode = str_contains($e->getMessage(), 'not found') || str_contains($e->getMessage(), 'not available') ? 404 : 500;
+            return response()->json(['error' => $e->getMessage()], $statusCode);
+        }
+    }
+
 }

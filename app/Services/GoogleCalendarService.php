@@ -39,31 +39,18 @@ class GoogleCalendarService
     public function setUser(User $user): self
     {
         $this->user = $user;
-        
+
         if ($user->google_access_token) {
             // Set redirect URI if configured
             if (config('services.google.redirect')) {
                 $this->client->setRedirectUri(config('services.google.redirect'));
             }
-            
+
             $this->client->setAccessToken($user->google_access_token);
-            
-            // Check if token is expired and refresh if needed
-            if ($this->isTokenExpired()) {
-                // Only refresh if we have a refresh token
-                if ($user->google_refresh_token) {
-                    $refreshed = $this->refreshToken();
-                    if (!$refreshed) {
-                        Log::warning('Failed to refresh token for user: ' . $user->id . '. Token may need to be re-authenticated.');
-                    }
-                } else {
-                    Log::warning('Token expired but no refresh token available for user: ' . $user->id);
-                }
-            }
-            
+
             $this->calendarService = new Calendar($this->client);
         }
-        
+
         return $this;
     }
 
@@ -75,7 +62,7 @@ class GoogleCalendarService
         if (!$this->user->google_token_expires) {
             return true;
         }
-        
+
         return Carbon::now()->isAfter($this->user->google_token_expires);
     }
 
@@ -86,12 +73,12 @@ class GoogleCalendarService
     {
         try {
             $targetUser = $user ?: $this->user;
-            
+
             if (!$targetUser) {
                 Log::error('No user provided for token refresh');
                 return false;
             }
-            
+
             if (!$targetUser->google_refresh_token) {
                 Log::error('No refresh token available for user: ' . $targetUser->id);
                 return false;
@@ -107,13 +94,13 @@ class GoogleCalendarService
             $tokenArray = [
                 'access_token' => $targetUser->google_access_token,
                 'refresh_token' => $targetUser->google_refresh_token,
-                'expires_in' => $targetUser->google_token_expires ? 
+                'expires_in' => $targetUser->google_token_expires ?
                     Carbon::now()->diffInSeconds($targetUser->google_token_expires) : 0,
             ];
-            
+
             // Set the token array on the client
             $this->client->setAccessToken($tokenArray);
-            
+
             // Fetch new access token using the refresh token
             $accessToken = $this->client->fetchAccessTokenWithRefreshToken();
 
@@ -162,7 +149,7 @@ class GoogleCalendarService
             }
 
             $calendarList = $this->calendarService->calendarList->listCalendarList();
-            
+
             foreach ($calendarList->getItems() as $calendar) {
                 if ($calendar->getPrimary()) {
                     return $calendar->getId();
@@ -190,7 +177,7 @@ class GoogleCalendarService
             }
 
             $calendarId = $this->user->google_calendar_id ?: $this->getPrimaryCalendarId();
-            
+
             if (!$calendarId) {
                 return [];
             }
@@ -202,7 +189,7 @@ class GoogleCalendarService
             $freeBusyRequest = new FreeBusyRequest();
             $freeBusyRequest->setTimeMin($startDateTime->toRfc3339String());
             $freeBusyRequest->setTimeMax($endDateTime->toRfc3339String());
-            
+
             $freeBusyRequestItem = new FreeBusyRequestItem();
             $freeBusyRequestItem->setId($calendarId);
             $freeBusyRequest->setItems([$freeBusyRequestItem]);
@@ -229,7 +216,7 @@ class GoogleCalendarService
 
                 $daySlots = $this->generateDaySlots($currentDate, $busyTimes, $durationMinutes);
                 $availableSlots = array_merge($availableSlots, $daySlots);
-                
+
                 $currentDate->addDay();
             }
 
@@ -247,20 +234,20 @@ class GoogleCalendarService
     protected function generateDaySlots(Carbon $date, array $busyTimes, int $durationMinutes): array
     {
         $slots = [];
-        
+
         // Define working hours (9 AM to 5 PM - customize as needed)
         $startHour = 9;
         $endHour = 17;
-        
+
         $dayStart = $date->copy()->setHour($startHour)->setMinute(0)->setSecond(0);
         $dayEnd = $date->copy()->setHour($endHour)->setMinute(0)->setSecond(0);
-        
+
         $currentSlot = $dayStart->copy();
-        
+
         while ($currentSlot->addMinutes($durationMinutes)->lte($dayEnd)) {
             $slotStart = $currentSlot->copy()->subMinutes($durationMinutes);
             $slotEnd = $currentSlot->copy();
-            
+
             // Check if this slot conflicts with busy times
             if (!$this->isSlotBusy($slotStart, $slotEnd, $busyTimes)) {
                 $slots[] = [
@@ -272,7 +259,7 @@ class GoogleCalendarService
                 ];
             }
         }
-        
+
         return $slots;
     }
 
@@ -284,13 +271,13 @@ class GoogleCalendarService
         foreach ($busyTimes as $busyTime) {
             $busyStart = Carbon::parse($busyTime->getStart());
             $busyEnd = Carbon::parse($busyTime->getEnd());
-            
+
             // Check for overlap
             if ($slotStart->lt($busyEnd) && $slotEnd->gt($busyStart)) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -305,7 +292,7 @@ class GoogleCalendarService
             }
 
             $calendarId = $this->user->google_calendar_id ?: $this->getPrimaryCalendarId();
-            
+
             if (!$calendarId) {
                 throw new \Exception('No calendar ID available');
             }
@@ -315,9 +302,9 @@ class GoogleCalendarService
 
             $event = new Event();
             $event->setSummary('Appointment with ' . $eventData['client_name']);
-            
+
             $description = "Booked via Web Portal\n\n";
-            
+
             // Client details
             $description .= "CLIENT DETAILS:\n";
             $description .= "Name: {$eventData['client_name']}\n";
@@ -325,7 +312,7 @@ class GoogleCalendarService
             if (!empty($eventData['client_phone'])) {
                 $description .= "Phone: {$eventData['client_phone']}\n";
             }
-            
+
             // Specialist details
             $description .= "\nSPECIALIST DETAILS:\n";
             if (!empty($eventData['specialist_name'])) {
@@ -337,12 +324,12 @@ class GoogleCalendarService
             if (!empty($eventData['specialist_phone'])) {
                 $description .= "Phone: {$eventData['specialist_phone']}\n";
             }
-            
+
             // Notes
             if (!empty($eventData['notes'])) {
                 $description .= "\nNOTES:\n{$eventData['notes']}\n";
             }
-            
+
             $event->setDescription($description);
 
             $start = new EventDateTime();
@@ -383,11 +370,14 @@ class GoogleCalendarService
             // Set event as confirmed
             $event->setStatus('confirmed');
 
-            $createdEvent = $this->calendarService->events->insert(
-                $calendarId,
-                $event,
-                ['conferenceDataVersion' => 1]
-            );
+            // Attempt to create the event, with automatic token refresh on failure
+            $createdEvent = $this->executeWithTokenRefresh(function() use ($calendarId, $event) {
+                return $this->calendarService->events->insert(
+                    $calendarId,
+                    $event,
+                    ['conferenceDataVersion' => 1]
+                );
+            });
 
             $meetingLink = $this->extractMeetingLink($createdEvent);
 
@@ -396,12 +386,15 @@ class GoogleCalendarService
                 $patchEvent = new Event();
                 $patchEvent->setDescription($descriptionWithLink);
 
-                $createdEvent = $this->calendarService->events->patch(
-                    $calendarId,
-                    $createdEvent->getId(),
-                    $patchEvent,
-                    ['conferenceDataVersion' => 1]
-                );
+                // Also handle token refresh for the patch operation
+                $createdEvent = $this->executeWithTokenRefresh(function() use ($calendarId, $createdEvent, $patchEvent) {
+                    return $this->calendarService->events->patch(
+                        $calendarId,
+                        $createdEvent->getId(),
+                        $patchEvent,
+                        ['conferenceDataVersion' => 1]
+                    );
+                });
             }
 
             return [
@@ -415,6 +408,83 @@ class GoogleCalendarService
 
         } catch (\Exception $e) {
             Log::error('Create event error: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Execute a Google Calendar API call with automatic token refresh on failure
+     *
+     * @param callable $callback The API call to execute
+     * @return mixed The result of the API call
+     * @throws \Exception If the API call fails after token refresh attempt
+     */
+    protected function executeWithTokenRefresh(callable $callback)
+    {
+        try {
+            // First attempt
+            return $callback();
+        } catch (\Exception $e) {
+            $errorMessage = $e->getMessage();
+            $errorCode = $e->getCode();
+
+            // Try to parse JSON error if present (handle both single-line and multi-line JSON)
+            $errorData = null;
+            // First try to decode the entire message as JSON
+            $errorData = json_decode($errorMessage, true);
+            // If that fails, try to extract JSON from the message
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                if (preg_match('/\{.*\}/s', $errorMessage, $matches)) {
+                    $errorData = json_decode($matches[0], true);
+                }
+            }
+
+            // Check if this is a token-related error
+            $isTokenError = str_contains($errorMessage, 'invalid_grant') ||
+                           str_contains($errorMessage, 'Token has been expired') ||
+                           str_contains($errorMessage, 'Token has been revoked') ||
+                           str_contains($errorMessage, 'unauthorized') ||
+                           str_contains($errorMessage, 'Invalid Credentials') ||
+                           ($errorData && isset($errorData['error']) &&
+                            (str_contains($errorData['error'], 'invalid_grant') ||
+                             str_contains($errorData['error'], 'expired') ||
+                             str_contains($errorData['error'], 'revoked'))) ||
+                           $errorCode === 401;
+
+            if ($isTokenError && $this->user && $this->user->google_refresh_token) {
+                Log::warning('Token error detected, attempting to refresh token', [
+                    'user_id' => $this->user->id,
+                    'error' => $errorMessage,
+                    'error_code' => $errorCode,
+                ]);
+
+                // Attempt to refresh the token
+                $refreshed = $this->refreshToken();
+
+                if ($refreshed) {
+                    Log::info('Token refreshed successfully, retrying API call', [
+                        'user_id' => $this->user->id,
+                    ]);
+
+                    // Retry the operation once
+                    try {
+                        return $callback();
+                    } catch (\Exception $retryException) {
+                        Log::error('API call failed after token refresh', [
+                            'user_id' => $this->user->id,
+                            'error' => $retryException->getMessage(),
+                        ]);
+                        throw $retryException;
+                    }
+                } else {
+                    Log::error('Failed to refresh token, cannot retry API call', [
+                        'user_id' => $this->user->id,
+                    ]);
+                    throw new \Exception('Token expired or revoked and refresh failed. Please reconnect your Google Calendar.', 0, $e);
+                }
+            }
+
+            // Not a token error or no refresh token available, re-throw original exception
             throw $e;
         }
     }
@@ -448,13 +518,15 @@ class GoogleCalendarService
             }
 
             $calendarId = $this->user->google_calendar_id ?: $this->getPrimaryCalendarId();
-            
+
             if (!$calendarId) {
                 throw new \Exception('No calendar ID available');
             }
 
-            // Delete the event
-            $this->calendarService->events->delete($calendarId, $eventId);
+            // Delete the event with automatic token refresh on failure
+            $this->executeWithTokenRefresh(function() use ($calendarId, $eventId) {
+                return $this->calendarService->events->delete($calendarId, $eventId);
+            });
 
             Log::info('Google Calendar event deleted', [
                 'user_id' => $this->user->id,
@@ -478,8 +550,8 @@ class GoogleCalendarService
      */
     public function isConnected(): bool
     {
-        return $this->user && 
-               $this->user->google_access_token && 
+        return $this->user &&
+               $this->user->google_access_token &&
                $this->calendarService !== null;
     }
 
@@ -494,7 +566,7 @@ class GoogleCalendarService
             }
 
             $calendarId = $this->user->google_calendar_id ?: $this->getPrimaryCalendarId();
-            
+
             if (!$calendarId) {
                 return [];
             }
@@ -506,7 +578,7 @@ class GoogleCalendarService
             $freeBusyRequest = new FreeBusyRequest();
             $freeBusyRequest->setTimeMin($startDateTime->toRfc3339String());
             $freeBusyRequest->setTimeMax($endDateTime->toRfc3339String());
-            
+
             $freeBusyRequestItem = new FreeBusyRequestItem();
             $freeBusyRequestItem->setId($calendarId);
             $freeBusyRequest->setItems([$freeBusyRequestItem]);
@@ -542,17 +614,17 @@ class GoogleCalendarService
             }
 
             $calendarId = $this->user->google_calendar_id ?: $this->getPrimaryCalendarId();
-            
+
             if (!$calendarId) {
                 return [];
             }
 
             // Default to current date and 30 days ahead
-            $startDateTime = $startDate 
+            $startDateTime = $startDate
                 ? Carbon::parse($startDate)->setTimezone($timezone)->startOfDay()
                 : Carbon::now($timezone)->startOfDay();
-            
-            $endDateTime = $endDate 
+
+            $endDateTime = $endDate
                 ? Carbon::parse($endDate)->setTimezone($timezone)->endOfDay()
                 : Carbon::now($timezone)->addDays(30)->endOfDay();
 
@@ -571,29 +643,29 @@ class GoogleCalendarService
             foreach ($items as $event) {
                 $start = $event->getStart();
                 $end = $event->getEnd();
-                
+
                 $startTime = $start->getDateTime() ? Carbon::parse($start->getDateTime())->setTimezone($timezone) : null;
                 $endTime = $end->getDateTime() ? Carbon::parse($end->getDateTime())->setTimezone($timezone) : null;
 
                 // Extract client info from description or attendees
                 $description = $event->getDescription() ?? '';
-                
+
                 // Only show appointments created through the web application
                 // Check if description contains "Booked via Web Portal" or starts with "Client:"
-                $isWebAppointment = strpos($description, 'Booked via Web Portal') !== false 
+                $isWebAppointment = strpos($description, 'Booked via Web Portal') !== false
                     || preg_match('/^Client:\s*/i', $description);
-                
+
                 if (!$isWebAppointment) {
                     continue; // Skip appointments not created through the web application
                 }
-                
+
                 $attendees = $event->getAttendees() ?? [];
-                
+
                 // Try to extract client name and email from description
                 $clientName = '';
                 $clientEmail = '';
                 $clientPhone = '';
-                
+
                 if (preg_match('/Client:\s*(.+)/i', $description, $matches)) {
                     $clientName = trim($matches[1]);
                 }
@@ -603,7 +675,7 @@ class GoogleCalendarService
                 if (preg_match('/Phone:\s*(.+)/i', $description, $matches)) {
                     $clientPhone = trim($matches[1]);
                 }
-                
+
                 // If not found in description, try attendees
                 if (empty($clientEmail) && !empty($attendees)) {
                     foreach ($attendees as $attendee) {
@@ -643,7 +715,7 @@ class GoogleCalendarService
 
     /**
      * Calculate available time slots based on working hours, calendar, and duration
-     * 
+     *
      * @param array $workingHours Array of ['start_time' => 'HH:MM', 'end_time' => 'HH:MM']
      * @param int $durationMinutes Duration in minutes (60, 80, or 105)
      * @param string $timezone Timezone for the specialist
@@ -657,17 +729,17 @@ class GoogleCalendarService
             $today = Carbon::now($timezone)->startOfDay();
             $tomorrow = $today->copy()->addDay();
             $dayAfterTomorrow = $tomorrow->copy()->addDay();
-            
+
             // If a specific date is provided, only check that date
             if ($selectedDate) {
                 $targetDate = Carbon::parse($selectedDate, $timezone)->startOfDay();
-                
+
                 // Validate that the date is at least day after tomorrow
                 if ($targetDate->lt($dayAfterTomorrow)) {
                     Log::warning('Selected date is before day after tomorrow', ['date' => $selectedDate]);
                     return [];
                 }
-                
+
                 $startDate = $targetDate;
                 $endDate = $targetDate->copy()->endOfDay();
             } else {
@@ -678,7 +750,7 @@ class GoogleCalendarService
 
             // Get calendar events for the date range (only for the selected date if provided)
             $calendarEvents = $this->getCalendarEvents($startDate->toDateString(), $endDate->toDateString(), $timezone);
-            
+
             Log::info('Calendar events fetched', [
                 'count' => count($calendarEvents),
                 'selected_date' => $selectedDate,
@@ -694,7 +766,7 @@ class GoogleCalendarService
             foreach ($calendarEvents as $event) {
                 $eventStart = $event['start']->setTimezone($timezone);
                 $eventEnd = $event['end']->setTimezone($timezone);
-                
+
                 // Only include events that start on or after day after tomorrow
                 if ($eventStart->gte($dayAfterTomorrow->startOfDay())) {
                     // If a specific date is provided, only include events for that date
@@ -704,7 +776,7 @@ class GoogleCalendarService
                         $eventStartDate = $eventStart->toDateString();
                         $eventEndDate = $eventEnd->toDateString();
                         $selectedDateStr = Carbon::parse($selectedDate)->toDateString();
-                        
+
                         if ($eventStartDate === $selectedDateStr || $eventEndDate === $selectedDateStr) {
                             $validCalendarEvents[] = $event;
                             Log::debug('Event included for selected date', [
@@ -718,7 +790,7 @@ class GoogleCalendarService
                     }
                 }
             }
-            
+
             Log::info('Valid calendar events after filtering', [
                 'count' => count($validCalendarEvents),
                 'selected_date' => $selectedDate,
@@ -729,14 +801,14 @@ class GoogleCalendarService
             // Process each day (or just the selected date)
             $currentDate = $startDate->copy();
             $endDateForLoop = $selectedDate ? $startDate->copy() : $endDate;
-            
+
             while ($currentDate->lte($endDateForLoop)) {
                 // Get working hours for this day (assuming same hours every day, could be enhanced later)
                 foreach ($workingHours as $wh) {
                     // Parse working hours - handle both 'H:i:s' and 'H:i' formats
                     $startTimeStr = $wh['start_time'];
                     $endTimeStr = $wh['end_time'];
-                    
+
                     // Ensure format is H:i:s
                     if (strlen($startTimeStr) === 5) {
                         $startTimeStr .= ':00';
@@ -764,7 +836,7 @@ class GoogleCalendarService
                     if ($slotStart->lt($startTime)) {
                         $slotStart->addHour();
                     }
-                    
+
                     // For midnight-spanning hours, we need to ensure slots are on the correct date
                     // If the working hours span midnight (00:00-03:00), slots should be on the selected date
                     if ($spansMidnight && $selectedDate) {
@@ -775,7 +847,7 @@ class GoogleCalendarService
                             $slotStart->setDate($selectedDateCarbon->year, $selectedDateCarbon->month, $selectedDateCarbon->day);
                         }
                     }
-                    
+
                     // Continue until we can't fit a full duration slot
                     while ($slotStart->copy()->addMinutes($durationMinutes)->lte($endTime)) {
                         $slotEnd = $slotStart->copy()->addMinutes($durationMinutes);
@@ -792,13 +864,13 @@ class GoogleCalendarService
                                     continue;
                                 }
                             }
-                            
+
                             // Check if slot is available on calendar
                             $isAvailable = true;
                             foreach ($validCalendarEvents as $event) {
                                 $eventStart = $event['start']->setTimezone($timezone);
                                 $eventEnd = $event['end']->setTimezone($timezone);
-                                
+
                                 // Check for overlap
                                 if ($slotStart->lt($eventEnd) && $slotEnd->gt($eventStart)) {
                                     $isAvailable = false;
@@ -836,7 +908,7 @@ class GoogleCalendarService
 
                 $currentDate->addDay();
             }
-            
+
             Log::info('Final availability calculated', [
                 'count' => count($availabilityArray),
                 'selected_date' => $selectedDate,

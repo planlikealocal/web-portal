@@ -43,31 +43,73 @@ class UpdatePlanAction extends AbstractPlanAction
         $plan->update($updateData);
         Log::info('Plan updated successfully', ['plan_id' => $plan->id]);
 
-        // If status is being set to 'completed' and appointment details are provided, create Google Calendar event
-        if (isset($updateData['status']) && $updateData['status'] === 'completed') {
-            // Handle selected_time_slot if it's a JSON string (from frontend)
-            if (isset($updateData['selected_time_slot']) && is_string($updateData['selected_time_slot'])) {
-                $slotData = json_decode($updateData['selected_time_slot'], true);
-                if ($slotData && isset($slotData['start']) && isset($slotData['end'])) {
-                    $updateData['appointment_start'] = $slotData['start'];
-                    $updateData['appointment_end'] = $slotData['end'];
-                }
+        // Handle selected_time_slot if it's a JSON string (from frontend)
+        if (isset($updateData['selected_time_slot']) && is_string($updateData['selected_time_slot'])) {
+            $slotData = json_decode($updateData['selected_time_slot'], true);
+            if ($slotData && isset($slotData['start']) && isset($slotData['end'])) {
+                $updateData['appointment_start'] = $slotData['start'];
+                $updateData['appointment_end'] = $slotData['end'];
             }
-            
+        }
+
+        // Refresh plan to get latest data including payment status
+        $plan->refresh();
+
+        // Automatically create Google Calendar appointment if:
+        // 1. Appointment times are set (either in updateData or already on plan)
+        // 2. Payment is already paid
+        // 3. Appointment hasn't been created yet
+        $hasAppointmentTimes = (!empty($updateData['appointment_start']) && !empty($updateData['appointment_end'])) ||
+                                ($plan->appointment_start && $plan->appointment_end);
+        
+        if ($hasAppointmentTimes && $plan->payment_status === 'paid' && !$plan->google_calendar_event_id) {
+            try {
+                $confirmAppointmentAction = new ConfirmAppointmentAction($this->googleCalendarService);
+                $confirmAppointmentAction->execute($plan);
+                Log::info('Google Calendar appointment created automatically after plan update', [
+                    'plan_id' => $plan->id,
+                ]);
+            } catch (\Exception $e) {
+                $errorMessage = $e->getMessage();
+                $isTokenRevoked = str_contains($errorMessage, 'Token expired or revoked') ||
+                                str_contains($errorMessage, 'invalid_grant') ||
+                                str_contains($errorMessage, 'reconnect your Google Calendar');
+                
+                if ($isTokenRevoked) {
+                    Log::error('Google Calendar appointment creation failed due to revoked/expired token', [
+                        'plan_id' => $plan->id,
+                        'specialist_id' => $plan->specialist_id,
+                        'error' => $errorMessage,
+                        'action_required' => 'Specialist needs to reconnect Google Calendar at /specialist/google-calendar-settings',
+                    ]);
+                } else {
+                    Log::error('Failed to create Google Calendar event automatically', [
+                        'plan_id' => $plan->id,
+                        'error' => $errorMessage,
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                }
+                // Don't fail the request if Google Calendar event creation fails
+            }
+        }
+
+        // If status is being set to 'completed' and appointment details are provided, create Google Calendar event
+        // (This is a fallback for the old flow where status is set to 'completed')
+        if (isset($updateData['status']) && $updateData['status'] === 'completed') {
             // Check if appointment details are available
             if (!empty($updateData['appointment_start']) && !empty($updateData['appointment_end'])) {
-                try {
-                    // Refresh plan to get latest data
-                    $plan->refresh();
-                    $confirmAppointmentAction = new ConfirmAppointmentAction($this->googleCalendarService);
-                    $confirmAppointmentAction->execute($plan);
-                } catch (\Exception $e) {
-                    Log::error('Failed to create Google Calendar event', [
-                        'plan_id' => $plan->id,
-                        'error' => $e->getMessage()
-                    ]);
-                    // Don't fail the request if Google Calendar event creation fails
-                    // The plan is still saved, just without the calendar event
+                // Only create if not already created above
+                if (!$plan->google_calendar_event_id) {
+                    try {
+                        $confirmAppointmentAction = new ConfirmAppointmentAction($this->googleCalendarService);
+                        $confirmAppointmentAction->execute($plan);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to create Google Calendar event', [
+                            'plan_id' => $plan->id,
+                            'error' => $e->getMessage()
+                        ]);
+                        // Don't fail the request if Google Calendar event creation fails
+                    }
                 }
             } else {
                 Log::warning('Plan marked as completed but no appointment details provided', [

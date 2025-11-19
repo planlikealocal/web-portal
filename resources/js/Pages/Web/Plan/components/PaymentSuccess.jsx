@@ -40,8 +40,8 @@ const PaymentSuccess = ({ plan }) => {
         window.location.href = `/plans/${plan.id}/download-calendar`;
     };
 
-    const handleDownloadInvoice = () => {
-        window.location.href = `/plans/${plan.id}/download-invoice`;
+    const handleDownloadReceipt = () => {
+        window.location.href = `/plans/${plan.id}/download-receipt`;
     };
 
     return (
@@ -65,7 +65,7 @@ const PaymentSuccess = ({ plan }) => {
                             Payment Successful!
                         </Typography>
                         <Typography variant="body1">
-                            Your appointment has been confirmed and payment has been processed successfully.
+                        Thank you for scheduling your appointment, <strong>{plan.specialist.full_name}</strong> will be in touch with you in the next 24 hrs to confirm all the details before your video session.
                         </Typography>
                     </Alert>
 
@@ -187,18 +187,18 @@ const PaymentSuccess = ({ plan }) => {
                                         </Button>
                                     </Grid>
 
-                                    {/* Invoice Download */}
+                                    {/* Receipt Download */}
                                     <Grid size={{ xs: 12, sm: 6 }}>
 
                                         <Button
                                             variant="outlined"
                                             size="large"
                                             fullWidth
-                                            startIcon={<Download />}
-                                            onClick={handleDownloadInvoice}
+                                            startIcon={<Receipt />}
+                                            onClick={handleDownloadReceipt}
                                             sx={{ py: 1.5 }}
                                         >
-                                            Download Invoice
+                                            Download Receipt
                                         </Button>
                                     </Grid>
                                 </Grid>

@@ -56,7 +56,11 @@ class RefreshGoogleTokens extends Command
             $failedCount = 0;
             
             foreach ($users as $user) {
-                if ($user->isGoogleTokenExpired() || $this->isTokenExpiringSoon($user)) {
+                // For permanent connections (with refresh token), check if token is expired or expiring soon
+                // Note: isGoogleTokenExpired() returns false for permanent connections,
+                // so we need to check expiration directly
+                $isExpired = !$user->google_token_expires || now()->isAfter($user->google_token_expires);
+                if ($isExpired || $this->isTokenExpiringSoon($user)) {
                     if ($this->refreshUserTokens($user, $googleCalendarService)) {
                         $refreshedCount++;
                     } else {

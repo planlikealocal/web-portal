@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
+import { CssBaseline, Fab } from '@mui/material';
+import { ContactMail as ContactMailIcon } from '@mui/icons-material';
 import websiteTheme from '../themes/websiteTheme';
 import Notification from '../Components/Notification';
+import ContactUsDialog from '../Components/ContactUsDialog';
 
 const WebsiteLayout = ({ children }) => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
 
   // Handle scroll to show/hide scroll to top button
   React.useEffect(() => {
@@ -53,9 +56,12 @@ const WebsiteLayout = ({ children }) => {
               <Link href="/destinations" className="text-white hover:text-[#F2B544] transition-colors duration-200 font-medium">
                 Destinations
               </Link>
-              <Link href="/contact" className="text-white hover:text-[#F2B544] transition-colors duration-200 font-medium">
+              <button
+                onClick={() => setContactDialogOpen(true)}
+                className="text-white hover:text-[#F2B544] transition-colors duration-200 font-medium bg-transparent border-none cursor-pointer"
+              >
                 Contact
-              </Link>
+              </button>
             </nav>
 
             {/* Desktop CTA Button */}
@@ -106,13 +112,15 @@ const WebsiteLayout = ({ children }) => {
                 >
                   Destinations
                 </Link>
-                <Link
-                  href="/contact"
-                  className="text-white hover:text-[#F2B544] transition-colors duration-200 font-medium px-3 py-2 rounded-lg hover:bg-white/10"
-                  onClick={() => setMobileMenuOpen(false)}
+                <button
+                  onClick={() => {
+                    setContactDialogOpen(true);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-white hover:text-[#F2B544] transition-colors duration-200 font-medium px-3 py-2 rounded-lg hover:bg-white/10 w-full text-left bg-transparent border-none cursor-pointer"
                 >
                   Contact
-                </Link>
+                </button>
                 <Link
                   href="/book-appointment"
                   className="btn-primary mx-3 mt-2"
@@ -131,6 +139,27 @@ const WebsiteLayout = ({ children }) => {
         <Notification />
         {children}
       </main>
+
+      {/* Floating Contact Us Button */}
+      <Fab
+        color="primary"
+        aria-label="Contact Us"
+        onClick={() => setContactDialogOpen(true)}
+        sx={{
+          position: 'fixed',
+          bottom: 24,
+          right: 24,
+          zIndex: 1000,
+        }}
+      >
+        <ContactMailIcon />
+      </Fab>
+
+      {/* Contact Us Dialog */}
+      <ContactUsDialog
+        open={contactDialogOpen}
+        onClose={() => setContactDialogOpen(false)}
+      />
 
       {/* Footer */}
       <footer className="bg-gray-800 text-white py-8">

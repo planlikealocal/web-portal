@@ -89,13 +89,24 @@ class User extends Authenticatable
 
     /**
      * Check if Google access token is expired
+     * 
+     * Note: If the user has a refresh token (permanent connection),
+     * the token is never considered expired because it can be automatically refreshed.
      */
     public function isGoogleTokenExpired(): bool
     {
+        // If user has a refresh token, the connection is permanent
+        // and the access token can be automatically refreshed, so it's never expired
+        if (!empty($this->google_refresh_token)) {
+            return false;
+        }
+        
+        // If no expiration date is set, consider it expired (unless they have refresh token, which we already checked)
         if (!$this->google_token_expires) {
             return true;
         }
         
+        // Check if the access token has expired
         return now()->isAfter($this->google_token_expires);
     }
 

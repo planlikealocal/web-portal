@@ -33,6 +33,43 @@ class CheckPaymentStatusAction extends AbstractPlanAction
                     $plan->load('specialist.country', 'destination');
                     $plan->refresh();
                     
+                    // Automatically create Google Calendar appointment if appointment times are set
+                    // and appointment hasn't been created yet
+                    if (!$wasAlreadyPaid && $plan->appointment_start && $plan->appointment_end && !$plan->google_calendar_event_id) {
+                        try {
+                            $confirmAppointmentAction = new ConfirmAppointmentAction($this->googleCalendarService);
+                            $confirmAppointmentAction->execute($plan);
+                            Log::info('Google Calendar appointment created automatically after payment status check', [
+                                'plan_id' => $plan->id,
+                            ]);
+                        } catch (\Exception $e) {
+                            $errorMessage = $e->getMessage();
+                            $isTokenRevoked = str_contains($errorMessage, 'Token expired or revoked') ||
+                                            str_contains($errorMessage, 'invalid_grant') ||
+                                            str_contains($errorMessage, 'reconnect your Google Calendar');
+                            
+                            if ($isTokenRevoked) {
+                                Log::error('Google Calendar appointment creation failed due to revoked/expired token', [
+                                    'plan_id' => $plan->id,
+                                    'specialist_id' => $plan->specialist_id,
+                                    'error' => $errorMessage,
+                                    'action_required' => 'Specialist needs to reconnect Google Calendar at /specialist/google-calendar-settings',
+                                ]);
+                                
+                                // TODO: Send notification email to specialist about reconnection requirement
+                                // For now, we log it clearly so it can be addressed
+                            } else {
+                                Log::error('Failed to create Google Calendar appointment after payment status check', [
+                                    'plan_id' => $plan->id,
+                                    'error' => $errorMessage,
+                                    'trace' => $e->getTraceAsString(),
+                                ]);
+                            }
+                            // Don't fail the payment process if Google Calendar event creation fails
+                            // Payment is successful, appointment can be created manually later
+                        }
+                    }
+                    
                     // Send email only if payment status was just updated (not already paid)
                     if (!$wasAlreadyPaid) {
                         $sendEmailAction = new SendPaymentSuccessEmailAction($this->googleCalendarService);

@@ -40,6 +40,7 @@ Route::get('/plans/{plan}/availability', [PlanController::class, 'getAvailabilit
 Route::post('/plans/{plan}/create-checkout-session', [PlanController::class, 'createCheckoutSession'])->name('plans.checkout');
 Route::get('/plans/{plan}/download-calendar', [PlanController::class, 'downloadCalendar'])->name('plans.download-calendar');
 Route::get('/plans/{plan}/download-invoice', [PlanController::class, 'downloadInvoice'])->name('plans.download-invoice');
+Route::get('/plans/{plan}/download-receipt', [PlanController::class, 'downloadReceipt'])->name('plans.download-receipt');
 Route::post('/stripe/webhook', [PlanController::class, 'handleStripeWebhook'])->name('stripe.webhook');
 
 // Admin authentication routes
@@ -100,6 +101,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Plans routes
         Route::get('/plans', [AdminPlanController::class, 'index'])->name('plans.index');
         Route::get('/plans/{plan}', [AdminPlanController::class, 'show'])->name('plans.show');
+
+        // Contact Requests routes
+        Route::get('/contact-requests', [\App\Http\Controllers\Admin\ContactRequestController::class, 'index'])->name('contact-requests.index');
+        Route::get('/contact-requests/{contactRequest}', [\App\Http\Controllers\Admin\ContactRequestController::class, 'show'])->name('contact-requests.show');
+        Route::post('/contact-requests/{contactRequest}/update-status', [\App\Http\Controllers\Admin\ContactRequestController::class, 'updateStatus'])->name('contact-requests.update-status');
 
         // Test notification route (for development/demo purposes)
         Route::post('/test-notifications', function () {

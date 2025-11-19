@@ -35,7 +35,7 @@ class SendPaymentSuccessEmailAction extends AbstractPlanAction
 
             // Generate download URLs
             $calendarDownloadUrl = url("/plans/{$plan->id}/download-calendar");
-            $invoiceDownloadUrl = url("/plans/{$plan->id}/download-invoice");
+            $receiptDownloadUrl = url("/plans/{$plan->id}/download-receipt");
 
             Mail::send('emails.payment-success', [
                 'plan' => $plan,
@@ -43,7 +43,7 @@ class SendPaymentSuccessEmailAction extends AbstractPlanAction
                 'appointmentDuration' => $appointmentDuration,
                 'planPrice' => $planPrice,
                 'calendarDownloadUrl' => $calendarDownloadUrl,
-                'invoiceDownloadUrl' => $invoiceDownloadUrl,
+                'receiptDownloadUrl' => $receiptDownloadUrl,
                 'meetingLink' => $plan->meeting_link,
             ], function ($message) use ($plan) {
                 $message->to($plan->email, $plan->first_name . ' ' . $plan->last_name)
