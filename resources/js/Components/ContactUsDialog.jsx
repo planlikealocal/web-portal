@@ -176,7 +176,7 @@ const ContactUsDialog = ({ open, onClose }) => {
                     left: 0,
                     right: 0,
                     m: 0,
-                    maxHeight: '600px',
+                    maxHeight: '650px',
                     borderRadius: '16px 16px 0 0',
                 }
             }}

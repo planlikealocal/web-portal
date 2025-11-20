@@ -115,4 +115,19 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Contact Form Notification Emails
+    |--------------------------------------------------------------------------
+    |
+    | Email addresses that should receive notifications when a contact form
+    | is submitted. Multiple addresses can be specified, separated by commas.
+    | If not configured, notifications will be sent to the default from address.
+    |
+    */
+
+    'contact_notification_emails' => array_filter(
+        array_map('trim', explode(',', env('CONTACT_NOTIFICATION_EMAILS', '')))
+    ),
+
 ];

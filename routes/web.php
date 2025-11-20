@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 // Website routes
 Route::get('/', [WebsiteController::class, 'home'])->name('home');
 Route::get('/about', [WebsiteController::class, 'about'])->name('about');
+Route::get('/what-we-do', [WebsiteController::class, 'whatWeDo'])->name('what-we-do');
 Route::get('/contact', [WebsiteController::class, 'contact'])->name('contact');
 Route::get('/destinations', [DestinationsController::class, 'index'])->name('destinations');
 Route::get('/destinations/{destination}', [DestinationsController::class, 'show'])->name('destinations.show');

@@ -53,6 +53,9 @@ const WebsiteLayout = ({ children }) => {
               <Link href="/about" className="text-white hover:text-[#F2B544] transition-colors duration-200 font-medium">
                 About
               </Link>
+              <Link href="/what-we-do" className="text-white hover:text-[#F2B544] transition-colors duration-200 font-medium">
+                What we do
+              </Link>
               <Link href="/destinations" className="text-white hover:text-[#F2B544] transition-colors duration-200 font-medium">
                 Destinations
               </Link>
@@ -104,6 +107,13 @@ const WebsiteLayout = ({ children }) => {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   About
+                </Link>
+                <Link
+                  href="/what-we-do"
+                  className="text-white hover:text-[#F2B544] transition-colors duration-200 font-medium px-3 py-2 rounded-lg hover:bg-white/10"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  What we do
                 </Link>
                 <Link
                   href="/destinations"
