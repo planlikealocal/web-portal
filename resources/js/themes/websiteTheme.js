@@ -4,16 +4,11 @@ const websiteTheme = createTheme({
   // Website-specific theme colors
   palette: {
     primary: {
-      main: '#0A2463',
-      light: '#1a3a7a',
-      dark: '#06152f',
+      main: '#3260FE',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#F2B544',
-      light: '#f5c866',
-      dark: '#e8a523',
-      contrastText: '#000000',
+      main: '#F2DFFF',
     },
     error: {
       main: '#E85A4F',

@@ -75,14 +75,10 @@ const adminTheme = createTheme({
     // Custom admin-specific theme colors
     palette: {
         primary: {
-            main: '#1976d2',
-            light: '#42a5f5',
-            dark: '#1565c0',
+            main: '#3260FE',
         },
         secondary: {
-            main: '#dc004e',
-            light: '#ff5983',
-            dark: '#9a0036',
+            main: '#F2DFFF',
         },
         background: {
             default: '#f5f5f5',
