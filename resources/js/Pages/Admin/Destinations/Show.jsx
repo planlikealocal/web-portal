@@ -139,12 +139,12 @@ const Show = ({ destination }) => {
                                         <Card>
                                             <CardContent>
                                                 <Typography variant="h6" gutterBottom>
-                                                    Home Page Image
+                                                    Index Page Image
                                                 </Typography>
                                                 <Box
                                                     component="img"
                                                     src={destination.home_image}
-                                                    alt="Home page"
+                                                    alt="Index page"
                                                     sx={{
                                                         width: '100%',
                                                         height: 250,

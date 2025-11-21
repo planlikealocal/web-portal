@@ -3,13 +3,14 @@ import { Box } from '@mui/material';
 
 /**
  * CurvedSection - A reusable component with a curved wave separator at the bottom
- * 
+ *
  * @param {React.ReactNode} children - Content to display in the main section
  * @param {React.ReactNode} bottomContent - Optional content to display in the bottom section
  * @param {string} topBgColor - Background color for the top section (default: '#FFFFFF')
  * @param {string} bottomBgColor - Background color for the bottom section (default: '#CED4DA')
  * @param {string} curveColor - Color of the curve separator (default: same as bottomBgColor)
  * @param {number} curveHeight - Height of the curve section in pixels (default: 150)
+ * @param {string} curveType - Type of curve: 'wave' or 'smile' (default: 'wave')
  * @param {boolean} showBottomSection - Whether to show the bottom section (default: true)
  * @param {string} className - Additional CSS classes
  * @param {object} sx - Additional MUI sx styles
@@ -20,13 +21,24 @@ const CurvedSection = ({
     topBgColor = '#FFFFFF',
     bottomBgColor = '#CED4DA',
     curveColor = null,
-    curveHeight = 150,
+    curveHeight = 350,
+    curveType = 'wave',
     showBottomSection = true,
     className = '',
     sx = {},
 }) => {
     // Use bottomBgColor for curve if curveColor not specified
     const finalCurveColor = curveColor || bottomBgColor;
+
+    // Define curve paths based on type
+    const getCurvePath = () => {
+        if (curveType === 'smile') {
+            // Smile curve: smooth downward arc
+            return "M0,0 C360,80 1080,80 1440,0 L1440,120 L0,120 Z";
+        }
+        // Default wave curve
+        return "M0,80 C360,40 720,100 1080,60 C1260,50 1380,70 1440,60 L1440,120 L0,120 Z";
+    };
 
     return (
         <Box
@@ -60,7 +72,7 @@ const CurvedSection = ({
                 }}
             >
                 <svg
-                    viewBox="0 0 1440 120"
+                    viewBox="0 0 1440 80"
                     preserveAspectRatio="none"
                     style={{
                         position: 'absolute',
@@ -72,7 +84,7 @@ const CurvedSection = ({
                     }}
                 >
                     <path
-                        d="M0,80 C360,40 720,100 1080,60 C1260,50 1380,70 1440,60 L1440,120 L0,120 Z"
+                        d={getCurvePath()}
                         fill={finalCurveColor}
                     />
                 </svg>

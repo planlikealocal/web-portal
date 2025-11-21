@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>New Index Form Submission</title>
+    <title>New Specialist Application</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -104,24 +104,15 @@
             color: #6c757d;
             font-size: 12px;
         }
-        .topic-badge {
-            display: inline-block;
-            padding: 5px 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>📧 New Index Form Submission</h1>
+        <h1>💼 New Specialist Application</h1>
     </div>
     <div class="content">
         <div class="notification-box">
-            <p style="margin: 0; font-size: 18px;">You have received a new contact form submission</p>
+            <p style="margin: 0; font-size: 18px;">You have received a new specialist application</p>
         </div>
 
         <div class="contact-details">
@@ -137,10 +128,12 @@
                 </span>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Topic:</span>
-                <span class="detail-value">
-                    <span class="topic-badge">{{ $topic }}</span>
-                </span>
+                <span class="detail-label">City & State:</span>
+                <span class="detail-value">{{ $city_state }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Phone:</span>
+                <span class="detail-value">{{ $phone }}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Submitted:</span>
@@ -149,8 +142,18 @@
         </div>
 
         <div class="message-box">
-            <h3 style="margin-top: 0; color: #495057;">Message:</h3>
-            <p>{{ $contact_message }}</p>
+            <h3 style="margin-top: 0; color: #495057;">What is this destination known for?</h3>
+            <p>{{ $destination_known_for }}</p>
+        </div>
+
+        <div class="message-box">
+            <h3 style="margin-top: 0; color: #495057;">What make you a qualified expert?</h3>
+            <p>{{ $qualified_expert }}</p>
+        </div>
+
+        <div class="message-box">
+            <h3 style="margin-top: 0; color: #495057;">Best way to contact</h3>
+            <p>{{ $best_way_to_contact }}</p>
         </div>
 
         <div style="text-align: center; margin-top: 30px;">
@@ -158,8 +161,8 @@
         </div>
 
         <div class="footer">
-            <p>This is an automated notification from the contact form system.</p>
-            <p>Please reply directly to the sender's email address: <a href="mailto:{{ $email }}" style="color: #667eea;">{{ $email }}</a></p>
+            <p>This is an automated notification from the specialist application system.</p>
+            <p>Please reply directly to the applicant's email address: <a href="mailto:{{ $email }}" style="color: #667eea;">{{ $email }}</a></p>
         </div>
     </div>
 </body>

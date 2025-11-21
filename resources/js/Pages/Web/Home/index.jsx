@@ -1,9 +1,9 @@
 import React from 'react';
 import { Typography, Box, Container, Button, Grid } from '@mui/material';
 import { Link } from '@inertiajs/react';
-import WebsiteLayout from '../../Layouts/WebsiteLayout.jsx';
+import WebsiteLayout from '../../../Layouts/WebsiteLayout.jsx';
 
-const Home = () => {
+const Index = () => {
   return (
     <WebsiteLayout>
       <Container maxWidth="md">
@@ -54,4 +54,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Index;

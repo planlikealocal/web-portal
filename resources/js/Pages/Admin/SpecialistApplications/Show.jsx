@@ -20,33 +20,35 @@ import {
 import {
     ArrowBack as ArrowBackIcon,
     Email as EmailIcon,
-    ContactMail as ContactMailIcon,
+    Phone as PhoneIcon,
+    LocationOn as LocationIcon,
     CalendarToday as CalendarIcon,
     Person as PersonIcon,
-    Topic as TopicIcon,
+    Work as WorkIcon,
 } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import {Link, router, usePage} from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout.jsx';
 
-const Show = ({contactRequest}) => {
+const Show = ({application}) => {
     const {flash} = usePage().props;
-    const [status, setStatus] = useState(contactRequest.status || 'new');
-    const [notes, setNotes] = useState(contactRequest.notes || '');
+    const [status, setStatus] = useState(application.status || 'new');
+    const [notes, setNotes] = useState(application.notes || '');
     const [updating, setUpdating] = useState(false);
 
     const getStatusColor = (status) => {
         const colors = {
             new: 'primary',
-            contacted: 'warning',
-            resolved: 'success',
+            reviewed: 'warning',
+            approved: 'success',
+            rejected: 'error',
         };
         return colors[status] || 'default';
     };
 
     const handleUpdateStatus = () => {
         setUpdating(true);
-        router.post(`/admin/contact-requests/${contactRequest.id}/update-status`, {
+        router.post(`/admin/specialist-applications/${application.id}/update-status`, {
             status,
             notes,
         }, {
@@ -65,14 +67,14 @@ const Show = ({contactRequest}) => {
                 <Box sx={{mb: 3, display: 'flex', alignItems: 'center', gap: 2}}>
                     <Button
                         component={Link}
-                        href="/admin/contact-requests"
+                        href="/admin/specialist-applications"
                         startIcon={<ArrowBackIcon/>}
                         variant="outlined"
                     >
-                        Back to Index Requests
+                        Back to Applications
                     </Button>
                     <Typography variant="h4" component="h1">
-                        Index Request Details
+                        Specialist Application Details
                     </Typography>
                 </Box>
 
@@ -96,7 +98,7 @@ const Show = ({contactRequest}) => {
                                             First Name
                                         </Typography>
                                         <Typography variant="body1" sx={{mb: 2}}>
-                                            {contactRequest.first_name}
+                                            {application.first_name}
                                         </Typography>
                                     </Grid>
                                     <Grid size={{xs: 12, sm: 6}}>
@@ -104,7 +106,7 @@ const Show = ({contactRequest}) => {
                                             Last Name
                                         </Typography>
                                         <Typography variant="body1" sx={{mb: 2}}>
-                                            {contactRequest.last_name}
+                                            {application.last_name}
                                         </Typography>
                                     </Grid>
                                     <Grid size={{xs: 12}}>
@@ -114,7 +116,27 @@ const Show = ({contactRequest}) => {
                                             Email
                                         </Typography>
                                         <Typography variant="body1" sx={{mb: 2}}>
-                                            <a href={`mailto:${contactRequest.email}`}>{contactRequest.email}</a>
+                                            <a href={`mailto:${application.email}`}>{application.email}</a>
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={{xs: 12, sm: 6}}>
+                                        <Typography variant="caption" color="text.secondary"
+                                                    sx={{display: 'flex', alignItems: 'center', gap: 0.5}}>
+                                            <LocationIcon fontSize="small"/>
+                                            City & State
+                                        </Typography>
+                                        <Typography variant="body1" sx={{mb: 2}}>
+                                            {application.city_state}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid size={{xs: 12, sm: 6}}>
+                                        <Typography variant="caption" color="text.secondary"
+                                                    sx={{display: 'flex', alignItems: 'center', gap: 0.5}}>
+                                            <PhoneIcon fontSize="small"/>
+                                            Phone
+                                        </Typography>
+                                        <Typography variant="body1" sx={{mb: 2}}>
+                                            {application.phone}
                                         </Typography>
                                     </Grid>
                                 </Grid>
@@ -123,26 +145,13 @@ const Show = ({contactRequest}) => {
 
                         <Card sx={{mb: 3}}>
                             <CardHeader
-                                title="Message Details"
-                                avatar={<ContactMailIcon/>}
+                                title="Application Details"
+                                avatar={<WorkIcon/>}
                             />
                             <CardContent>
-                                <Box sx={{mb: 2}}>
-                                    <Typography variant="caption" color="text.secondary"
-                                                sx={{display: 'flex', alignItems: 'center', gap: 0.5}}>
-                                        <TopicIcon fontSize="small"/>
-                                        Topic
-                                    </Typography>
-                                    <Chip
-                                        label={contactRequest.topic}
-                                        color="primary"
-                                        sx={{mt: 1}}
-                                    />
-                                </Box>
-                                <Divider sx={{my: 2}}/>
-                                <Box>
+                                <Box sx={{mb: 3}}>
                                     <Typography variant="caption" color="text.secondary">
-                                        Message
+                                        What is this destination known for?
                                     </Typography>
                                     <Paper
                                         variant="outlined"
@@ -154,7 +163,43 @@ const Show = ({contactRequest}) => {
                                             wordBreak: 'break-word',
                                         }}
                                     >
-                                        {contactRequest.message}
+                                        {application.destination_known_for}
+                                    </Paper>
+                                </Box>
+                                <Divider sx={{my: 2}}/>
+                                <Box sx={{mb: 3}}>
+                                    <Typography variant="caption" color="text.secondary">
+                                        What make you a qualified expert?
+                                    </Typography>
+                                    <Paper
+                                        variant="outlined"
+                                        sx={{
+                                            p: 2,
+                                            mt: 1,
+                                            backgroundColor: 'grey.50',
+                                            whiteSpace: 'pre-wrap',
+                                            wordBreak: 'break-word',
+                                        }}
+                                    >
+                                        {application.qualified_expert}
+                                    </Paper>
+                                </Box>
+                                <Divider sx={{my: 2}}/>
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary">
+                                        Best way to contact
+                                    </Typography>
+                                    <Paper
+                                        variant="outlined"
+                                        sx={{
+                                            p: 2,
+                                            mt: 1,
+                                            backgroundColor: 'grey.50',
+                                            whiteSpace: 'pre-wrap',
+                                            wordBreak: 'break-word',
+                                        }}
+                                    >
+                                        {application.best_way_to_contact}
                                     </Paper>
                                 </Box>
                             </CardContent>
@@ -173,8 +218,9 @@ const Show = ({contactRequest}) => {
                                         onChange={(e) => setStatus(e.target.value)}
                                     >
                                         <MenuItem value="new">New</MenuItem>
-                                        <MenuItem value="contacted">Contacted</MenuItem>
-                                        <MenuItem value="resolved">Resolved</MenuItem>
+                                        <MenuItem value="reviewed">Reviewed</MenuItem>
+                                        <MenuItem value="approved">Approved</MenuItem>
+                                        <MenuItem value="rejected">Rejected</MenuItem>
                                     </Select>
                                 </FormControl>
 
@@ -185,7 +231,7 @@ const Show = ({contactRequest}) => {
                                     label="Notes"
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
-                                    placeholder="Add any notes about this contact request..."
+                                    placeholder="Add any notes about this application..."
                                     sx={{mb: 2}}
                                 />
 
@@ -207,11 +253,11 @@ const Show = ({contactRequest}) => {
                                         Created At
                                     </Typography>
                                     <Typography variant="body2">
-                                        {dayjs(contactRequest.created_at).format('YYYY-MM-DD HH:mm:ss')}
+                                        {dayjs(application.created_at).format('YYYY-MM-DD HH:mm:ss')}
                                     </Typography>
                                 </Box>
 
-                                {contactRequest.updated_at && (
+                                {application.updated_at && (
                                     <Box sx={{mt: 2}}>
                                         <Typography variant="caption" color="text.secondary"
                                                     sx={{display: 'flex', alignItems: 'center', gap: 0.5, mb: 1}}>
@@ -219,7 +265,7 @@ const Show = ({contactRequest}) => {
                                             Last Updated
                                         </Typography>
                                         <Typography variant="body2">
-                                            {dayjs(contactRequest.updated_at).format('YYYY-MM-DD HH:mm:ss')}
+                                            {dayjs(application.updated_at).format('YYYY-MM-DD HH:mm:ss')}
                                         </Typography>
                                     </Box>
                                 )}
@@ -229,8 +275,8 @@ const Show = ({contactRequest}) => {
                                         Current Status
                                     </Typography>
                                     <Chip
-                                        label={contactRequest.status}
-                                        color={getStatusColor(contactRequest.status)}
+                                        label={application.status}
+                                        color={getStatusColor(application.status)}
                                         size="small"
                                     />
                                 </Box>

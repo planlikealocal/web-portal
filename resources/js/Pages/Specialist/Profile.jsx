@@ -325,7 +325,7 @@ const Profile = ({ specialist, countries }) => {
                                         <Grid size={{ xs: 12, sm: 6 }}>
                                             <TextField
                                                 fullWidth
-                                                label="Contact Number"
+                                                label="Index Number"
                                                 value={data.contact_no}
                                                 onChange={(e) =>
                                                     setData(

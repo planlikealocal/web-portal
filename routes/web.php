@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 
 // Website routes
 Route::get('/', [WebsiteController::class, 'home'])->name('home');
-Route::get('/about', [WebsiteController::class, 'about'])->name('about');
+Route::get('/who-we-are', [WebsiteController::class, 'whoWeAre'])->name('who-we-are');
 Route::get('/what-we-do', [WebsiteController::class, 'whatWeDo'])->name('what-we-do');
 Route::get('/contact', [WebsiteController::class, 'contact'])->name('contact');
 Route::get('/destinations', [DestinationsController::class, 'index'])->name('destinations');
@@ -29,6 +29,7 @@ Route::get('/api/destinations', [DestinationsController::class, 'loadMore'])->na
 Route::get('/api/regions', [DestinationsController::class, 'getRegionsByCountry'])->name('regions.by-country');
 Route::get('/api/countries', [App\Http\Controllers\Admin\CountryController::class, 'list'])->name('countries.list');
 Route::post('/contact', [WebsiteController::class, 'contactSubmit'])->name('contact.submit');
+Route::post('/specialist-applications', [WebsiteController::class, 'specialistApplicationSubmit'])->name('specialist-applications.submit');
 
 // Public appointment booking
 Route::get('/book-appointment', [AppointmentBookingController::class, 'index'])->name('appointment.booking');
@@ -107,6 +108,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/contact-requests', [\App\Http\Controllers\Admin\ContactRequestController::class, 'index'])->name('contact-requests.index');
         Route::get('/contact-requests/{contactRequest}', [\App\Http\Controllers\Admin\ContactRequestController::class, 'show'])->name('contact-requests.show');
         Route::post('/contact-requests/{contactRequest}/update-status', [\App\Http\Controllers\Admin\ContactRequestController::class, 'updateStatus'])->name('contact-requests.update-status');
+
+        // Specialist Applications routes
+        Route::get('/specialist-applications', [\App\Http\Controllers\Admin\SpecialistApplicationController::class, 'index'])->name('specialist-applications.index');
+        Route::get('/specialist-applications/{application}', [\App\Http\Controllers\Admin\SpecialistApplicationController::class, 'show'])->name('specialist-applications.show');
+        Route::post('/specialist-applications/{application}/update-status', [\App\Http\Controllers\Admin\SpecialistApplicationController::class, 'updateStatus'])->name('specialist-applications.update-status');
 
         // Test notification route (for development/demo purposes)
         Route::post('/test-notifications', function () {

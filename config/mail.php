@@ -130,4 +130,20 @@ return [
         array_map('trim', explode(',', env('CONTACT_NOTIFICATION_EMAILS', '')))
     ),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Specialist Application Notification Emails
+    |--------------------------------------------------------------------------
+    |
+    | Email addresses that should receive notifications when a specialist
+    | application is submitted. Multiple addresses can be specified, separated
+    | by commas. If not configured, notifications will be sent to the default
+    | from address.
+    |
+    */
+
+    'specialist_application_notification_emails' => array_filter(
+        array_map('trim', explode(',', env('SPECIALIST_APPLICATION_NOTIFICATION_EMAILS', '')))
+    ),
+
 ];

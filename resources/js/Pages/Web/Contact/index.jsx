@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Typography, Box, Container, TextField, Button, Grid, Alert } from '@mui/material';
 import { useForm } from '@inertiajs/react';
-import WebsiteLayout from '../../Layouts/WebsiteLayout.jsx';
+import WebsiteLayout from '../../../Layouts/WebsiteLayout.jsx';
 
-const Contact = () => {
+const Index = () => {
   const { data, setData, post, processing, errors } = useForm({
     name: '',
     email: '',
@@ -114,4 +114,4 @@ const Contact = () => {
   );
 };
 
-export default Contact;
+export default Index;

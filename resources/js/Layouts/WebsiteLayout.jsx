@@ -50,8 +50,8 @@ const WebsiteLayout = ({ children }) => {
               <Link href="/" className="text-white hover:text-[#F2B544] transition-colors duration-200 font-medium">
                 Home
               </Link>
-              <Link href="/about" className="text-white hover:text-[#F2B544] transition-colors duration-200 font-medium">
-                About
+              <Link href="/who-we-are" className="text-white hover:text-[#F2B544] transition-colors duration-200 font-medium">
+                Who we are
               </Link>
               <Link href="/what-we-do" className="text-white hover:text-[#F2B544] transition-colors duration-200 font-medium">
                 What we do
@@ -63,7 +63,7 @@ const WebsiteLayout = ({ children }) => {
                 onClick={() => setContactDialogOpen(true)}
                 className="text-white hover:text-[#F2B544] transition-colors duration-200 font-medium bg-transparent border-none cursor-pointer"
               >
-                Contact
+                Contact Us
               </button>
             </nav>
 
@@ -129,7 +129,7 @@ const WebsiteLayout = ({ children }) => {
                   }}
                   className="text-white hover:text-[#F2B544] transition-colors duration-200 font-medium px-3 py-2 rounded-lg hover:bg-white/10 w-full text-left bg-transparent border-none cursor-pointer"
                 >
-                  Contact
+                  Index
                 </button>
                 <Link
                   href="/book-appointment"
@@ -150,10 +150,10 @@ const WebsiteLayout = ({ children }) => {
         {children}
       </main>
 
-      {/* Floating Contact Us Button */}
+      {/* Floating Index Us Button */}
       <Fab
         color="primary"
-        aria-label="Contact Us"
+        aria-label="Index Us"
         onClick={() => setContactDialogOpen(true)}
         sx={{
           position: 'fixed',
@@ -165,7 +165,7 @@ const WebsiteLayout = ({ children }) => {
         <ContactMailIcon />
       </Fab>
 
-      {/* Contact Us Dialog */}
+      {/* Index Us Dialog */}
       <ContactUsDialog
         open={contactDialogOpen}
         onClose={() => setContactDialogOpen(false)}
@@ -176,7 +176,7 @@ const WebsiteLayout = ({ children }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <p className="text-gray-400 mb-4">Footer</p>
-            
+
             {/* Scroll to Top Button */}
             {showScrollTop && (
               <button

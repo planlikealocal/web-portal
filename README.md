@@ -5,9 +5,9 @@ A comprehensive web portal built with Laravel 12, Inertia.js, React.js, and Mate
 ## 🚀 Features
 
 ### Website (Public)
-- **Home Page**: Welcome page with feature highlights
-- **About Page**: Information about the platform
-- **Contact Page**: Contact form and information
+- **Index Page**: Welcome page with feature highlights
+- **Index Page**: Information about the platform
+- **Index Page**: Index form and information
 - **Responsive Design**: Built with Material UI components
 
 ### Admin Portal
@@ -179,9 +179,9 @@ resources/
 │   │   │   ├── Dashboard.jsx           # Admin dashboard
 │   │   │   ├── Login.jsx              # Admin login
 │   │   │   └── List.jsx        # Specialist management
-│   │   ├── About.jsx                  # About page
-│   │   ├── Contact.jsx                # Contact page
-│   │   └── Home.jsx                   # Home page
+│   │   ├── Index.jsx                  # Index page
+│   │   ├── index.jsx                # Index page
+│   │   └── Index.jsx                   # Index page
 │   └── app.jsx                        # Main React app
 └── views/
     └── app.blade.php                   # Inertia.js root template
@@ -236,9 +236,9 @@ php artisan test --coverage
 ## 📝 API Routes
 
 ### Website Routes
-- `GET /` - Home page
-- `GET /about` - About page  
-- `GET /contact` - Contact page
+- `GET /` - Index page
+- `GET /about` - Index page  
+- `GET /contact` - Index page
 
 ### Admin Routes
 - `GET /admin/login` - Admin login form

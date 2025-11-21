@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Contact\HandleContactFormSubmissionAction;
+use App\Actions\SpecialistApplication\HandleSpecialistApplicationAction;
 use App\Http\Requests\ContactFormRequest;
+use App\Http\Requests\SpecialistApplicationRequest;
 use Inertia\Inertia;
 
 class WebsiteController extends Controller
@@ -13,15 +15,15 @@ class WebsiteController extends Controller
      */
     public function home()
     {
-        return Inertia::render('Home');
+        return Inertia::render('Home/index');
     }
 
     /**
      * Show the about page
      */
-    public function about()
+    public function whoWeAre()
     {
-        return Inertia::render('About');
+        return Inertia::render('WhoWeAre/index');
     }
 
     /**
@@ -29,7 +31,7 @@ class WebsiteController extends Controller
      */
     public function whatWeDo()
     {
-        return Inertia::render('WhatWeDo');
+        return Inertia::render('WhatWeDo/index');
     }
 
     /**
@@ -37,7 +39,7 @@ class WebsiteController extends Controller
      */
     public function contact()
     {
-        return Inertia::render('Contact');
+        return Inertia::render('Contact/index');
     }
 
     /**
@@ -48,5 +50,15 @@ class WebsiteController extends Controller
         $action->execute($request->validated());
 
         return redirect()->back()->with('success', 'Thank you for your message! We will get back to you soon.');
+    }
+
+    /**
+     * Handle specialist application submission
+     */
+    public function specialistApplicationSubmit(SpecialistApplicationRequest $request, HandleSpecialistApplicationAction $action)
+    {
+        $action->execute($request->validated());
+
+        return redirect()->back()->with('success', 'Thank you for your application! We will review it and get back to you soon.');
     }
 }
