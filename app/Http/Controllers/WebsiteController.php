@@ -3,19 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Contact\HandleContactFormSubmissionAction;
+use App\Actions\Destination\GetDestinationsAction;
 use App\Actions\SpecialistApplication\HandleSpecialistApplicationAction;
 use App\Http\Requests\ContactFormRequest;
 use App\Http\Requests\SpecialistApplicationRequest;
+use App\Http\Resources\DestinationListResource;
 use Inertia\Inertia;
 
 class WebsiteController extends Controller
 {
+    public function __construct(private GetDestinationsAction $getDestinationsAction) {}
+
     /**
      * Show the home page
      */
     public function home()
     {
-        return Inertia::render('Home/index');
+        // Get featured destinations (active only, limit to 6)
+        $destinations = $this->getDestinationsAction->executePaginated(['status' => 'active'], 6, 1);
+
+        return Inertia::render('Home/index', [
+            'destinations' => DestinationListResource::collection($destinations->items()),
+        ]);
     }
 
     /**

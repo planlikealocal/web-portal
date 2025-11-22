@@ -45,7 +45,6 @@ const WebsiteLayout = ({children}) => {
                                 </div>
 
                             </Link>
-                            <Button variant="contained" color="primary">Test</Button>
 
                             {/* Desktop Navigation */}
                             <nav className="hidden md:flex items-center space-x-6">
