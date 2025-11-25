@@ -19,8 +19,8 @@ class WebsiteController extends Controller
      */
     public function home()
     {
-        // Get featured destinations (active only, limit to 6)
-        $destinations = $this->getDestinationsAction->executePaginated(['status' => 'active'], 6, 1);
+        // Get featured destinations (active only, home_page = true, limit to 6)
+        $destinations = $this->getDestinationsAction->executePaginated(['status' => 'active', 'home_page' => true], 6, 1);
 
         return Inertia::render('Home/index', [
             'destinations' => DestinationListResource::collection($destinations->items()),

@@ -34,6 +34,7 @@ class UpdateDestinationRequest extends FormRequest
             'banner_image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
             'status' => 'nullable|in:draft,active,inactive',
             'specialist_ids' => 'nullable|string',
+            'home_page' => 'nullable|boolean',
         ];
     }
 }

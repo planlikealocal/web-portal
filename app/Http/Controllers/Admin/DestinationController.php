@@ -132,6 +132,11 @@ class DestinationController extends Controller
             $data['country_id'] = null;
         }
 
+        // Handle home_page - convert string to boolean
+        if (isset($data['home_page'])) {
+            $data['home_page'] = filter_var($data['home_page'], FILTER_VALIDATE_BOOLEAN);
+        }
+
         // Handle image uploads
         if ($request->hasFile('home_image')) {
             $file = $request->file('home_image');

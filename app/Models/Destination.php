@@ -17,6 +17,7 @@ class Destination extends Model
         'overview_title',
         'overview',
         'status',
+        'home_page',
         'state_province',
         'city',
         'home_image',
@@ -31,6 +32,7 @@ class Destination extends Model
         return [
             'status' => 'string',
             'specialist_ids' => 'array',
+            'home_page' => 'boolean',
         ];
     }
 

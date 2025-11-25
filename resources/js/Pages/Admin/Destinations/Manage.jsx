@@ -20,6 +20,8 @@ import {
     InputLabel,
     Select,
     MenuItem,
+    FormControlLabel,
+    Checkbox,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -55,6 +57,7 @@ const Manage = (props) => {
         specialist_ids: destination.specialist_ids ?
             (Array.isArray(destination.specialist_ids) ? destination.specialist_ids : destination.specialist_ids.split(',').map(id => parseInt(id.trim()))) :
             [],
+        home_page: destination.home_page || false,
     });
     const [basicInfoErrors, setBasicInfoErrors] = useState({});
     const [savingBasicInfo, setSavingBasicInfo] = useState(false);
@@ -124,6 +127,7 @@ const Manage = (props) => {
         }
         formData.append('state_province', basicInfo.state_province || '');
         formData.append('specialist_ids', JSON.stringify(basicInfo.specialist_ids || []));
+        formData.append('home_page', basicInfo.home_page ? '1' : '0');
 
         // Handle file uploads - only append if it's a File object (new upload)
         if (basicInfo.home_image instanceof File) {
@@ -410,6 +414,17 @@ const Manage = (props) => {
                                             }))}
                                             error={!!basicInfoErrors.specialist_ids}
                                             helperText={basicInfoErrors.specialist_ids}
+                                        />
+                                    </Grid>
+                                    <Grid size={{xs: 12}}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={basicInfo.home_page || false}
+                                                    onChange={(e) => handleBasicInfoChange('home_page')(e.target.checked)}
+                                                />
+                                            }
+                                            label="Show on Homepage"
                                         />
                                     </Grid>
                                 </Grid>

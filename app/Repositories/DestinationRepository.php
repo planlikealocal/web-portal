@@ -38,6 +38,10 @@ class DestinationRepository implements DestinationRepositoryInterface
             $query->where('status', $filters['status']);
         }
 
+        if (isset($filters['home_page'])) {
+            $query->where('home_page', $filters['home_page']);
+        }
+
         if (isset($filters['country_id'])) {
             $query->where('country_id', $filters['country_id']);
         }
@@ -60,6 +64,10 @@ class DestinationRepository implements DestinationRepositoryInterface
 
         if (isset($filters['status'])) {
             $query->where('status', $filters['status']);
+        }
+
+        if (isset($filters['home_page'])) {
+            $query->where('home_page', $filters['home_page']);
         }
 
         if (isset($filters['country_id'])) {
