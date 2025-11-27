@@ -484,9 +484,6 @@ const Destinations = ({ destinations: initialDestinations, pagination: initialPa
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                   <p className="text-sm text-gray-500 mb-4">Sub header</p>
                   <h2 className="text-4xl font-bold text-gray-900 mb-8">Ready to Plan Like a Local?</h2>
-                  <a href="/book-appointment" className="btn-primary">
-                      Plan a Trip
-                  </a>
               </div>
           </section>
       </div>

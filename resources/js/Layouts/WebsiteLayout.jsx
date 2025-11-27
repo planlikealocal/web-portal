@@ -74,9 +74,6 @@ const WebsiteLayout = ({children}) => {
 
                             {/* Desktop CTA Button */}
                             <div className="hidden md:flex items-center">
-                                <Link href="/book-appointment" className="btn-primary">
-                                    Plan a trip
-                                </Link>
                             </div>
 
                             {/* Mobile Menu Button */}
@@ -139,13 +136,6 @@ const WebsiteLayout = ({children}) => {
                                     >
                                         Index
                                     </button>
-                                    <Link
-                                        href="/book-appointment"
-                                        className="btn-primary mx-3 mt-2"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                    >
-                                        Plan a trip
-                                    </Link>
                                 </nav>
                             </div>
                         )}

@@ -31,9 +31,6 @@ Route::get('/api/countries', [App\Http\Controllers\Admin\CountryController::clas
 Route::post('/contact', [WebsiteController::class, 'contactSubmit'])->name('contact.submit');
 Route::post('/specialist-applications', [WebsiteController::class, 'specialistApplicationSubmit'])->name('specialist-applications.submit');
 
-// Public appointment booking
-Route::get('/book-appointment', [AppointmentBookingController::class, 'index'])->name('appointment.booking');
-
 // Plan routes
 Route::post('/plans', [PlanController::class, 'store'])->name('plans.store');
 Route::get('/plans/{plan}', [PlanController::class, 'show'])->name('plans.show');

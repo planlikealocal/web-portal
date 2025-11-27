@@ -75,14 +75,28 @@ class AppointmentController extends Controller
 
                 $filteredAppointments = collect($rawAppointments)
                     ->filter(function ($appointment) use ($statusFilter, $filters, $timezone) {
-                        if (empty($appointment['plan'])) {
-                            return false;
+                        // Get appointment status from plan if available, otherwise use appointment status or empty
+                        $planStatus = '';
+                        if (!empty($appointment['plan']) && is_object($appointment['plan'])) {
+                            $planStatus = strtolower($appointment['plan']->appointment_status ?? '');
+                        } else {
+                            $planStatus = strtolower($appointment['appointment_status'] ?? '');
                         }
 
-                        $planStatus = strtolower($appointment['plan']->appointment_status ?? $appointment['appointment_status'] ?? '');
-
-                        if ($statusFilter && $planStatus !== $statusFilter) {
-                            return false;
+                        // Apply status filter: if status filter is empty, show all appointments
+                        // If status filter is set, show appointments that match the status
+                        // For 'active' filter, also include appointments without a status (treat as active)
+                        if ($statusFilter) {
+                            // If appointment has no status
+                            if (!$planStatus) {
+                                // Only show if filter is 'active' (treat no-status as active)
+                                // or if filter is empty (show all)
+                                return $statusFilter === 'active';
+                            }
+                            // If appointment has status, it must match the filter
+                            if ($planStatus !== $statusFilter) {
+                                return false;
+                            }
                         }
 
                         $startDateTime = null;
