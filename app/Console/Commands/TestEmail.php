@@ -57,6 +57,10 @@ class TestEmail extends Command
             $this->line('  SMTP Host: ' . config('mail.mailers.smtp.host'));
             $this->line('  SMTP Port: ' . config('mail.mailers.smtp.port'));
             $this->line('  SMTP Username: ' . (config('mail.mailers.smtp.username') ? '***configured***' : 'not set'));
+        } elseif (config('mail.default') === 'ses') {
+            $this->line('  AWS Region: ' . config('services.ses.region', 'not set'));
+            $this->line('  AWS Access Key: ' . (config('services.ses.key') ? '***configured***' : 'not set'));
+            $this->line('  AWS Secret Key: ' . (config('services.ses.secret') ? '***configured***' : 'not set'));
         }
         
         $this->newLine();
@@ -84,18 +88,34 @@ Sent at: ' . now()->format('Y-m-d H:i:s T'), function ($message) use ($recipient
             $this->error('Error: ' . $e->getMessage());
             $this->newLine();
             $this->warn('Troubleshooting tips:');
-            $this->line('1. Verify your .env file has correct AWS SES SMTP credentials:');
-            $this->line('   - MAIL_MAILER=smtp');
-            $this->line('   - MAIL_HOST=<your-ses-smtp-endpoint>');
-            $this->line('   - MAIL_PORT=587 (or 465 for SSL)');
-            $this->line('   - MAIL_USERNAME=<your-ses-smtp-username>');
-            $this->line('   - MAIL_PASSWORD=<your-ses-smtp-password>');
-            $this->line('   - MAIL_FROM_ADDRESS=<verified-email-in-ses>');
-            $this->line('   - MAIL_FROM_NAME="Your App Name"');
-            $this->newLine();
-            $this->line('2. Ensure your EC2 instance has outbound access to port 587/465');
-            $this->line('3. Verify the email address is verified in AWS SES (if in sandbox mode)');
-            $this->line('4. Check Laravel logs: storage/logs/laravel.log');
+            
+            if (config('mail.default') === 'smtp') {
+                $this->line('1. Verify your .env file has correct AWS SES SMTP credentials:');
+                $this->line('   - MAIL_MAILER=smtp');
+                $this->line('   - MAIL_HOST=<your-ses-smtp-endpoint> (e.g., email-smtp.us-east-1.amazonaws.com)');
+                $this->line('   - MAIL_PORT=587 (or 465 for SSL)');
+                $this->line('   - MAIL_USERNAME=<your-ses-smtp-username>');
+                $this->line('   - MAIL_PASSWORD=<your-ses-smtp-password>');
+                $this->line('   - MAIL_ENCRYPTION=tls (or ssl for port 465)');
+                $this->line('   - MAIL_FROM_ADDRESS=<verified-email-in-ses>');
+                $this->line('   - MAIL_FROM_NAME="Your App Name"');
+                $this->newLine();
+                $this->line('2. Ensure your EC2 instance has outbound access to port 587/465');
+            } elseif (config('mail.default') === 'ses') {
+                $this->line('1. Verify your .env file has correct AWS SES API credentials:');
+                $this->line('   - MAIL_MAILER=ses');
+                $this->line('   - AWS_ACCESS_KEY_ID=<your-aws-access-key>');
+                $this->line('   - AWS_SECRET_ACCESS_KEY=<your-aws-secret-key>');
+                $this->line('   - AWS_DEFAULT_REGION=<your-aws-region> (e.g., us-east-1)');
+                $this->line('   - MAIL_FROM_ADDRESS=<verified-email-in-ses>');
+                $this->line('   - MAIL_FROM_NAME="Your App Name"');
+                $this->newLine();
+                $this->line('2. Ensure AWS SDK is installed: composer require aws/aws-sdk-php');
+                $this->line('3. Verify IAM permissions for SES (ses:SendEmail, ses:SendRawEmail)');
+            }
+            
+            $this->line((config('mail.default') === 'smtp' ? '3' : '4') . '. Verify the email address is verified in AWS SES (if in sandbox mode)');
+            $this->line((config('mail.default') === 'smtp' ? '4' : '5') . '. Check Laravel logs: storage/logs/laravel.log');
             
             Log::error('Test email failed', [
                 'recipient' => $recipientEmail,
