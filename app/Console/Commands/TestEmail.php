@@ -87,6 +87,38 @@ Sent at: ' . now()->format('Y-m-d H:i:s T'), function ($message) use ($recipient
             $this->error('✗ Failed to send test email!');
             $this->error('Error: ' . $e->getMessage());
             $this->newLine();
+            
+            // Check for common authentication errors
+            $errorMessage = $e->getMessage();
+            $smtpUsername = config('mail.mailers.smtp.username', '');
+            
+            // Detect if user is using AWS Access Key ID instead of SMTP credentials
+            if (strpos($errorMessage, 'Authentication Credentials Invalid') !== false || 
+                strpos($errorMessage, '535') !== false) {
+                
+                // Check if username looks like an AWS Access Key ID (starts with AKIA)
+                if (strpos($smtpUsername, 'AKIA') === 0) {
+                    $this->error('⚠️  CRITICAL: You are using AWS Access Key ID as SMTP username!');
+                    $this->newLine();
+                    $this->warn('AWS SES SMTP requires SEPARATE SMTP credentials, not AWS Access Keys!');
+                    $this->newLine();
+                    $this->info('How to get AWS SES SMTP credentials:');
+                    $this->line('1. Go to AWS Console → SES → SMTP Settings');
+                    $this->line('2. Click "Create SMTP credentials"');
+                    $this->line('3. This will generate a NEW username and password specifically for SMTP');
+                    $this->line('4. The SMTP username will look like: AKIAIOSFODNN7EXAMPLE');
+                    $this->line('5. The SMTP password will be a long random string');
+                    $this->line('6. Download and save these credentials - you can only see the password once!');
+                    $this->newLine();
+                    $this->info('Update your .env file with:');
+                    $this->line('   MAIL_USERNAME=<the-smtp-username-from-step-4>');
+                    $this->line('   MAIL_PASSWORD=<the-smtp-password-from-step-5>');
+                    $this->newLine();
+                    $this->line('⚠️  DO NOT use AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY for SMTP!');
+                    $this->newLine();
+                }
+            }
+            
             $this->warn('Troubleshooting tips:');
             
             if (config('mail.default') === 'smtp') {
@@ -94,8 +126,8 @@ Sent at: ' . now()->format('Y-m-d H:i:s T'), function ($message) use ($recipient
                 $this->line('   - MAIL_MAILER=smtp');
                 $this->line('   - MAIL_HOST=<your-ses-smtp-endpoint> (e.g., email-smtp.us-east-1.amazonaws.com)');
                 $this->line('   - MAIL_PORT=587 (or 465 for SSL)');
-                $this->line('   - MAIL_USERNAME=<your-ses-smtp-username>');
-                $this->line('   - MAIL_PASSWORD=<your-ses-smtp-password>');
+                $this->line('   - MAIL_USERNAME=<your-ses-smtp-username> (NOT AWS Access Key ID!)');
+                $this->line('   - MAIL_PASSWORD=<your-ses-smtp-password> (NOT AWS Secret Access Key!)');
                 $this->line('   - MAIL_ENCRYPTION=tls (or ssl for port 465)');
                 $this->line('   - MAIL_FROM_ADDRESS=<verified-email-in-ses>');
                 $this->line('   - MAIL_FROM_NAME="Your App Name"');
