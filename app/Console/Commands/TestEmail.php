@@ -1,0 +1,110 @@
+<?php
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+
+class TestEmail extends Command
+{
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'email:test {email? : The email address to send the test email to}';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Send a test email to verify AWS SES SMTP configuration';
+
+    /**
+     * Execute the console command.
+     */
+    public function handle()
+    {
+        // Get recipient email
+        $recipientEmail = $this->argument('email');
+        
+        // If no email provided, use the configured from address
+        if (empty($recipientEmail)) {
+            $recipientEmail = config('mail.from.address');
+            if (empty($recipientEmail)) {
+                $this->error('No email address provided and MAIL_FROM_ADDRESS is not configured.');
+                $this->info('Usage: php artisan email:test your-email@example.com');
+                return 1;
+            }
+            $this->info("No recipient email provided. Using configured from address: {$recipientEmail}");
+        }
+
+        // Validate email format
+        if (!filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+            $this->error('Invalid email format: ' . $recipientEmail);
+            return 1;
+        }
+
+        // Display current mail configuration
+        $this->info('Current Mail Configuration:');
+        $this->line('  Mailer: ' . config('mail.default'));
+        $this->line('  From Address: ' . config('mail.from.address'));
+        $this->line('  From Name: ' . config('mail.from.name'));
+        
+        if (config('mail.default') === 'smtp') {
+            $this->line('  SMTP Host: ' . config('mail.mailers.smtp.host'));
+            $this->line('  SMTP Port: ' . config('mail.mailers.smtp.port'));
+            $this->line('  SMTP Username: ' . (config('mail.mailers.smtp.username') ? '***configured***' : 'not set'));
+        }
+        
+        $this->newLine();
+
+        // Send test email
+        $this->info("Sending test email to: {$recipientEmail}");
+        
+        try {
+            Mail::raw('This is a test email from your Laravel application to verify AWS SES SMTP configuration.
+
+If you receive this email, your AWS SES SMTP setup is working correctly!
+
+Sent at: ' . now()->format('Y-m-d H:i:s T'), function ($message) use ($recipientEmail) {
+                $message->to($recipientEmail)
+                        ->subject('Test Email - AWS SES SMTP Configuration');
+            });
+
+            $this->info('✓ Test email sent successfully!');
+            $this->info("Please check the inbox for: {$recipientEmail}");
+            $this->info('(Also check spam/junk folder if not found)');
+            
+            return 0;
+        } catch (\Exception $e) {
+            $this->error('✗ Failed to send test email!');
+            $this->error('Error: ' . $e->getMessage());
+            $this->newLine();
+            $this->warn('Troubleshooting tips:');
+            $this->line('1. Verify your .env file has correct AWS SES SMTP credentials:');
+            $this->line('   - MAIL_MAILER=smtp');
+            $this->line('   - MAIL_HOST=<your-ses-smtp-endpoint>');
+            $this->line('   - MAIL_PORT=587 (or 465 for SSL)');
+            $this->line('   - MAIL_USERNAME=<your-ses-smtp-username>');
+            $this->line('   - MAIL_PASSWORD=<your-ses-smtp-password>');
+            $this->line('   - MAIL_FROM_ADDRESS=<verified-email-in-ses>');
+            $this->line('   - MAIL_FROM_NAME="Your App Name"');
+            $this->newLine();
+            $this->line('2. Ensure your EC2 instance has outbound access to port 587/465');
+            $this->line('3. Verify the email address is verified in AWS SES (if in sandbox mode)');
+            $this->line('4. Check Laravel logs: storage/logs/laravel.log');
+            
+            Log::error('Test email failed', [
+                'recipient' => $recipientEmail,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return 1;
+        }
+    }
+}
+
