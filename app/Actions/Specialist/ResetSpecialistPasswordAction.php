@@ -57,7 +57,16 @@ class ResetSpecialistPasswordAction
 
         // Send email with new password
         try {
-            Mail::send('emails.specialist-password-reset', [
+            // Explicitly use the configured mailer
+            $mailer = config('mail.default', 'smtp');
+            
+            \Log::info('Attempting to send password reset email', [
+                'specialist_id' => $specialist->id,
+                'email' => $specialist->email,
+                'mailer' => $mailer,
+            ]);
+
+            Mail::mailer($mailer)->send('emails.specialist-password-reset', [
                 'specialist' => $specialist,
                 'newPassword' => $newPassword,
             ], function ($message) use ($specialist) {
@@ -65,21 +74,30 @@ class ResetSpecialistPasswordAction
                         ->subject('Password Reset - Your New Login Credentials');
             });
 
+            \Log::info('Password reset email sent successfully', [
+                'specialist_id' => $specialist->id,
+                'email' => $specialist->email,
+            ]);
+
             return [
                 'success' => true,
                 'message' => 'Password reset successfully. New password has been sent to ' . $specialist->email,
             ];
         } catch (\Exception $e) {
-            // If email fails, still return success but log the error
-            \Log::error('Failed to send password reset email to specialist: ' . $specialist->email, [
-                'error' => $e->getMessage(),
+            // Log the full error details
+            \Log::error('Failed to send password reset email to specialist', [
                 'specialist_id' => $specialist->id,
+                'email' => $specialist->email,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'mailer' => config('mail.default'),
             ]);
 
             return [
                 'success' => true,
                 'message' => 'Password reset successfully, but failed to send email. Please contact the specialist directly.',
                 'newPassword' => $newPassword, // Include password in response for manual delivery
+                'error' => $e->getMessage(), // Include error for debugging
             ];
         }
     }
