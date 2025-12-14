@@ -13,6 +13,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'specialist' => \App\Http\Middleware\SpecialistMiddleware::class,
+            'google.calendar' => \App\Http\Middleware\EnsureGoogleCalendarConnected::class,
+            'specialist.google.calendar' => \App\Http\Middleware\RequireGoogleCalendarForSpecialists::class,
+        ]);
+        
+        // Exclude Stripe webhook from CSRF protection
+        $middleware->validateCsrfTokens(except: [
+            'stripe/webhook',
         ]);
         
         $middleware->web(append: [

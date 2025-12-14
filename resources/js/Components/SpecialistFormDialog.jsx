@@ -247,7 +247,7 @@ const SpecialistFormDialog = ({open, onClose, specialist = null, reSetForm =fals
                             <TextField
                                 fullWidth
                                 size="small"
-                                label="Contact Number"
+                                label="Index Number"
                                 value={data.contact_no}
                                 onChange={(e) => setData('contact_no', e.target.value)}
                                 error={!!errors.contact_no}

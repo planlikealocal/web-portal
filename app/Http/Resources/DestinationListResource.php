@@ -22,6 +22,7 @@ class DestinationListResource extends JsonResource
             'overview' => $this->overview,
             'status' => $this->status,
             'country' => $this->country?->name,
+            'country_id' => $this->country_id,
             'state_province' => $this->state_province,
             'city' => $this->city,
             'full_location' => $this->full_location,

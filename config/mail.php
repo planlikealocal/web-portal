@@ -43,6 +43,7 @@ return [
             'url' => env('MAIL_URL'),
             'host' => env('MAIL_HOST', '127.0.0.1'),
             'port' => env('MAIL_PORT', 2525),
+            'encryption' => env('MAIL_ENCRYPTION', 'tls'),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
             'timeout' => null,
@@ -114,5 +115,36 @@ return [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Contact Form Notification Emails
+    |--------------------------------------------------------------------------
+    |
+    | Email addresses that should receive notifications when a contact form
+    | is submitted. Multiple addresses can be specified, separated by commas.
+    | If not configured, notifications will be sent to the default from address.
+    |
+    */
+
+    'contact_notification_emails' => array_filter(
+        array_map('trim', explode(',', env('CONTACT_NOTIFICATION_EMAILS', '')))
+    ),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Specialist Application Notification Emails
+    |--------------------------------------------------------------------------
+    |
+    | Email addresses that should receive notifications when a specialist
+    | application is submitted. Multiple addresses can be specified, separated
+    | by commas. If not configured, notifications will be sent to the default
+    | from address.
+    |
+    */
+
+    'specialist_application_notification_emails' => array_filter(
+        array_map('trim', explode(',', env('SPECIALIST_APPLICATION_NOTIFICATION_EMAILS', '')))
+    ),
 
 ];

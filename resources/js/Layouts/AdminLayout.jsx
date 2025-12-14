@@ -22,6 +22,9 @@ import {
   Home as HomeIcon,
   Place as PlaceIcon,
   Public as PublicIcon,
+  Assignment as AssignmentIcon,
+  ContactMail as ContactMailIcon,
+  Description as DescriptionIcon,
 } from '@mui/icons-material';
 import { Link, router } from '@inertiajs/react';
 import adminTheme from '../themes/adminTheme';
@@ -43,7 +46,10 @@ const AdminLayout = ({ children }) => {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, href: '/admin' },
     { text: 'Specialists', icon: <PeopleIcon />, href: '/admin/specialists' },
+    { text: 'Specialist Applications', icon: <DescriptionIcon />, href: '/admin/specialist-applications' },
     { text: 'Destinations', icon: <PlaceIcon />, href: '/admin/destinations' },
+    { text: 'Plans', icon: <AssignmentIcon />, href: '/admin/plans' },
+    { text: 'Contact Requests', icon: <ContactMailIcon />, href: '/admin/contact-requests' },
     { text: 'Countries', icon: <PublicIcon />, href: '/admin/countries' },
     { text: 'Back to Website', icon: <HomeIcon />, href: '/' },
   ];

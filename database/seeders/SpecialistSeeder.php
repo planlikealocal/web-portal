@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Specialist;
 use App\Models\Country;
+use App\Actions\Auth\CreateUserAccountAction;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -199,8 +200,18 @@ class SpecialistSeeder extends Seeder
             ],
         ];
 
-        foreach ($specialists as $specialist) {
-            Specialist::create($specialist);
+        foreach ($specialists as $specialistData) {
+            // Create the specialist record
+            $specialist = Specialist::create($specialistData);
+            
+            // Create corresponding user account for authentication
+            $createUserAction = new CreateUserAccountAction();
+            $userResult = $createUserAction->execute([
+                'name' => $specialistData['first_name'] . ' ' . $specialistData['last_name'],
+                'email' => $specialistData['email'],
+                'role' => 'specialist',
+                'password' => 'password123', // Default password for seeded specialists
+            ], false); // Don't send welcome email for seeded specialists
         }
     }
 }

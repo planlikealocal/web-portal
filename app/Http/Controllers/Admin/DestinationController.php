@@ -96,7 +96,7 @@ class DestinationController extends Controller
      */
     public function show(Destination $destination): Response
     {
-        $destination->load(['location', 'images', 'seasons', 'activities', 'itineraries']);
+        $destination->load(['country', 'images', 'seasons', 'activities', 'itineraries']);
 
         return Inertia::render('Admin/Destinations/Show', [
             'destination' => new DestinationResource($destination),
@@ -130,6 +130,11 @@ class DestinationController extends Controller
         // Handle country_id - convert empty string to null
         if (isset($data['country_id']) && $data['country_id'] === '') {
             $data['country_id'] = null;
+        }
+
+        // Handle home_page - convert string to boolean
+        if (isset($data['home_page'])) {
+            $data['home_page'] = filter_var($data['home_page'], FILTER_VALIDATE_BOOLEAN);
         }
 
         // Handle image uploads
@@ -174,11 +179,8 @@ class DestinationController extends Controller
     {
         $destination->load(['images', 'seasons', 'activities', 'itineraries', 'country']);
 
-        // Load specialists filtered by destination's country if available
+        // Load all active specialists (client-side filtering will handle country filtering)
         $filters = ['status' => 'active'];
-        if ($destination->country_id) {
-            $filters['country_id'] = $destination->country_id;
-        }
         $specialists = $this->getSpecialistsAction->execute($filters);
         
         // Load all countries for the select box

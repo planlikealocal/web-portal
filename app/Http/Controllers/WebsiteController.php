@@ -2,26 +2,45 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Actions\Contact\HandleContactFormSubmissionAction;
+use App\Actions\Destination\GetDestinationsAction;
+use App\Actions\SpecialistApplication\HandleSpecialistApplicationAction;
+use App\Http\Requests\ContactFormRequest;
+use App\Http\Requests\SpecialistApplicationRequest;
+use App\Http\Resources\DestinationListResource;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Mail;
 
 class WebsiteController extends Controller
 {
+    public function __construct(private GetDestinationsAction $getDestinationsAction) {}
+
     /**
      * Show the home page
      */
     public function home()
     {
-        return Inertia::render('Home');
+        // Get featured destinations (active only, home_page = true, limit to 6)
+        $destinations = $this->getDestinationsAction->executePaginated(['status' => 'active', 'home_page' => true], 6, 1);
+
+        return Inertia::render('Home/index', [
+            'destinations' => DestinationListResource::collection($destinations->items()),
+        ]);
     }
 
     /**
      * Show the about page
      */
-    public function about()
+    public function whoWeAre()
     {
-        return Inertia::render('About');
+        return Inertia::render('WhoWeAre/index');
+    }
+
+    /**
+     * Show the what we do page
+     */
+    public function whatWeDo()
+    {
+        return Inertia::render('WhatWeDo/index');
     }
 
     /**
@@ -29,27 +48,26 @@ class WebsiteController extends Controller
      */
     public function contact()
     {
-        return Inertia::render('Contact');
+        return Inertia::render('Contact/index');
     }
 
     /**
      * Handle contact form submission
      */
-    public function contactSubmit(Request $request)
+    public function contactSubmit(ContactFormRequest $request, HandleContactFormSubmissionAction $action)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'message' => 'required|string|max:1000',
-        ]);
-
-        // Send email using Mailpit
-        Mail::raw($validated['message'], function ($message) use ($validated) {
-            $message->to('admin@example.com')
-                   ->subject('New Contact Form Submission from ' . $validated['name'])
-                   ->replyTo($validated['email']);
-        });
+        $action->execute($request->validated());
 
         return redirect()->back()->with('success', 'Thank you for your message! We will get back to you soon.');
+    }
+
+    /**
+     * Handle specialist application submission
+     */
+    public function specialistApplicationSubmit(SpecialistApplicationRequest $request, HandleSpecialistApplicationAction $action)
+    {
+        $action->execute($request->validated());
+
+        return redirect()->back()->with('success', 'Thank you for your application! We will review it and get back to you soon.');
     }
 }

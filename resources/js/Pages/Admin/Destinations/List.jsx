@@ -23,6 +23,10 @@ const List = (props) => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedDestination, setSelectedDestination] = useState(null);
 
+    const handlePreview = (destination) => {
+        router.visit(`/admin/destinations/${destination.id}`);
+    };
+
     const handleEdit = (destination) => {
         router.visit(`/admin/destinations/${destination.id}/manage`);
     };
@@ -139,9 +143,9 @@ const List = (props) => {
                 <Box>
                     <IconButton
                         size="small"
-                        onClick={() => handleEdit(params.row)}
+                        onClick={() => handlePreview(params.row)}
                         color="primary"
-                        title="Manage"
+                        title="Preview"
                     >
                         <ViewIcon/>
                     </IconButton>
@@ -149,7 +153,7 @@ const List = (props) => {
                         size="small"
                         onClick={() => handleEdit(params.row)}
                         color="primary"
-                        title="Edit"
+                        title="Manage"
                     >
                         <EditIcon/>
                     </IconButton>

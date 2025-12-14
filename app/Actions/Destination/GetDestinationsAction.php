@@ -15,10 +15,10 @@ class GetDestinationsAction extends AbstractDestinationAction
         return $this->destinationRepository->getAll($filters);
     }
 
-    public function executePaginated(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    public function executePaginated(array $filters = [], int $perPage = 15, int $page = 1): LengthAwarePaginator
     {
-        $this->logAction('get_destinations_paginated', array_merge($filters, ['per_page' => $perPage]));
+        $this->logAction('get_destinations_paginated', array_merge($filters, ['per_page' => $perPage, 'page' => $page]));
 
-        return $this->destinationRepository->getAllPaginated($filters, $perPage);
+        return $this->destinationRepository->getAllPaginated($filters, $perPage, $page);
     }
 }

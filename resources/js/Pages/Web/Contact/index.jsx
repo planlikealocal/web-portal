@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Typography, Box, Container, TextField, Button, Grid, Alert } from '@mui/material';
 import { useForm } from '@inertiajs/react';
-import WebsiteLayout from '../Layouts/WebsiteLayout';
+import WebsiteLayout from '../../../Layouts/WebsiteLayout.jsx';
 
-const Contact = () => {
+const Index = () => {
   const { data, setData, post, processing, errors } = useForm({
     name: '',
     email: '',
@@ -25,7 +25,7 @@ const Contact = () => {
           <Typography variant="body1" paragraph align="center">
             Get in touch with us for any inquiries or support needs.
           </Typography>
-          
+
           <Grid container spacing={3}>
             <Grid item size={{xs: 12, md: 6}}>
               <Typography variant="h5" gutterBottom>
@@ -48,13 +48,13 @@ const Contact = () => {
               <Typography variant="h5" gutterBottom>
                 Send us a Message
               </Typography>
-              
+
               {errors.message && (
                 <Alert severity="error" sx={{ mb: 2 }}>
                   {errors.message}
                 </Alert>
               )}
-              
+
               <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
                 <TextField
                   margin="normal"
@@ -114,4 +114,4 @@ const Contact = () => {
   );
 };
 
-export default Contact;
+export default Index;

@@ -4,6 +4,8 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Models\Specialist;
+use Illuminate\Support\Facades\Storage;
 
 class DestinationResource extends JsonResource
 {
@@ -30,15 +32,33 @@ class DestinationResource extends JsonResource
             'grid_image' => $this->grid_image,
             'banner_image' => $this->banner_image,
             'specialist_ids' => $this->specialist_ids,
+            'specialists' => $this->when($this->specialist_ids, function () {
+                $ids = is_array($this->specialist_ids) ? $this->specialist_ids : [];
+                if (empty($ids)) {
+                    return [];
+                }
+                $specialists = Specialist::with('country')->whereIn('id', $ids)->active()->get();
+                return $specialists->map(function ($s) {
+                    return [
+                        'id' => $s->id,
+                        'full_name' => $s->full_name,
+                        'avatar_url' => $s->profile_pic ? Storage::url($s->profile_pic) : null,
+                        'bio' => $s->bio,
+                        'location' => trim(implode(', ', array_filter([$s->city, $s->state_province, optional($s->country)->name]))),
+                    ];
+                });
+            }),
             'images' => $this->whenLoaded('images', function () {
                 return $this->images->map(function ($image) {
-                    return [
-                        'id' => $image->id,
-                        'name' => $image->name,
-                        'description' => $image->description,
-                        'image_type' => $image->image_type,
-                        'url' => $image->url,
-                    ];
+                    if ($image->image_type === 'gallery') {
+                        return [
+                            'id' => $image->id,
+                            'name' => $image->name,
+                            'description' => $image->description,
+                            'image_type' => $image->image_type,
+                            'url' => $image->url,
+                        ];
+                    }
                 });
             }),
             'seasons' => $this->whenLoaded('seasons', function () {

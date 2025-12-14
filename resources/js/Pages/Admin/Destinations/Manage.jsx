@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useMemo} from 'react';
 import {
     Box,
     Typography,
@@ -20,6 +20,8 @@ import {
     InputLabel,
     Select,
     MenuItem,
+    FormControlLabel,
+    Checkbox,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -55,26 +57,21 @@ const Manage = (props) => {
         specialist_ids: destination.specialist_ids ?
             (Array.isArray(destination.specialist_ids) ? destination.specialist_ids : destination.specialist_ids.split(',').map(id => parseInt(id.trim()))) :
             [],
+        home_page: destination.home_page || false,
     });
     const [basicInfoErrors, setBasicInfoErrors] = useState({});
     const [savingBasicInfo, setSavingBasicInfo] = useState(false);
-    const [filteredSpecialists, setFilteredSpecialists] = useState(specialists);
 
-    // Initialize filtered specialists
-    useEffect(() => {
-        setFilteredSpecialists(specialists);
-    }, [specialists]);
-
-    // Function to fetch specialists by country
-    const fetchSpecialistsByCountry = async (countryId) => {
-        try {
-            const response = await fetch(`/admin/destinations/specialists-by-country?country_id=${countryId || ''}`);
-            const data = await response.json();
-            setFilteredSpecialists(data.specialists);
-        } catch (error) {
-            console.error('Error fetching specialists:', error);
+    // Client-side filtering of specialists by country
+    const filteredSpecialists = useMemo(() => {
+        if (!basicInfo.country_id) {
+            // If no country selected, show all specialists
+            return specialists;
         }
-    };
+        // Filter specialists by selected country (convert both to numbers for comparison)
+        const selectedCountryId = Number(basicInfo.country_id);
+        return specialists.filter(specialist => Number(specialist.country_id) === selectedCountryId);
+    }, [specialists, basicInfo.country_id]);
 
     // Dialog states
     const [imageDialogOpen, setImageDialogOpen] = useState(false);
@@ -101,8 +98,6 @@ const Manage = (props) => {
                 [field]: value,
                 specialist_ids: [] // Clear specialists when country changes
             }));
-            // Fetch specialists for the new country
-            fetchSpecialistsByCountry(value);
         } else {
             setBasicInfo(prev => ({
                 ...prev,
@@ -132,6 +127,7 @@ const Manage = (props) => {
         }
         formData.append('state_province', basicInfo.state_province || '');
         formData.append('specialist_ids', JSON.stringify(basicInfo.specialist_ids || []));
+        formData.append('home_page', basicInfo.home_page ? '1' : '0');
 
         // Handle file uploads - only append if it's a File object (new upload)
         if (basicInfo.home_image instanceof File) {
@@ -420,6 +416,17 @@ const Manage = (props) => {
                                             helperText={basicInfoErrors.specialist_ids}
                                         />
                                     </Grid>
+                                    <Grid size={{xs: 12}}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={basicInfo.home_page || false}
+                                                    onChange={(e) => handleBasicInfoChange('home_page')(e.target.checked)}
+                                                />
+                                            }
+                                            label="Show on Homepage"
+                                        />
+                                    </Grid>
                                 </Grid>
                             </Grid>
                             <Grid size={{xs: 2}}>
@@ -504,8 +511,8 @@ const Manage = (props) => {
                             </Fab>
                         </Box>
                         <Grid container spacing={2}>
-                            {destination.images?.map((image) => (
-                                <Grid size={{xs: 2}} key={image.id}>
+                            {(destination.images || []).filter(Boolean).map((image, idx) => (
+                                <Grid size={{xs: 2}} key={image.id || idx}>
                                     <Card
                                         sx={{
                                             height: '100%',
@@ -521,8 +528,8 @@ const Manage = (props) => {
                                         <Box sx={{position: 'relative', flex: 1}}>
                                             <Box
                                                 component="img"
-                                                src={image.url}
-                                                alt={image.name}
+                                                src={image?.url || ''}
+                                                alt={image?.name || 'Image'}
                                                 sx={{
                                                     width: '100%',
                                                     height: 120,
@@ -571,10 +578,10 @@ const Manage = (props) => {
                                         </Box>
                                         <CardContent sx={{p: 1, flex: 0}}>
                                             <Typography variant="caption" noWrap sx={{mb: 0.5, display: 'block'}}>
-                                                {image.name}
+                                                {image?.name || 'Untitled'}
                                             </Typography>
                                             <Chip
-                                                label={image.image_type}
+                                                label={image?.image_type || 'Image'}
                                                 size="small"
                                                 color="primary"
                                                 variant="outlined"
@@ -783,7 +790,7 @@ const Manage = (props) => {
                     <CardContent>
                         <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
                             <Typography variant="h6">
-                                Destination Itineraries
+                                Destination Itinerary Manage
                             </Typography>
                             <Fab size="small" color="primary" onClick={handleAddItinerary}>
                                 <AddIcon/>
@@ -907,7 +914,7 @@ const Manage = (props) => {
                                         }}
                                     >
                                         <Typography color="text.secondary" variant="h6" sx={{mb: 1}}>
-                                            No itineraries added yet
+                                            No itinerary item added yet
                                         </Typography>
                                         <Typography color="text.secondary" variant="body2">
                                             Click the + button above to add destination itineraries

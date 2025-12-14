@@ -38,4 +38,16 @@ class CountryController extends Controller
         
         return response()->json($countries);
     }
+
+    /**
+     * Get all countries with destinations count for public API
+     */
+    public function list(Request $request): JsonResponse
+    {
+        $countries = Country::withCount('destinations')
+            ->orderBy('name')
+            ->get(['id', 'name', 'code', 'flag_url', 'destinations_count']);
+        
+        return response()->json($countries);
+    }
 }
