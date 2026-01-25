@@ -4,13 +4,15 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -19,9 +21,14 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
         'role',
+        'date_of_birth',
+        'country_id',
+        'google_id',
         'google_access_token',
         'google_refresh_token',
         'google_token_expires',
@@ -50,8 +57,17 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'date_of_birth' => 'date',
             'google_token_expires' => 'datetime',
         ];
+    }
+
+    /**
+     * Get the country for the user.
+     */
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
     }
 
     /**
@@ -68,6 +84,14 @@ class User extends Authenticatable
     public function isSpecialist(): bool
     {
         return $this->role === 'specialist';
+    }
+
+    /**
+     * Check if user is a mobile app user
+     */
+    public function isMobileUser(): bool
+    {
+        return $this->role === 'user' || $this->role === null;
     }
 
     /**

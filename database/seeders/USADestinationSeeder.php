@@ -231,3 +231,5 @@ class USADestinationSeeder extends Seeder
     }
 }
 
+
+

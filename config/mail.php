@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => env('MAIL_MAILER', env('LARAVEL_SAIL') ? 'smtp' : 'log'),
 
     /*
     |--------------------------------------------------------------------------
@@ -41,9 +41,9 @@ return [
             'transport' => 'smtp',
             'scheme' => env('MAIL_SCHEME'),
             'url' => env('MAIL_URL'),
-            'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
-            'encryption' => env('MAIL_ENCRYPTION', 'tls'),
+            'host' => env('MAIL_HOST', env('LARAVEL_SAIL') ? 'mailpit' : '127.0.0.1'),
+            'port' => env('MAIL_PORT', env('LARAVEL_SAIL') ? 1025 : 2525),
+            'encryption' => env('MAIL_ENCRYPTION', env('LARAVEL_SAIL') ? null : 'tls'),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
             'timeout' => null,
