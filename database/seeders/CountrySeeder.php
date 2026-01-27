@@ -88,6 +88,11 @@ class CountrySeeder extends Seeder
                 'code' => 'CH',
                 'flag_url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Flag_of_Switzerland.svg/40px-Flag_of_Switzerland.svg.png',
             ],
+            [
+                'name' => 'Sri Lanka',
+                'code' => 'LK',
+                'flag_url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Flag_of_Sri_Lanka.svg/40px-Flag_of_Sri_Lanka.svg.png',
+            ],
         ];
 
         foreach ($countries as $country) {
