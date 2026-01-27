@@ -57,5 +57,6 @@ Route::prefix('mobile/v1')->group(function () {
         // User profile (alias for mobile app compatibility)
         Route::get('/user/profile', [App\Http\Controllers\Api\ProfileController::class, 'show']);
         Route::put('/user/profile', [App\Http\Controllers\Api\ProfileController::class, 'update']);
+        Route::post('/user/profile/image', [App\Http\Controllers\Api\ProfileController::class, 'uploadImage']);
     });
 });

@@ -22,8 +22,12 @@ class UpdateProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'sometimes|required|string|max:255',
+            'name' => 'sometimes|nullable|string|max:255',
+            'first_name' => 'sometimes|nullable|string|max:255',
+            'last_name' => 'sometimes|nullable|string|max:255',
             'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $this->user()->id,
+            'date_of_birth' => 'sometimes|nullable|date|before:today',
+            'country_id' => 'sometimes|nullable|integer|exists:countries,id',
         ];
     }
 

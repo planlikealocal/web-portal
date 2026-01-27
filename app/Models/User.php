@@ -33,6 +33,8 @@ class User extends Authenticatable
         'google_refresh_token',
         'google_token_expires',
         'google_calendar_id',
+        'avatar_url',
+        'profile_image',
     ];
 
     /**
