@@ -25,6 +25,7 @@ import {
   Assignment as AssignmentIcon,
   ContactMail as ContactMailIcon,
   Description as DescriptionIcon,
+  Info as InfoIcon,
 } from '@mui/icons-material';
 import { Link, router } from '@inertiajs/react';
 import adminTheme from '../themes/adminTheme';
@@ -50,6 +51,7 @@ const AdminLayout = ({ children }) => {
     { text: 'Destinations', icon: <PlaceIcon />, href: '/admin/destinations' },
     { text: 'Plans', icon: <AssignmentIcon />, href: '/admin/plans' },
     { text: 'Contact Requests', icon: <ContactMailIcon />, href: '/admin/contact-requests' },
+    { text: 'Who We Are', icon: <InfoIcon />, href: '/admin/who-we-are' },
     { text: 'Countries', icon: <PublicIcon />, href: '/admin/countries' },
     { text: 'Back to Website', icon: <HomeIcon />, href: '/' },
   ];

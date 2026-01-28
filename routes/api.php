@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('mobile/v1')->group(function () {
     // Public routes
+    Route::get('/who-we-are', [App\Http\Controllers\Api\WhoWeAreController::class, 'index']);
     Route::get('/countries', [App\Http\Controllers\Api\CountryController::class, 'index']);
     Route::post('/auth/register', [App\Http\Controllers\Api\AuthController::class, 'register']);
     Route::post('/auth/login', [App\Http\Controllers\Api\AuthController::class, 'login']);
