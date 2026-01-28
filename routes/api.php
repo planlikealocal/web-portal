@@ -58,5 +58,8 @@ Route::prefix('mobile/v1')->group(function () {
         Route::get('/user/profile', [App\Http\Controllers\Api\ProfileController::class, 'show']);
         Route::put('/user/profile', [App\Http\Controllers\Api\ProfileController::class, 'update']);
         Route::post('/user/profile/image', [App\Http\Controllers\Api\ProfileController::class, 'uploadImage']);
+        
+        // Specialist application
+        Route::post('/specialist/apply', [App\Http\Controllers\Api\SpecialistController::class, 'apply']);
     });
 });
