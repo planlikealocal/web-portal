@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\DestinationController;
 use App\Http\Controllers\Admin\PlanController as AdminPlanController;
 use App\Http\Controllers\Admin\SpecialistController;
 use App\Http\Controllers\Admin\WhoWeAreController;
+use App\Http\Controllers\Admin\PricingController;
+use App\Http\Controllers\Admin\ProcessController;
 use App\Http\Controllers\AppointmentBookingController;
 use App\Http\Controllers\DestinationsController;
 use App\Http\Controllers\GoogleController;
@@ -119,6 +121,22 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/who-we-are', [WhoWeAreController::class, 'store'])->name('who-we-are.store');
         Route::post('/who-we-are/{whoWeAre}', [WhoWeAreController::class, 'update'])->name('who-we-are.update');
         Route::delete('/who-we-are/{whoWeAre}', [WhoWeAreController::class, 'destroy'])->name('who-we-are.destroy');
+
+        // Pricing routes
+        Route::get('/pricing', [PricingController::class, 'index'])->name('pricing.index');
+        Route::get('/pricing/create', [PricingController::class, 'create'])->name('pricing.create');
+        Route::get('/pricing/{pricingPlan}/edit', [PricingController::class, 'edit'])->name('pricing.edit');
+        Route::post('/pricing', [PricingController::class, 'store'])->name('pricing.store');
+        Route::post('/pricing/{pricingPlan}', [PricingController::class, 'update'])->name('pricing.update');
+        Route::delete('/pricing/{pricingPlan}', [PricingController::class, 'destroy'])->name('pricing.destroy');
+
+        // Process routes
+        Route::get('/process', [ProcessController::class, 'index'])->name('process.index');
+        Route::get('/process/create', [ProcessController::class, 'create'])->name('process.create');
+        Route::get('/process/{processStep}/edit', [ProcessController::class, 'edit'])->name('process.edit');
+        Route::post('/process', [ProcessController::class, 'store'])->name('process.store');
+        Route::post('/process/{processStep}', [ProcessController::class, 'update'])->name('process.update');
+        Route::delete('/process/{processStep}', [ProcessController::class, 'destroy'])->name('process.destroy');
 
         // Test notification route (for development/demo purposes)
         Route::post('/test-notifications', function () {
