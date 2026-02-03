@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\SpecialistApplication\HandleSpecialistApplicationAction;
 use App\Http\Requests\Api\ApplyForSpecialistRequest;
+use App\Http\Resources\Api\SpecialistResource;
+use App\Models\Specialist;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class SpecialistController extends BaseApiController
 {
@@ -42,6 +45,50 @@ class SpecialistController extends BaseApiController
             ]);
             
             return $this->error('Failed to submit application. Please try again later.');
+        }
+    }
+
+    /**
+     * Get specialists by IDs
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function index(Request $request): JsonResponse
+    {
+        try {
+            $ids = $request->get('ids');
+            
+            if (!$ids) {
+                return $this->error('Specialist IDs are required.');
+            }
+
+            // Parse comma-separated IDs
+            $specialistIds = is_array($ids) ? $ids : explode(',', $ids);
+            $specialistIds = array_map('intval', $specialistIds);
+            $specialistIds = array_filter($specialistIds, fn($id) => $id > 0);
+
+            if (empty($specialistIds)) {
+                return $this->success([], 'No valid specialist IDs provided.');
+            }
+
+            // Get active specialists by IDs
+            $specialists = Specialist::whereIn('id', $specialistIds)
+                ->where('status', 'active')
+                ->with('country')
+                ->get();
+
+            return $this->success(
+                SpecialistResource::collection($specialists),
+                'Specialists retrieved successfully'
+            );
+        } catch (\Exception $e) {
+            \Log::error('Failed to retrieve specialists via mobile API', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            return $this->error('Failed to retrieve specialists. Please try again later.');
         }
     }
 }

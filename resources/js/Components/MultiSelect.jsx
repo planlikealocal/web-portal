@@ -33,20 +33,31 @@ const MultiSelect = ({
                 value={value}
                 onChange={handleChange}
                 label={label}
-                renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {selected.map((value) => {
-                            const option = options.find(opt => opt.id === value);
-                            return (
-                                <Chip
-                                    key={value}
-                                    label={option ? option.name : value}
-                                    size="small"
-                                />
-                            );
-                        })}
-                    </Box>
-                )}
+                renderValue={(selected) => {
+                    // Filter out invalid values that don't match any option
+                    const validSelected = Array.isArray(selected) 
+                        ? selected.filter(val => options.some(opt => opt.id === val))
+                        : [];
+                    
+                    if (validSelected.length === 0) {
+                        return <em style={{ color: '#999' }}>{placeholder}</em>;
+                    }
+                    
+                    return (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {validSelected.map((value) => {
+                                const option = options.find(opt => opt.id === value);
+                                return option ? (
+                                    <Chip
+                                        key={value}
+                                        label={option.name}
+                                        size="small"
+                                    />
+                                ) : null;
+                            })}
+                        </Box>
+                    );
+                }}
             >
                 {options.map((option) => (
                     <MenuItem key={option.id} value={option.id}>

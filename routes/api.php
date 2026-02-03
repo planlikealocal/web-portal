@@ -64,5 +64,8 @@ Route::prefix('mobile/v1')->group(function () {
         
         // Specialist application
         Route::post('/specialist/apply', [App\Http\Controllers\Api\SpecialistController::class, 'apply']);
+        
+        // Specialists
+        Route::get('/specialists', [App\Http\Controllers\Api\SpecialistController::class, 'index']);
     });
 });

@@ -93,6 +93,21 @@ class CountrySeeder extends Seeder
                 'code' => 'LK',
                 'flag_url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Flag_of_Sri_Lanka.svg/40px-Flag_of_Sri_Lanka.svg.png',
             ],
+            [
+                'name' => 'New Zealand',
+                'code' => 'NZ',
+                'flag_url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Flag_of_New_Zealand.svg/40px-Flag_of_New_Zealand.svg.png',
+            ],
+            [
+                'name' => 'Australia',
+                'code' => 'AU',
+                'flag_url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Flag_of_Australia.svg/40px-Flag_of_Australia.svg.png',
+            ],
+            [
+                'name' => 'Maldives',
+                'code' => 'MV',
+                'flag_url' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Flag_of_Maldives.svg/40px-Flag_of_Maldives.svg.png',
+            ],
         ];
 
         foreach ($countries as $country) {

@@ -1,4 +1,4 @@
-import React, {useState, useMemo} from 'react';
+import React, {useState, useMemo, useEffect} from 'react';
 import {
     Box,
     Typography,
@@ -44,6 +44,31 @@ import ItineraryDialog from '../../../Components/ItineraryDialog.jsx';
 
 const Manage = (props) => {
     const {destination, specialists = [], countries = []} = props;
+    
+    // Helper function to parse specialist_ids safely
+    const parseSpecialistIds = (value) => {
+        if (!value) return [];
+        if (Array.isArray(value)) {
+            // Filter out any invalid values and ensure all are numbers
+            return value.map(id => parseInt(id)).filter(id => !isNaN(id) && id > 0);
+        }
+        if (typeof value === 'string') {
+            // Handle comma-separated string
+            if (value.trim() === '') return [];
+            return value.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id) && id > 0);
+        }
+        if (typeof value === 'number') {
+            // If it's a single number, check if it's a valid specialist ID
+            // If it matches the destination ID, it's likely incorrect, so return empty array
+            if (value === destination.id) {
+                console.warn('specialist_ids appears to contain destination ID, ignoring');
+                return [];
+            }
+            return [value];
+        }
+        return [];
+    };
+    
     const [basicInfo, setBasicInfo] = useState({
         name: destination.name || '',
         description: destination.description || '',
@@ -54,9 +79,7 @@ const Manage = (props) => {
         banner_image: destination.banner_image || null,
         country_id: destination.country_id || null,
         state_province: destination.state_province || null,
-        specialist_ids: destination.specialist_ids ?
-            (Array.isArray(destination.specialist_ids) ? destination.specialist_ids : destination.specialist_ids.split(',').map(id => parseInt(id.trim()))) :
-            [],
+        specialist_ids: parseSpecialistIds(destination.specialist_ids),
         home_page: destination.home_page || false,
     });
     const [basicInfoErrors, setBasicInfoErrors] = useState({});
@@ -72,6 +95,28 @@ const Manage = (props) => {
         const selectedCountryId = Number(basicInfo.country_id);
         return specialists.filter(specialist => Number(specialist.country_id) === selectedCountryId);
     }, [specialists, basicInfo.country_id]);
+
+    // Sync and validate specialist_ids when destination or specialists change
+    useEffect(() => {
+        const parsedIds = parseSpecialistIds(destination.specialist_ids);
+        // Filter to only include IDs that exist in the specialists list
+        const validSpecialistIds = parsedIds.filter(id => 
+            specialists.some(spec => spec.id === id)
+        );
+        
+        // Update state with validated IDs
+        setBasicInfo(prev => {
+            const currentIds = prev.specialist_ids || [];
+            // Only update if different to avoid unnecessary re-renders
+            if (JSON.stringify(validSpecialistIds.sort()) !== JSON.stringify(currentIds.sort())) {
+                return {
+                    ...prev,
+                    specialist_ids: validSpecialistIds
+                };
+            }
+            return prev;
+        });
+    }, [destination.specialist_ids, specialists, destination.id]);
 
     // Dialog states
     const [imageDialogOpen, setImageDialogOpen] = useState(false);

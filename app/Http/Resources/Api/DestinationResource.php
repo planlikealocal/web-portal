@@ -45,6 +45,8 @@ class DestinationResource extends JsonResource
             'seasons' => $this->seasons->map(fn($season) => [
                 'id' => $season->id,
                 'name' => $season->name,
+                'duration' => $season->duration,
+                'description' => $season->description,
                 'start_month' => $season->start_month,
                 'end_month' => $season->end_month,
             ]),

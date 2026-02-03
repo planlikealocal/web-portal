@@ -28,6 +28,9 @@ class SpecialistSeeder extends Seeder
         $franceId = Country::where('name', 'France')->first()?->id;
         $brazilId = Country::where('name', 'Brazil')->first()?->id;
         $switzerlandId = Country::where('name', 'Switzerland')->first()?->id;
+        $newZealandId = Country::where('name', 'New Zealand')->first()?->id;
+        $australiaId = Country::where('name', 'Australia')->first()?->id;
+        $maldivesId = Country::where('name', 'Maldives')->first()?->id;
 
         $specialists = [
             [
@@ -37,12 +40,13 @@ class SpecialistSeeder extends Seeder
                 'bio' => 'Experienced adventure guide with 15+ years in outdoor activities. Specializes in hiking, mountain climbing, and wilderness survival.',
                 'contact_no' => '+1-555-0123',
                 'country_id' => $usaId,
-                'state_province' => 'California',
-                'city' => 'San Francisco',
-                'address' => '123 Tech Street, Downtown',
-                'postal_code' => '94105',
+                'state_province' => 'Alaska',
+                'city' => 'Anchorage',
+                'address' => '123 Adventure Street',
+                'postal_code' => '99501',
                 'status' => 'active',
                 'no_of_trips' => 15,
+                'profile_pic' => 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
             ],
             [
                 'first_name' => 'Maria',
@@ -57,6 +61,7 @@ class SpecialistSeeder extends Seeder
                 'postal_code' => '28013',
                 'status' => 'active',
                 'no_of_trips' => 8,
+                'profile_pic' => 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop',
             ],
             [
                 'first_name' => 'Ahmed',
@@ -83,8 +88,9 @@ class SpecialistSeeder extends Seeder
                 'city' => 'London',
                 'address' => '10 Downing Street',
                 'postal_code' => 'SW1A 2AA',
-                'status' => 'inactive',
+                'status' => 'active',
                 'no_of_trips' => 5,
+                'profile_pic' => 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop',
             ],
             [
                 'first_name' => 'Yuki',
@@ -99,6 +105,7 @@ class SpecialistSeeder extends Seeder
                 'postal_code' => '150-0002',
                 'status' => 'active',
                 'no_of_trips' => 12,
+                'profile_pic' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop',
             ],
             [
                 'first_name' => 'Isabella',
@@ -197,21 +204,144 @@ class SpecialistSeeder extends Seeder
                 'postal_code' => '8001',
                 'status' => 'active',
                 'no_of_trips' => 19,
+                'profile_pic' => 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop',
+            ],
+            // Specialists for new destinations
+            [
+                'first_name' => 'Hiroshi',
+                'last_name' => 'Yamamoto',
+                'email' => 'hiroshi.yamamoto@example.com',
+                'bio' => 'Local Tokyo guide specializing in hidden neighborhoods and authentic everyday experiences. Discover Japan beyond tourist spots.',
+                'contact_no' => '+81-3-5678-9012',
+                'country_id' => $japanId,
+                'state_province' => 'Tokyo',
+                'city' => 'Tokyo',
+                'address' => 'Shibuya District, Tokyo',
+                'postal_code' => '150-0001',
+                'status' => 'active',
+                'no_of_trips' => 28,
+                'profile_pic' => 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
+            ],
+            [
+                'first_name' => 'Aisha',
+                'last_name' => 'Mohamed',
+                'email' => 'aisha.mohamed@example.com',
+                'bio' => 'Maldives resort and island life specialist. Expert in luxury travel and tropical paradise experiences.',
+                'contact_no' => '+960-7-123-4567',
+                'country_id' => $maldivesId,
+                'state_province' => 'Malé',
+                'city' => 'Malé',
+                'address' => 'Malé City Center',
+                'postal_code' => '20000',
+                'status' => 'active',
+                'no_of_trips' => 35,
+                'profile_pic' => 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop',
+            ],
+            [
+                'first_name' => 'Michael',
+                'last_name' => 'Chen',
+                'email' => 'michael.chen@example.com',
+                'bio' => 'New York City nightlife and urban culture expert. Specializes in local bars, music venues, and city lights after dark.',
+                'contact_no' => '+1-212-555-7890',
+                'country_id' => $usaId,
+                'state_province' => 'New York',
+                'city' => 'New York',
+                'address' => 'Times Square, Manhattan',
+                'postal_code' => '10036',
+                'status' => 'active',
+                'no_of_trips' => 42,
+                'profile_pic' => 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop',
+            ],
+            [
+                'first_name' => 'David',
+                'last_name' => 'Williams',
+                'email' => 'david.williams@example.com',
+                'bio' => 'Alabama local guide specializing in southern culture, history, and hospitality.',
+                'contact_no' => '+1-205-555-1234',
+                'country_id' => $usaId,
+                'state_province' => 'Alabama',
+                'city' => 'Birmingham',
+                'address' => 'Downtown Birmingham',
+                'postal_code' => '35203',
+                'status' => 'active',
+                'no_of_trips' => 10,
+                'profile_pic' => 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop',
+            ],
+            [
+                'first_name' => 'Thabo',
+                'last_name' => 'Mbeki',
+                'email' => 'thabo.mbeki@example.com',
+                'bio' => 'Cape Town adventure guide and mountain specialist. Expert in Table Mountain, wine regions, and coastal experiences.',
+                'contact_no' => '+27-21-987-6543',
+                'country_id' => $southAfricaId,
+                'state_province' => 'Western Cape',
+                'city' => 'Cape Town',
+                'address' => 'V&A Waterfront, Cape Town',
+                'postal_code' => '8001',
+                'status' => 'active',
+                'no_of_trips' => 31,
+                'profile_pic' => 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop',
+            ],
+            [
+                'first_name' => 'James',
+                'last_name' => 'Mitchell',
+                'email' => 'james.mitchell@example.com',
+                'bio' => 'New Zealand wilderness and adventure specialist. Expert in fjords, hiking trails, and Maori cultural experiences.',
+                'contact_no' => '+64-9-876-5432',
+                'country_id' => $newZealandId,
+                'state_province' => 'Auckland',
+                'city' => 'Auckland',
+                'address' => 'Auckland Central',
+                'postal_code' => '1010',
+                'status' => 'active',
+                'no_of_trips' => 26,
+                'profile_pic' => 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop',
+            ],
+            [
+                'first_name' => 'Olivia',
+                'last_name' => 'Taylor',
+                'email' => 'olivia.taylor@example.com',
+                'bio' => 'Australian surf and beach culture expert. Specializes in coastal adventures, surfing, and Great Barrier Reef experiences.',
+                'contact_no' => '+61-2-9876-5432',
+                'country_id' => $australiaId,
+                'state_province' => 'New South Wales',
+                'city' => 'Sydney',
+                'address' => 'Bondi Beach, Sydney',
+                'postal_code' => '2026',
+                'status' => 'active',
+                'no_of_trips' => 33,
+                'profile_pic' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop',
             ],
         ];
 
         foreach ($specialists as $specialistData) {
+            // Skip if country_id is null (country not found)
+            if (!$specialistData['country_id']) {
+                continue;
+            }
+
+            // Check if specialist already exists
+            $existingSpecialist = Specialist::where('email', $specialistData['email'])->first();
+            if ($existingSpecialist) {
+                continue; // Skip if already exists
+            }
+
             // Create the specialist record
             $specialist = Specialist::create($specialistData);
             
             // Create corresponding user account for authentication
-            $createUserAction = new CreateUserAccountAction();
-            $userResult = $createUserAction->execute([
-                'name' => $specialistData['first_name'] . ' ' . $specialistData['last_name'],
-                'email' => $specialistData['email'],
-                'role' => 'specialist',
-                'password' => 'password123', // Default password for seeded specialists
-            ], false); // Don't send welcome email for seeded specialists
+            try {
+                $createUserAction = new CreateUserAccountAction();
+                $userResult = $createUserAction->execute([
+                    'name' => $specialistData['first_name'] . ' ' . $specialistData['last_name'],
+                    'email' => $specialistData['email'],
+                    'role' => 'specialist',
+                    'password' => 'password123', // Default password for seeded specialists
+                ], false); // Don't send welcome email for seeded specialists
+            } catch (\Exception $e) {
+                // If user creation fails (e.g., email already exists), continue
+                \Log::warning('Failed to create user for specialist: ' . $specialistData['email'] . ' - ' . $e->getMessage());
+            }
         }
     }
 }
