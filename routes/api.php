@@ -42,6 +42,7 @@ Route::prefix('mobile/v1')->group(function () {
         // Plans
         Route::get('/plans', [App\Http\Controllers\Api\PlanController::class, 'index']);
         Route::post('/plans', [App\Http\Controllers\Api\PlanController::class, 'store']);
+        Route::post('/plans/payment-intent', [App\Http\Controllers\Api\PlanController::class, 'createPaymentIntent']);
         Route::get('/plans/{id}', [App\Http\Controllers\Api\PlanController::class, 'show']);
         Route::put('/plans/{id}', [App\Http\Controllers\Api\PlanController::class, 'update']);
         Route::get('/plans/{id}/availability', [App\Http\Controllers\Api\PlanController::class, 'getAvailability']);

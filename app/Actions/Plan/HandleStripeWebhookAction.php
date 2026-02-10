@@ -2,6 +2,7 @@
 
 namespace App\Actions\Plan;
 
+use App\Models\Plan;
 use Illuminate\Support\Facades\Log;
 use Stripe\Stripe;
 
@@ -31,12 +32,43 @@ class HandleStripeWebhookAction extends AbstractPlanAction
             case 'payment_intent.succeeded':
                 $paymentIntent = $event->data->object;
                 Log::info('Payment intent succeeded', ['payment_intent_id' => $paymentIntent->id]);
+                $this->handlePaymentIntentSucceeded($paymentIntent);
                 break;
             default:
                 Log::info('Unhandled event type', ['type' => $event->type]);
         }
 
         return ['received' => true];
+    }
+
+    private function handlePaymentIntentSucceeded($paymentIntent): void
+    {
+        $planId = $paymentIntent->metadata['plan_id'] ?? null;
+
+        if (!$planId) {
+            Log::warning('payment_intent.succeeded – no plan_id in metadata', [
+                'payment_intent_id' => $paymentIntent->id,
+            ]);
+            return;
+        }
+
+        $plan = Plan::find($planId);
+
+        if (!$plan) {
+            Log::warning('payment_intent.succeeded – plan not found', ['plan_id' => $planId]);
+            return;
+        }
+
+        $plan->update([
+            'payment_status' => 'paid',
+            'status'         => 'completed',
+            'paid_at'        => now(),
+        ]);
+
+        $this->logAction('payment_intent_fulfilled', [
+            'plan_id'           => $plan->id,
+            'payment_intent_id' => $paymentIntent->id,
+        ]);
     }
 }
 

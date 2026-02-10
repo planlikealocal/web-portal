@@ -6,6 +6,7 @@ use App\Actions\Plan\CreatePlanAction;
 use App\Actions\Plan\UpdatePlanAction;
 use App\Actions\Plan\GetPlanAvailabilityAction;
 use App\Actions\Plan\CreateCheckoutSessionAction;
+use App\Actions\Plan\CreatePaymentIntentAction;
 use App\Http\Requests\Api\StorePlanRequest;
 use App\Http\Requests\Api\UpdatePlanRequest;
 use App\Http\Resources\Api\PlanResource;
@@ -20,6 +21,7 @@ class PlanController extends BaseApiController
         private UpdatePlanAction $updatePlanAction,
         private GetPlanAvailabilityAction $getPlanAvailabilityAction,
         private CreateCheckoutSessionAction $createCheckoutSessionAction,
+        private CreatePaymentIntentAction $createPaymentIntentAction,
     ) {}
 
     /**
@@ -137,6 +139,35 @@ class PlanController extends BaseApiController
             return $this->notFound('Plan not found');
         } catch (\Exception $e) {
             return $this->error('Failed to retrieve availability: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Create Stripe PaymentIntent for the mobile card form
+     */
+    public function createPaymentIntent(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'specialist_id'   => 'required|exists:specialists,id',
+                'plan_type'       => 'required|string',
+                'appointment_date' => 'required|date',
+                'timezone'        => 'required|string',
+            ]);
+
+            $user = $request->user();
+            $data = array_merge($request->all(), ['email' => $user->email]);
+
+            $result = $this->createPaymentIntentAction->execute($data);
+
+            return $this->success([
+                'client_secret' => $result['clientSecret'],
+                'plan_id'       => $result['planId'],
+            ], 'Payment intent created successfully');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->validationError($e->errors(), 'Validation failed');
+        } catch (\Exception $e) {
+            return $this->error('Failed to create payment intent: ' . $e->getMessage());
         }
     }
 
