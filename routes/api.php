@@ -35,6 +35,8 @@ Route::prefix('mobile/v1')->group(function () {
         
         // Destinations
         Route::get('/destinations', [App\Http\Controllers\Api\DestinationController::class, 'index']);
+        Route::get('/destinations/regions', [App\Http\Controllers\Api\DestinationController::class, 'getRegionsByCountry']);
+        Route::get('/destinations/activities', [App\Http\Controllers\Api\DestinationController::class, 'getActivitiesByCountry']);
         Route::get('/destinations/{id}', [App\Http\Controllers\Api\DestinationController::class, 'show']);
         Route::get('/destinations/country/{country}', [App\Http\Controllers\Api\DestinationController::class, 'getByCountry']);
         Route::get('/destinations/region/{region}', [App\Http\Controllers\Api\DestinationController::class, 'getByRegion']);
