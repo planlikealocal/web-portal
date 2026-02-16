@@ -16,7 +16,7 @@ class PricingController extends Controller
         $plans = PricingPlan::where('is_active', true)
             ->orderBy('order')
             ->orderBy('created_at', 'asc')
-            ->get(['id', 'name', 'price', 'price_description', 'features', 'background_color', 'order']);
+            ->get(['id', 'name', 'price', 'price_description', 'time_in_minutes', 'features', 'background_color', 'order']);
 
         $data = $plans->map(function ($plan) {
             return [
@@ -24,6 +24,7 @@ class PricingController extends Controller
                 'name' => $plan->name,
                 'price' => number_format($plan->price, 2, '.', ''),
                 'price_description' => $plan->price_description,
+                'time_in_minutes' => $plan->time_in_minutes,
                 'features' => $plan->features ?? [],
                 'background_color' => $plan->background_color,
                 'order' => $plan->order,

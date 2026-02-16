@@ -20,6 +20,7 @@ const Create = () => {
     name: '',
     price: '',
     price_description: '',
+    time_in_minutes: '',
     features: [],
     background_color: '',
     order: 0,
@@ -104,6 +105,16 @@ const Create = () => {
                 onChange={(e) => setData('price_description', e.target.value)}
                 error={!!errors.price_description}
                 helperText={errors.price_description || 'e.g., "per personalized trip plan"'}
+                fullWidth
+              />
+
+              <TextField
+                label="Time in Minutes"
+                type="number"
+                value={data.time_in_minutes}
+                onChange={(e) => setData('time_in_minutes', e.target.value ? parseInt(e.target.value) : '')}
+                error={!!errors.time_in_minutes}
+                helperText={errors.time_in_minutes || 'Duration of the service in minutes'}
                 fullWidth
               />
 

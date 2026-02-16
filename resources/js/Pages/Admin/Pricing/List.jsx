@@ -70,6 +70,7 @@ const List = ({ pricingPlans }) => {
                 <TableCell>Name</TableCell>
                 <TableCell>Price</TableCell>
                 <TableCell>Price Description</TableCell>
+                <TableCell>Time (mins)</TableCell>
                 <TableCell>Features</TableCell>
                 <TableCell>Background Color</TableCell>
                 <TableCell>Order</TableCell>
@@ -84,6 +85,7 @@ const List = ({ pricingPlans }) => {
                     <TableCell>{item.name}</TableCell>
                     <TableCell>${item.price}</TableCell>
                     <TableCell>{item.price_description || '-'}</TableCell>
+                    <TableCell>{item.time_in_minutes || '-'}</TableCell>
                     <TableCell>
                       <Typography
                         variant="body2"
@@ -144,7 +146,7 @@ const List = ({ pricingPlans }) => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={9} align="center">
                     <Typography variant="body2" color="text.secondary">
                       No pricing plans found. Click the + button to add a new plan.
                     </Typography>

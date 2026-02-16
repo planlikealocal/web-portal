@@ -13,6 +13,7 @@ class PricingPlan extends Model
         'name',
         'price',
         'price_description',
+        'time_in_minutes',
         'features',
         'background_color',
         'order',
@@ -21,6 +22,7 @@ class PricingPlan extends Model
 
     protected $casts = [
         'price' => 'decimal:2',
+        'time_in_minutes' => 'integer',
         'features' => 'array',
         'order' => 'integer',
         'is_active' => 'boolean',

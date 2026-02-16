@@ -19,6 +19,7 @@ const Edit = ({ pricingPlan }) => {
     name: pricingPlan.name || '',
     price: pricingPlan.price || '',
     price_description: pricingPlan.price_description || '',
+    time_in_minutes: pricingPlan.time_in_minutes || '',
     features: pricingPlan.features || [],
     background_color: pricingPlan.background_color || '',
     order: pricingPlan.order || 0,
@@ -106,6 +107,16 @@ const Edit = ({ pricingPlan }) => {
                 onChange={(e) => setData('price_description', e.target.value)}
                 error={!!errors.price_description}
                 helperText={errors.price_description || 'e.g., "per personalized trip plan"'}
+                fullWidth
+              />
+
+              <TextField
+                label="Time in Minutes"
+                type="number"
+                value={data.time_in_minutes}
+                onChange={(e) => setData('time_in_minutes', e.target.value ? parseInt(e.target.value) : '')}
+                error={!!errors.time_in_minutes}
+                helperText={errors.time_in_minutes || 'Duration of the service in minutes'}
                 fullWidth
               />
 

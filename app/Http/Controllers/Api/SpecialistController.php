@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Specialist\GetSpecialistAvailabilityAction;
 use App\Actions\SpecialistApplication\HandleSpecialistApplicationAction;
 use App\Http\Requests\Api\ApplyForSpecialistRequest;
 use App\Http\Resources\Api\SpecialistResource;
@@ -89,6 +90,39 @@ class SpecialistController extends BaseApiController
             ]);
             
             return $this->error('Failed to retrieve specialists. Please try again later.');
+        }
+    }
+
+    /**
+     * Get availability for a specialist
+     */
+    public function getAvailability(Request $request, $id): JsonResponse
+    {
+        try {
+            $request->validate([
+                'date' => 'required|date_format:Y-m-d',
+                'duration' => 'required|integer|min:15|max:480',
+            ]);
+
+            $specialist = Specialist::with('workingHours')->findOrFail($id);
+
+            $action = app(GetSpecialistAvailabilityAction::class);
+            $result = $action->execute(
+                $specialist,
+                $request->input('date'),
+                (int) $request->input('duration')
+            );
+
+            return $this->success([
+                'availability' => $result['availability'],
+                'timezone' => $result['timezone'],
+            ], 'Availability retrieved successfully');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->validationError($e->errors());
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->notFound('Specialist not found');
+        } catch (\Exception $e) {
+            return $this->error('Failed to retrieve availability: ' . $e->getMessage());
         }
     }
 }

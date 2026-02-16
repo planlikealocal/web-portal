@@ -25,6 +25,7 @@ class UpdatePricingRequest extends FormRequest
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'price_description' => 'nullable|string|max:255',
+            'time_in_minutes' => 'nullable|integer|min:1',
             'features' => 'nullable|array',
             'features.*' => 'string|max:500',
             'background_color' => 'nullable|string|max:50',
