@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Destination extends Model
 {
@@ -82,6 +83,15 @@ class Destination extends Model
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
+    }
+
+    /**
+     * Get users who wishlisted this destination.
+     */
+    public function wishlistedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'destination_wishlist')
+                    ->withTimestamps();
     }
 
     /**

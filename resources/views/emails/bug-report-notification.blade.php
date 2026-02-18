@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>New Bug Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 0;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .content {
+            background-color: #ffffff;
+            padding: 30px;
+            border: 1px solid #e9ecef;
+            border-radius: 0 0 10px 10px;
+        }
+        .notification-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .report-details {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .report-details h3 {
+            margin-top: 0;
+            color: #495057;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #6c757d;
+        }
+        .detail-value {
+            color: #212529;
+        }
+        .description-box {
+            background-color: #fff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .description-box p {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .issue-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .button {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 15px 5px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .button:hover {
+            opacity: 0.9;
+        }
+        .screenshot-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>New Bug Report</h1>
+    </div>
+    <div class="content">
+        <div class="notification-box">
+            <p style="margin: 0; font-size: 18px;">A new bug report has been submitted</p>
+        </div>
+
+        <div class="report-details">
+            <h3>Reporter Information</h3>
+            <div class="detail-row">
+                <span class="detail-label">Name:</span>
+                <span class="detail-value">{{ $reporter_name }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Email:</span>
+                <span class="detail-value">
+                    <a href="mailto:{{ $reporter_email }}" style="color: #667eea; text-decoration: none;">{{ $reporter_email }}</a>
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Submitted:</span>
+                <span class="detail-value">{{ $submitted_at }}</span>
+            </div>
+        </div>
+
+        <div class="report-details">
+            <h3>Bug Report Details</h3>
+            <div class="detail-row">
+                <span class="detail-label">Issue Type:</span>
+                <span class="detail-value">
+                    <span class="issue-badge">{{ $issue_type }}</span>
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Title:</span>
+                <span class="detail-value">{{ $report_title }}</span>
+            </div>
+        </div>
+
+        <div class="description-box">
+            <h3 style="margin-top: 0; color: #495057;">Description:</h3>
+            <p>{{ $report_description }}</p>
+        </div>
+
+        @if($screenshot_url)
+        <div style="margin: 20px 0;">
+            <strong style="color: #495057;">Screenshot Attached:</strong><br>
+            <a href="{{ $screenshot_url }}" class="screenshot-link">View Screenshot</a>
+        </div>
+        @endif
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="{{ $admin_url }}" class="button">View in Admin Panel</a>
+        </div>
+
+        <div class="footer">
+            <p>This is an automated notification from the bug report system.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -147,4 +147,19 @@ return [
         array_map('trim', explode(',', env('SPECIALIST_APPLICATION_NOTIFICATION_EMAILS', '')))
     ),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Bug Report Notification Emails
+    |--------------------------------------------------------------------------
+    |
+    | Email addresses that should receive notifications when a bug report
+    | is submitted. Multiple addresses can be specified, separated by commas.
+    | If not configured, notifications will be sent to the default from address.
+    |
+    */
+
+    'bug_report_notification_emails' => array_filter(
+        array_map('trim', explode(',', env('BUG_REPORT_NOTIFICATION_EMAILS', '')))
+    ),
+
 ];

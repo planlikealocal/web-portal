@@ -71,5 +71,17 @@ Route::prefix('mobile/v1')->group(function () {
         // Specialists
         Route::get('/specialists', [App\Http\Controllers\Api\SpecialistController::class, 'index']);
         Route::get('/specialists/{id}/availability', [App\Http\Controllers\Api\SpecialistController::class, 'getAvailability']);
+
+        // Wishlist
+        Route::get('/wishlist', [App\Http\Controllers\Api\WishlistController::class, 'index']);
+        Route::get('/wishlist/ids', [App\Http\Controllers\Api\WishlistController::class, 'ids']);
+        Route::post('/wishlist/toggle', [App\Http\Controllers\Api\WishlistController::class, 'toggle']);
+        Route::delete('/wishlist/{destinationId}', [App\Http\Controllers\Api\WishlistController::class, 'remove']);
+
+        // Bug Reports
+        Route::post('/bug-reports', [App\Http\Controllers\Api\BugReportController::class, 'store']);
+
+        // Contact Us
+        Route::post('/contact-us', [App\Http\Controllers\Api\ContactController::class, 'store']);
     });
 });

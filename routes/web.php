@@ -114,6 +114,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/specialist-applications/{application}', [\App\Http\Controllers\Admin\SpecialistApplicationController::class, 'show'])->name('specialist-applications.show');
         Route::post('/specialist-applications/{application}/update-status', [\App\Http\Controllers\Admin\SpecialistApplicationController::class, 'updateStatus'])->name('specialist-applications.update-status');
 
+        // Bug Reports routes
+        Route::get('/bug-reports', [\App\Http\Controllers\Admin\BugReportController::class, 'index'])->name('bug-reports.index');
+        Route::get('/bug-reports/{bugReport}', [\App\Http\Controllers\Admin\BugReportController::class, 'show'])->name('bug-reports.show');
+        Route::post('/bug-reports/{bugReport}/update-status', [\App\Http\Controllers\Admin\BugReportController::class, 'updateStatus'])->name('bug-reports.update-status');
+
         // Who We Are routes
         Route::get('/who-we-are', [WhoWeAreController::class, 'index'])->name('who-we-are.index');
         Route::get('/who-we-are/create', [WhoWeAreController::class, 'create'])->name('who-we-are.create');

@@ -28,6 +28,7 @@ import {
   Info as InfoIcon,
   AttachMoney as AttachMoneyIcon,
   Timeline as TimelineIcon,
+  BugReport as BugReportIcon,
 } from '@mui/icons-material';
 import { Link, router } from '@inertiajs/react';
 import adminTheme from '../themes/adminTheme';
@@ -53,6 +54,7 @@ const AdminLayout = ({ children }) => {
     { text: 'Destinations', icon: <PlaceIcon />, href: '/admin/destinations' },
     { text: 'Plans', icon: <AssignmentIcon />, href: '/admin/plans' },
     { text: 'Contact Requests', icon: <ContactMailIcon />, href: '/admin/contact-requests' },
+    { text: 'Bug Reports', icon: <BugReportIcon />, href: '/admin/bug-reports' },
     { text: 'Who We Are', icon: <InfoIcon />, href: '/admin/who-we-are' },
     { text: 'Pricing', icon: <AttachMoneyIcon />, href: '/admin/pricing' },
     { text: 'Process', icon: <TimelineIcon />, href: '/admin/process' },
