@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Specialist;
 use App\Models\Country;
+use App\Models\WorkingHour;
 use App\Actions\Auth\CreateUserAccountAction;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -314,6 +315,25 @@ class SpecialistSeeder extends Seeder
             ],
         ];
 
+        // Country ID to timezone mapping
+        $countryTimezones = [
+            $usaId => 'America/New_York',
+            $spainId => 'Europe/Madrid',
+            $uaeId => 'Asia/Dubai',
+            $ukId => 'Europe/London',
+            $japanId => 'Asia/Tokyo',
+            $mexicoId => 'America/Cancun',
+            $indiaId => 'Asia/Kolkata',
+            $southAfricaId => 'Africa/Johannesburg',
+            $italyId => 'Europe/Rome',
+            $franceId => 'Europe/Paris',
+            $brazilId => 'America/Sao_Paulo',
+            $switzerlandId => 'Europe/Zurich',
+            $newZealandId => 'Pacific/Auckland',
+            $australiaId => 'Australia/Sydney',
+            $maldivesId => 'Indian/Maldives',
+        ];
+
         foreach ($specialists as $specialistData) {
             // Skip if country_id is null (country not found)
             if (!$specialistData['country_id']) {
@@ -323,12 +343,35 @@ class SpecialistSeeder extends Seeder
             // Check if specialist already exists
             $existingSpecialist = Specialist::where('email', $specialistData['email'])->first();
             if ($existingSpecialist) {
-                continue; // Skip if already exists
+                // Ensure existing specialists have working hours and timezone
+                if (!$existingSpecialist->timezone) {
+                    $existingSpecialist->update([
+                        'timezone' => $countryTimezones[$specialistData['country_id']] ?? 'UTC',
+                    ]);
+                }
+                if ($existingSpecialist->workingHours()->count() === 0) {
+                    WorkingHour::create([
+                        'specialist_id' => $existingSpecialist->id,
+                        'start_time' => '09:00',
+                        'end_time' => '17:00',
+                    ]);
+                }
+                continue;
             }
+
+            // Add timezone based on country
+            $specialistData['timezone'] = $countryTimezones[$specialistData['country_id']] ?? 'UTC';
 
             // Create the specialist record
             $specialist = Specialist::create($specialistData);
-            
+
+            // Create default working hours (9 AM - 5 PM)
+            WorkingHour::create([
+                'specialist_id' => $specialist->id,
+                'start_time' => '09:00',
+                'end_time' => '17:00',
+            ]);
+
             // Create corresponding user account for authentication
             try {
                 $createUserAction = new CreateUserAccountAction();
