@@ -3,7 +3,10 @@
 namespace App\Actions\Plan;
 
 use App\Models\Plan;
+use App\Models\User;
 use Stripe\Stripe;
+use Stripe\Customer;
+use Stripe\EphemeralKey;
 use Stripe\PaymentIntent;
 use Illuminate\Support\Facades\Log;
 
@@ -17,6 +20,30 @@ class CreatePaymentIntentAction extends AbstractPlanAction
         $prices = config('plans.prices');
         $price = $prices[$planType] ?? $prices[config('plans.default')];
         $amountInCents = (int) round($price * 100);
+
+        Stripe::setApiKey(config('services.stripe.secret'));
+
+        // Look up or create a Stripe Customer for the user
+        $user = User::where('email', $data['email'])->first();
+        $customerId = $user?->stripe_customer_id;
+
+        if (!$customerId) {
+            $customer = Customer::create([
+                'email' => $data['email'],
+                'name'  => $user ? trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) : null,
+            ]);
+            $customerId = $customer->id;
+
+            if ($user) {
+                $user->update(['stripe_customer_id' => $customerId]);
+            }
+        }
+
+        // Create an EphemeralKey for the customer (needed by Payment Sheet)
+        $ephemeralKey = EphemeralKey::create(
+            ['customer' => $customerId],
+            ['stripe_version' => '2024-06-20']
+        );
 
         // Create the plan record
         $plan = Plan::create([
@@ -38,12 +65,11 @@ class CreatePaymentIntentAction extends AbstractPlanAction
                                     : null,
         ]);
 
-        // Create Stripe PaymentIntent
-        Stripe::setApiKey(config('services.stripe.secret'));
-
+        // Create Stripe PaymentIntent attached to the customer
         $paymentIntent = PaymentIntent::create([
             'amount'   => $amountInCents,
             'currency' => 'usd',
+            'customer' => $customerId,
             'metadata' => [
                 'plan_id'   => $plan->id,
                 'plan_type' => $planType,
@@ -62,8 +88,10 @@ class CreatePaymentIntentAction extends AbstractPlanAction
         ]);
 
         return [
-            'clientSecret' => $paymentIntent->client_secret,
-            'planId'       => $plan->id,
+            'clientSecret'  => $paymentIntent->client_secret,
+            'customerId'    => $customerId,
+            'ephemeralKey'  => $ephemeralKey->secret,
+            'planId'        => $plan->id,
         ];
     }
 }

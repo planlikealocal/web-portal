@@ -36,6 +36,7 @@ class User extends Authenticatable
         'google_calendar_id',
         'avatar_url',
         'profile_image',
+        'stripe_customer_id',
     ];
 
     /**

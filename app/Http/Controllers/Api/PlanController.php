@@ -161,8 +161,10 @@ class PlanController extends BaseApiController
             $result = $this->createPaymentIntentAction->execute($data);
 
             return $this->success([
-                'client_secret' => $result['clientSecret'],
-                'plan_id'       => $result['planId'],
+                'client_secret'  => $result['clientSecret'],
+                'customer'       => $result['customerId'],
+                'ephemeral_key'  => $result['ephemeralKey'],
+                'plan_id'        => $result['planId'],
             ], 'Payment intent created successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return $this->validationError($e->errors(), 'Validation failed');
